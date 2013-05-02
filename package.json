@@ -1,0 +1,28 @@
+{
+  "name": "Odin.js",
+  "version": "0.0.0",
+  "description": "2D HTML5 Canvas/WebGL Javascript Game Engine",
+  "main": "src/odin.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lonewolfgames/Odin.js.git"
+  },
+  "keywords": [
+    "Odin.js"
+  ],
+  "author": "Nathan Faucett",
+  "license": "BSD",
+  "readmeFilename": "README.md",
+  "gitHead": "b8a2024b472bbfee373b69b6a3659536570bc4b0",
+  "dependencies": {
+    "requirejs": "~2.1.5",
+    "amdefine": "0.0.4"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.2.0"
+  }
+}
