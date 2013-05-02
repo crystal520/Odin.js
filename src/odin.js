@@ -18,7 +18,11 @@ define(
 	};
 	
 	
+	Odin.Bounds = require("math/bounds");
+	Odin.Color = require("math/color");
+	Odin.Mat3 = require("math/mat3");
 	Odin.Mathf = require("math/mathf");
+	Odin.Vec2 = require("math/vec2");
 	
 	
 	return Odin;
