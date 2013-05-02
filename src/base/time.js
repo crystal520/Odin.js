@@ -12,21 +12,25 @@ define(
 	    
 	    this.time = 0;
 	    
+	    this.ms = 1/60;
 	    this.delta = 1/60;
 	    
 	    this.scale = 1;
-	    
-	    this.frame = 0;
 	}
-	    
+	
+	var last = 0;
+	
 	
 	Time.prototype.start = function(){
+	    this.time = this.now();
 	    
+	    this.ms = 1000 * ( this.time - last );
+	    this.delta = ( this.time - last ) * this.scale;
 	};
 	
 	
 	Time.prototype.end = function(){
-	    
+	    last = this.time;
 	};
 	
 	

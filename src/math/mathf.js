@@ -161,6 +161,17 @@ define(
 	    
 	    return i;
         };
+        
+        
+        Mathf.prototype.direction = function( x, y ){
+	    
+	    if( abs( x ) >= abs( y ) ){
+		
+		return x > 0 ? "right" : "left"
+	    }
+	    
+	    return y > 0 ? "up" : "down"
+	};
 	
 	
 	return new Mathf;

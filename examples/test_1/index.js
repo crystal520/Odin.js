@@ -9,5 +9,10 @@ require(
 	
 	Odin.globalize();
 	
+	game = new Game({
+	    debug: true
+	});
+	
+	game.init();
     }
 );
