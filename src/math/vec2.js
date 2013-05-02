@@ -228,38 +228,6 @@ define([
         };
         
         
-        Vec2.prototype.applyMat4 = function( m ){
-            var x = this.x, y = this.y,
-                me = m.elements;
-                
-            this.x = me[0] * x + me[4] * y + me[8] + me[12];
-	    this.y = me[1] * x + me[5] * y + me[9] + me[13];
-            
-            return this;
-        };
-        
-        
-        Vec2.prototype.applyQuat = function( q ){
-            var x = this.x,
-		y = this.y,
-		
-		qx = q.x,
-		qy = q.y,
-		qz = q.z,
-		qw = q.w,
-		
-		ix =  qw * x + qy - qz * y,
-		iy =  qw * y + qz * x - qx,
-		iz =  qw + qx * y - qy * x,
-		iw = -qx * x - qy * y - qz;
-		
-	    this.x = ix * qw + iw * -qx + iy * -qz - iz * -qy;
-	    this.y = iy * qw + iw * -qy + iz * -qx - ix * -qz;
-	    
-	    return this;
-        };
-        
-        
         Vec2.prototype.applyProjection = function( m ){
             var x = this.x, y = this.y,
                 me = m.elements,
@@ -282,32 +250,10 @@ define([
         };
         
         
-        Vec2.prototype.getPositionMat4 = function( m ){
-            var me = m.elements;
-            
-            this.x = me[12];
-            this.y = me[13];
-            
-            return this;
-        };
-        
-        
         Vec2.prototype.getScaleMat3 = function( m ){
             var me = m.elements,
                 sx = this.set( me[0], me[1] ).len(),
                 sy = this.set( me[3], me[4] ).len();
-            
-            this.x = sx;
-            this.y = sy;
-            
-            return this;
-        };
-        
-        
-        Vec2.prototype.getScaleMat4 = function( m ){
-            var me = m.elements,
-                sx = this.set( me[0], me[1], me[2] ).len(),
-                sy = this.set( me[4], me[5], me[6] ).len();
             
             this.x = sx;
             this.y = sy;

@@ -17,6 +17,9 @@ define(
 	    window.Odin = this;
 	};
 	
+	Odin.Class = require("base/class");
+	Odin.Device = require("base/device");
+	Odin.Time = require("base/time");
 	
 	Odin.Bounds = require("math/bounds");
 	Odin.Color = require("math/color");
