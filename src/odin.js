@@ -18,6 +18,9 @@ define(
 	};
 	
 	
+	Odin.Mathf = require("math/mathf");
+	
+	
 	return Odin;
     }
 );
