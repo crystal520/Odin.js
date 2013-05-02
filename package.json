@@ -11,7 +11,14 @@
     "url": "https://github.com/lonewolfgames/Odin.js.git"
   },
   "keywords": [
-    "Odin.js"
+    "odin.js",
+    "odin",
+    "webgl",
+    "2d",
+    "canvas",
+    "game",
+    "engine",
+    "game engine"
   ],
   "author": "Nathan Faucett",
   "license": "BSD",
