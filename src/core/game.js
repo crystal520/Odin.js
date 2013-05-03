@@ -27,11 +27,14 @@ define([
             this.scene = undefined;
             this.scenes = [];
             
-	    if( Device.webgl ){
+	    if( Device.webgl && !opts.forceCanvas ){
 		this.renderer = new WebGLRenderer( opts );
 	    }
-	    else{
+	    else if( Device.canvas ){
 		this.renderer = new CanvasRenderer( opts );
+	    }
+	    else{
+		throw new Error("Game "+ this.name +": Could not get rendering context");
 	    }
 	    
 	    Input.init( this.renderer.canvas.element );
@@ -95,6 +98,30 @@ define([
 		    }
                 }
             }
+        };
+	
+	
+	Game.prototype.setScene = function( scene ){
+            var index, newScene;
+	    
+            if( scene instanceof Scene ){
+                index = this.scenes.indexOf( scene );
+		
+		if( index === -1 ){
+		    console.warn("Game.setScene: scene not added to Game, adding it...");
+		    this.addScene( scene );
+		}
+		
+                this.scene = scene;
+            }
+            else if( Utils.isString( scene ) ){
+		
+                this.scene = this.getScene( scene );
+            }
+	    
+	    if( !this.scene ){
+		console.warn("Game.setScene: could not find scene in game "+ scene );
+	    }
         };
 	
 	

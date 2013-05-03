@@ -35,6 +35,7 @@ define(
 	    this.mobile = /android|webos|iphone|ipad|ipod|blackberry/i.test( userAgent );
 	    
 	    this.webgl = "WebGLRenderingContext" in window;
+	    this.canvas = "CanvasRenderingContext2D" in window;
 	    
 	    this.audioMpeg = !!audio.canPlayType("audio/mpeg");
 	    this.audioOgg = !!audio.canPlayType("audio/ogg");

@@ -29,7 +29,7 @@ define([
         
         
         CanvasRenderer.prototype.setDefault = function(){
-	    var gl = this.context,
+	    var ctx = this.context,
 		canvas = this.canvas,
 		hw = canvas.width * 0.5,
 		hh = canvas.height * 0.5;
@@ -40,34 +40,33 @@ define([
         
         
         CanvasRenderer.prototype.setClearColor = function( color ){
-            var gl = this.context;
             
-            if( color ){
-                gl.clearColor( color.r, color.g, color.b, color.a );
-            }
-            else{
-                gl.clearColor( 0, 0, 0, 1 );
-            }
+	    if( color ){
+		this.canvas.element.style.background = color.rgb();
+	    }
+	    else{
+		this.canvas.element.style.background = "#000000";
+	    }
 	};
 	
         
         CanvasRenderer.prototype.clear = function(){
-            var gl = this.context,
+            var ctx = this.context,
 		canvas = this.canvas
 	    
-            gl.clearRect( -1, -1, 1, 1 );
+            ctx.clearRect( -1, -1, 1, 1 );
 	};
         
         
         CanvasRenderer.prototype.setLineWidth = function(){
-	    var lastLineWidth, gl;
+	    var lastLineWidth, ctx;
 	    
 	    return function( width ){
-		gl = this.context;
+		ctx = this.context;
 		
 		if( width !== lastLineWidth ){
 		    
-		    gl.lineWidth = width;
+		    ctx.lineWidth = width;
 		    lastLineWidth = width;
 		}
 	    };
@@ -78,7 +77,8 @@ define([
 	    var lastScene, lastCamera;
 	    
 	    return function( scene ){
-		var gl = this.context,
+		var self = this,
+		    ctx = this.context,
 		    camera = scene.camera;
 		
 		if( lastScene !== scene ){
@@ -87,12 +87,12 @@ define([
 		}
 		if( lastCamera !== camera ){
 		    camera.setSize( this.canvas.width, this.canvas.height );
-		    gl.viewport( 0, 0, this.canvas.width, this.canvas.height );
+		    this.setDefault();
 		    
 		    if( this.canvas.fullScreen ){
 			this.canvas.on("resize", function(){
 			    camera.setSize( this.width, this.height );
-			    gl.viewport( 0, 0, this.width, this.height );
+			    self.setDefault();
 			});
 		    }
 		    
