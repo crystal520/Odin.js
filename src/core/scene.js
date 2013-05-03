@@ -23,8 +23,7 @@ define([
             this.children = [];
 	    
             this._sprites = [];
-	    
-            this.camera = undefined;
+            this._cameras = [];
 	    
             this.world = opts.world instanceof World ? opts.world : new World;
             
@@ -33,29 +32,6 @@ define([
         
         Scene.prototype = Object.create( Class.prototype );
         Scene.prototype.constructor = Scene;
-	
-	
-	Scene.prototype.setCamera = function( camera ){
-            var index;
-	    
-	    if( camera instanceof Camera ){
-		index = this.children.indexOf( camera );
-		
-		if( index === -1 ){
-		    console.warn("Scene.setCamera: camera not added to Scene, adding it...");
-		    this.add( camera );
-		}
-		
-		this.camera = camera;
-	    }
-            else if( isString( camera ) ){
-                this.camera = this.findByName( camera );
-            }
-	    
-            if( !this.camera ){
-                console.warn("Scene.setCamera: no camera found "+ camera );
-            }
-        };
         
         
         Scene.prototype.forEach = function( callback ){
@@ -144,9 +120,8 @@ define([
 	    if( sprite ){
 		this._sprites.push( sprite );
 	    }
-	    
-	    if( gameObject instanceof Camera && !this.camera ){
-		this.camera = gameObject;
+	    if( gameObject instanceof Camera ){
+		this._cameras.push( gameObject );
 	    }
 	};
         
@@ -159,9 +134,9 @@ define([
 		index = this._sprites.indexOf( sprite );
 		this._sprites.splice( index, 1 );
 	    }
-	    
-	    if( gameObject instanceof Camera && this.camera === gameObject ){
-		this.camera = undefined;
+	    if( gameObject instanceof Camera ){
+		index = this._sprites.indexOf( gameObject );
+		this._cameras.splice( index, 1 );
 	    }
 	};
 	

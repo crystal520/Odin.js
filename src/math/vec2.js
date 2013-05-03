@@ -231,10 +231,10 @@ define([
         Vec2.prototype.applyProjection = function( m ){
             var x = this.x, y = this.y,
                 me = m.elements,
-                d = 1 / ( me[3] * x + me[7] * y + me[11] + me[15] );
+                d = 1 / ( me[2] * x + me[5] * y + me[8] );
 	    
-            this.x = ( me[0] * x + me[4] * y + me[8] + me[12] ) * d;
-            this.y = ( me[1] * x + me[5] * y + me[9] + me[13] ) * d;
+            this.x = ( me[0] * x + me[3] * y + me[6] ) * d;
+            this.y = ( me[1] * x + me[4] * y + me[7] ) * d;
             
             return this;
         };

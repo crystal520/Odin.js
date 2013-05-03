@@ -128,7 +128,7 @@ define([
 		}
 		isUp = false;
                 
-		this.trigger("mouseDown");
+		this.trigger("down");
                 
                 downNeedsUpdate = false;
             }
@@ -144,7 +144,7 @@ define([
                 
                 this.delta.vsub( this.position, last );
                 
-		this.trigger("mouseMove");
+		this.trigger("move");
                 
                 moveNeedsUpdate = false;
             }
@@ -180,7 +180,7 @@ define([
 		}
 		isDown = false;
 		
-		this.trigger("mouseUp");
+		this.trigger("up");
 		
                 upNeedsUpdate = false;
             }
@@ -200,7 +200,7 @@ define([
                 this.middle = false;
                 this.right = false;
                 
-		this.trigger("mouseOut");
+		this.trigger("out");
                 
                 outNeedsUpdate = false;
             }
@@ -213,7 +213,7 @@ define([
                 
                 this.wheel = max( -1, min( 1, ( e.wheelDelta || -e.detail ) ) );
                 
-		this.trigger("mouseWheel");
+		this.trigger("wheel");
                 
                 wheelNeedsUpdate = false;
             }

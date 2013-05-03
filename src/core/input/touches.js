@@ -155,7 +155,7 @@ define([
                         
                         touch.start.copy( touch.position );
                         
-                        this.trigger("touchStart", touch );
+                        this.trigger("start", touch );
                     }
                 }
                 else{
@@ -189,7 +189,7 @@ define([
                             
                             touch.delta.vsub( touch.position, last );
                             
-                            this.trigger("touchMove", touch );
+                            this.trigger("move", touch );
                         }
                     }
                 }
@@ -231,7 +231,7 @@ define([
                             
 			    touch.identifier = -1;
                             
-                            this.trigger("touchEnd", touch );
+                            this.trigger("end", touch );
                         }
                     }
                 }

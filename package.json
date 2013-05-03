@@ -1,5 +1,5 @@
 {
-  "name": "Odin.js",
+  "name": "odin.js",
   "version": "0.0.0",
   "description": "2D HTML5 Canvas/WebGL Javascript Game Engine",
   "main": "src/odin.js",

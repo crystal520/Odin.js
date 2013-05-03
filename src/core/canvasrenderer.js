@@ -5,8 +5,9 @@ define([
 	"base/class",
 	"base/dom",
 	"base/device",
+	"math/mat3"
     ],
-    function( Class, Dom, Device ){
+    function( Class, Dom, Device, Mat3 ){
 	"use strict";
 	
 	
@@ -20,23 +21,10 @@ define([
             this.autoClear = opts.autoClear !== undefined ? opts.autoClear : true;
 	    
             this.context = Dom.get2DContext( this.canvas.element );
-	    
-	    this.setDefault();
         }
         
         CanvasRenderer.prototype = Object.create( Class.prototype );
         CanvasRenderer.prototype.constructor = CanvasRenderer;
-        
-        
-        CanvasRenderer.prototype.setDefault = function(){
-	    var ctx = this.context,
-		canvas = this.canvas,
-		hw = canvas.width * 0.5,
-		hh = canvas.height * 0.5;
-	    
-	    ctx.translate( hw, hh );
-	    ctx.scale( hw, hh );
-	};
         
         
         CanvasRenderer.prototype.setClearColor = function( color ){
@@ -54,7 +42,7 @@ define([
             var ctx = this.context,
 		canvas = this.canvas
 	    
-            ctx.clearRect( -1, -1, 1, 1 );
+            ctx.clearRect( -1, -1, 2, 2 );
 	};
         
         
@@ -76,23 +64,40 @@ define([
         CanvasRenderer.prototype.render = function(){
 	    var lastScene, lastCamera;
 	    
-	    return function( scene ){
+	    return function( scene, camera ){
 		var self = this,
 		    ctx = this.context,
-		    camera = scene.camera;
+		    sprites = scene._sprites,
+		    sprite, i, il;
 		
 		if( lastScene !== scene ){
 		    this.setClearColor( scene.world.background );
 		    lastScene = scene;
 		}
 		if( lastCamera !== camera ){
-		    camera.setSize( this.canvas.width, this.canvas.height );
-		    this.setDefault();
+		    var canvas = this.canvas,
+			w = canvas.width,
+			h = canvas.height,
+			hw = canvas.width * 0.5,
+			hh = canvas.height * 0.5;
+		    
+		    ctx.translate( hw, hh );
+		    ctx.scale( hw, hh );
+		    
+		    camera.setSize( w, h );
 		    
 		    if( this.canvas.fullScreen ){
 			this.canvas.on("resize", function(){
-			    camera.setSize( this.width, this.height );
-			    self.setDefault();
+			     var canvas = this.canvas,
+				w = this.width,
+				h = this.height,
+				hw = this.width * 0.5,
+				hh = this.height * 0.5;
+			    
+			    camera.setSize( w, h );
+			    
+			    ctx.translate( hw, hh );
+			    ctx.scale( hw, hh );
 			});
 		    }
 		    
@@ -102,8 +107,44 @@ define([
 		if( this.autoClear ){
 		    this.clear();
 		}
+		
+		for( i = 0, il = sprites.length; i < il; i++ ){
+		    sprite = sprites[i];
+		    
+		    this.renderSprite( sprite, camera );
+		}
 	    };
         }();
+        
+        
+        CanvasRenderer.prototype.renderSprite = function(){
+	    var matrixPerspective = new Mat3,
+		me = matrixPerspective.elements;
+	    
+	    return function( sprite, camera ){
+		var ctx = this.context,
+		    gameObject = sprite.gameObject,
+		    offset = sprite.offset;
+		
+		gameObject.matrixModelView.mmul( camera.matrixWorldInverse, gameObject.matrixWorld );
+		matrixPerspective.mmul( camera.matrixProjection, gameObject.matrixModelView );
+		
+		ctx.save();
+		
+		ctx.transform( me[0], me[1], me[3], me[4], me[6], me[7] );
+		
+		ctx.drawImage(
+		    sprite.image,
+		    sprite.x, sprite.y,
+		    sprite.w, sprite.h,
+		    offset.x - sprite.width * 0.5,
+		    offset.y - sprite.height * 0.5,
+		    sprite.width, sprite.height
+		);
+		
+		ctx.restore();
+	    };
+	}();
 	
         
         return CanvasRenderer;

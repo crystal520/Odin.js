@@ -84,8 +84,18 @@ define([
         };
         
         
+        Camera.prototype.zoomBy = function( zoom ){
+            
+            this.zoom += zoom !== undefined ? zoom : 0;
+            
+            this.needsUpdate = true;
+        };
+        
+        
         Camera.prototype.updateMatrixProjection = function(){
-	    var zoom = this.zoom,
+	    var width = this.width * 0.25,
+		height = this.height * 0.25,
+		zoom = this.aspect > 1 ? this.zoom / height : this.zoom / width,
 		right = ( this.width * 0.5 ) * zoom,
 		left = -right,
 		top = ( this.height * 0.5 ) * zoom,
@@ -99,13 +109,29 @@ define([
         
         
         Camera.prototype.update = function(){
+            var components = this.components,
+                type, component;
             
-            if( this.needsUpdate ){
+            this.trigger("update");
+            
+            for( type in components ){
+                component = components[ type ];
+                
+                if( component && component.update ){
+                    component.update();
+                }
+            }
+            
+            this.updateMatrices();
+            
+	    if( this.needsUpdate ){
                 this.updateMatrixProjection();
             }
             
             this.matrixWorldInverse.getInverse( this.matrixWorld );
             this.matrixProjectionScreen.mmul( this.matrixProjection, this.matrixWorldInverse );
+	    
+            this.trigger("lateUpdate");
         };
         
         

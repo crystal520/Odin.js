@@ -57,12 +57,12 @@ define([
 	
 	Mat3.prototype.toMat4 = function(){
             var te = this.elements,
-		me = this._mat4;
+		me = Mat3._mat4;
 	    
 	    me[0] = te[0]; me[4] = te[3]; me[12] = te[6];
 	    me[1] = te[1]; me[5] = te[4]; me[13] = te[7];
 	    
-            return this._mat4;
+            return me;
         };
 	
         
@@ -465,6 +465,14 @@ define([
 		equals( ae[8], be[8] )
 	    );
         };
+	
+	
+	Mat3._mat4 = new Float32Array([
+	    1, 0, 0, 0,
+	    0, 1, 0, 0,
+	    0, 0, 1, 0,
+	    0, 0, 0, 1
+	]);
 	
         
         return Mat3;

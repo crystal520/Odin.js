@@ -183,7 +183,7 @@ define([
 		    mat.setRotationAngle( relativeTo );
 		}
 		
-		if( !!relativeTo ){
+		if( relativeTo ){
 		    vec.applyMat3( mat );
 		}
 		

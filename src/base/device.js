@@ -16,19 +16,7 @@ define(
 	    
 	    this.pixelRatio = 1 / ( window.devicePixelRatio || 1 );
 	    
-	    this.browser = (
-		userAgent.indexOf("iphone") !== -1 ? "iphone" :
-		userAgent.indexOf("ipad") !== -1 ? "ipad" :
-		userAgent.indexOf("android") !== -1 ? "android" :
-		userAgent.indexOf("blackberry") !== -1 ? "blackberry" :
-		userAgent.indexOf("msie") !== -1 ? "ie" :
-		userAgent.indexOf("firefox") !== -1 ? "firefox" :
-		userAgent.indexOf("chrome") !== -1 ? "chrome" :
-		userAgent.indexOf("safari") !== -1 ? "safari" :
-		userAgent.indexOf("opera") !== -1 ? "opera" : "unknown"
-	    );
-	    
-	    this.browserVersion = Number( userAgent.match( new RegExp("(" + this.browser + ")( |/)([0-9]+)") )[3] );
+	    this.browser = userAgent.match(/(opera|chrome|safari|firefox|msie)\/?\s*(\.?\d+(\.\d+)*)/i)[1];
 	    
 	    this.touch = "ontouchstart" in window;
 	    

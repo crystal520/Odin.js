@@ -219,9 +219,8 @@ define([
         WebGLRenderer.prototype.render = function(){
 	    var lastScene, lastCamera;
 	    
-	    return function( scene ){
-		var gl = this.context,
-		    camera = scene.camera;
+	    return function( scene, camera ){
+		var gl = this.context;
 		
 		if( lastScene !== scene ){
 		    this.setClearColor( scene.world.background );
