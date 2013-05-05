@@ -47,7 +47,7 @@ define(
 	
 	Odin.Canvas = require("core/canvas");
 	Odin.CanvasRenderer = require("core/canvasrenderer");
-	Odin.ClientGame = require("core/clientgame");
+	Odin.Game = require("core/game");
 	Odin.Scene = require("core/scene");
 	Odin.WebGLRenderer = require("core/webglrenderer");
 	Odin.World = require("core/world");

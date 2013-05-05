@@ -7,7 +7,8 @@ define([
     function( Vec2 ){
         "use strict";
         
-	var vec2Equals = Vec2.equals;
+	var vec2Equals = Vec2.equals,
+	    abs = Math.abs;
 	
         
         function Bounds( center, size ){
@@ -135,19 +136,65 @@ define([
         };
         
         
+        Bounds.prototype.rotate = function( x ){
+	    
+	    
+            
+            return this;
+        };
+        
+        
         Bounds.prototype.contains = function( point ){
-            if( point.x < this.min.x || point.x > this.max.x ||
+            
+	    return !(
+		point.x < this.min.x || point.x > this.max.x ||
                 point.y < this.min.y || point.y > this.max.y
-            ){
-                return false;
-            }
-            return true;
+	    );
+	};
+        
+        
+        Bounds.prototype.intersects = function( other ){
+            
+	    return Bounds.intersects( this, other );
 	};
         
         
         Bounds.prototype.equals = function( other ){
             
             return Bounds.equals( this, other );
+	};
+        
+        
+        Bounds.intersection = function(){
+	    var vec = new Vec2;
+	    
+	    return function( a, b ){
+		var aMin = a.min, aMax = a.max,
+		    bMin = b.min, bMax = b.max;
+		
+		var left = bMin.x - aMax.x,
+		    right = bMax.x - aMin.x,
+		    top = bMin.y - aMax.y,
+		    bottom = bMax.y - aMin.y;
+		    
+		if( left > 0 || right < 0 || top > 0 || bottom < 0 ) return vec;
+		
+		vec.x = abs( left ) < right ? left : right;
+		vec.y = abs( top ) < bottom ? top : bottom;
+		
+		return vec;
+	    };
+	}();
+        
+        
+        Bounds.intersects = function( a, b ){
+            var aMin = a.min, aMax = a.max,
+		bMin = b.min, bMax = b.max;
+	    
+	    return !(
+		aMax.x < bMin.x || aMax.y < bMin.y || 
+                aMin.x > bMax.x || aMin.y > bMax.y
+	    );
 	};
         
         

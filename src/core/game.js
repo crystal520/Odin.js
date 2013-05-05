@@ -6,18 +6,19 @@ define([
 	"base/device",
 	"base/dom",
 	"base/time",
+	"core/scene",
 	"core/input/input",
 	"core/canvasrenderer",
 	"core/webglrenderer",
     ],
-    function( Class, Device, Dom, Time, Input, CanvasRenderer, WebGLRenderer ){
+    function( Class, Device, Dom, Time, Scene, Input, CanvasRenderer, WebGLRenderer ){
 	"use strict";
 	
 	var floor = Math.floor,
 	    addEvent = Dom.addEvent;
 	
 	
-	function ClientGame( opts ){
+	function Game( opts ){
 	    opts || ( opts = {} );
 	    
 	    Class.call( this );
@@ -35,7 +36,7 @@ define([
 		this.renderer = new CanvasRenderer( opts );
 	    }
 	    else{
-		throw new Error("ClientGame "+ this.name +": Could not get rendering context");
+		throw new Error("Game "+ this.name +": Could not get rendering context");
 	    }
 	    
 	    Input.init( this.renderer.canvas.element );
@@ -48,11 +49,11 @@ define([
             addEvent( window, "blur", this.handleBlur, this );
 	}
 	
-	ClientGame.prototype = Object.create( Class.prototype );
-        ClientGame.prototype.constructor = ClientGame;
+	Game.prototype = Object.create( Class.prototype );
+        Game.prototype.constructor = Game;
 	
 	
-	ClientGame.prototype.addScene = function(){
+	Game.prototype.addScene = function(){
             var scenes = this.scenes,
                 scene, index,
                 i, il;
@@ -64,9 +65,9 @@ define([
                 if( index === -1 && scene instanceof Scene ){
                     
                     scenes.push( scene );
-		    scene.ClientGame = this;
+		    scene.Game = this;
                     
-                    scene.trigger("addToClientGame");
+                    scene.trigger("addToGame");
                     this.trigger("addScene", scene );
 		    
 		    if( !this.scene ){
@@ -77,7 +78,7 @@ define([
         };
         
         
-        ClientGame.prototype.removeScene = function(){
+        Game.prototype.removeScene = function(){
             var scenes = this.scenes,
                 scene, index,
                 i, il;
@@ -89,9 +90,9 @@ define([
                 if( index !== -1 ){
                     
                     scenes.splice( index, 1 );
-		    scene.ClientGame = undefined;
+		    scene.Game = undefined;
                     
-                    scene.trigger("removeFromClientGame");
+                    scene.trigger("removeFromGame");
                     this.trigger("removeScene", scene );
 		    
 		    if( this.scene === scene ){
@@ -102,14 +103,14 @@ define([
         };
 	
 	
-	ClientGame.prototype.setScene = function( scene ){
+	Game.prototype.setScene = function( scene ){
             var index, newScene;
 	    
             if( scene instanceof Scene ){
                 index = this.scenes.indexOf( scene );
 		
 		if( index === -1 ){
-		    console.warn("ClientGame.setScene: scene not added to ClientGame, adding it...");
+		    console.warn("Game.setScene: scene not added to Game, adding it...");
 		    this.addScene( scene );
 		}
 		
@@ -121,17 +122,17 @@ define([
             }
 	    
 	    if( !this.scene ){
-		console.warn("ClientGame.setScene: could not find scene in ClientGame "+ scene );
+		console.warn("Game.setScene: could not find scene in Game "+ scene );
 	    }
         };
 	
 	
-	ClientGame.prototype.setCamera = function( camera ){
+	Game.prototype.setCamera = function( camera ){
             var index,
 		scene = this.scene;
 		
 	    if( !scene ){
-		console.warn("ClientGame.setCamera: no active sceen for camera.");
+		console.warn("Game.setCamera: no active sceen for camera.");
 		return;
 	    }
 	    
@@ -139,7 +140,7 @@ define([
 		index = scene.children.indexOf( camera );
 		
 		if( index === -1 ){
-		    console.warn("ClientGame.setCamera: camera not added to Scene, adding it...");
+		    console.warn("Game.setCamera: camera not added to Scene, adding it...");
 		    scene.add( camera );
 		}
 		
@@ -155,14 +156,14 @@ define([
         };
 	
 	
-	ClientGame.prototype.init = function(){
+	Game.prototype.init = function(){
 	    
 	    this.trigger("init");
 	    this.animate();
 	};
 	
 	
-	ClientGame.prototype.update = function(){
+	Game.prototype.update = function(){
 	    var scene = this.scene;
             
 	    Input.update();
@@ -183,7 +184,7 @@ define([
 	};
 	
 	
-	ClientGame.prototype.render = function(){
+	Game.prototype.render = function(){
 	    var scene = this.scene,
 		camera = this.camera;
             
@@ -193,7 +194,7 @@ define([
 	};
 	
 	
-	ClientGame.prototype.animate = function(){
+	Game.prototype.animate = function(){
 	    var fpsDisplay = document.createElement("p"),
 		last = 0;
 	    
@@ -225,18 +226,18 @@ define([
 	}();
         
         
-        ClientGame.prototype.handleFocus = function( e ){
+        Game.prototype.handleFocus = function( e ){
 	    
 	    this.trigger("focus", e );
         };
         
         
-        ClientGame.prototype.handleBlur = function( e ){
+        Game.prototype.handleBlur = function( e ){
 	    
 	    this.trigger("blur", e );
         };
 	
 	
-	return ClientGame;
+	return Game;
     }
 );

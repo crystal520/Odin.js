@@ -5,7 +5,6 @@ define(
     function(){
 	"use strict";
 	
-	
 	var splitter = /\s*[\s,]\s*/;
 	
 	

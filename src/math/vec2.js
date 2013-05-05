@@ -12,6 +12,7 @@ define([
 	    acos = Math.acos,
 	    sin = Math.sin,
 	    cos = Math.cos,
+	    atan2 = Math.atan2,
 	    lerp = Mathf.lerp,
 	    clamp = Mathf.clamp,
 	    equals= Mathf.equals;
@@ -214,6 +215,74 @@ define([
         Vec2.prototype.slerp = function( other, t ){
             
             return this.vslerp( this, other, t );
+        };
+        
+        
+        Vec2.prototype.vcross = function( a, b ){
+            
+            return a.x * b.y - a.y * b.x;
+        };
+        
+        
+        Vec2.prototype.cross = function( other ){
+            
+            return this.vcross( this, other );
+        };
+        
+        
+        Vec2.prototype.perp = function(){
+            var x = this.x, y = this.y;
+	    
+	    this.x = -y;
+	    this.y = x;
+	    
+            return this;
+        };
+        
+        
+        Vec2.prototype.invPerp = function(){
+            var x = this.x, y = this.y;
+	    
+	    this.x = y;
+	    this.y = -x;
+	    
+            return this;
+        };
+        
+        
+        Vec2.prototype.angle = function(){
+	    
+            return atan2( this.y, this.x );
+        };
+        
+        
+        Vec2.prototype.rotation = function( angle ){
+	    
+	    this.x = cos( angle );
+	    this.y = sin( angle );
+	    
+            return this;
+        };
+        
+        
+        Vec2.prototype.rotate = function( angle ){
+	    var x = this.x, y = this.y,
+		c = cos( angle ),
+		s = sin( angle );
+	    
+	    this.x = x * c - y * s;
+	    this.y = x * s + y * c;
+	    
+	    return this;
+        };
+        
+        
+        Vec2.prototype.zero = function(){
+            
+	    this.x = 0;
+	    this.y = 0;
+	    
+            return this;
         };
         
         

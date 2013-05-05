@@ -36,7 +36,7 @@ define(
 	
 	Time.prototype.now = function(){
 	    var startTime = Date.now(),
-		performance = window.performance || {};
+		performance = performance || {};
 		
 	    performance.now = function(){
 		return (

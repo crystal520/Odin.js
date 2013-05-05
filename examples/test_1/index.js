@@ -12,7 +12,7 @@ require(
 	
 	Odin.globalize();
 	
-	game = new ClientGame({
+	game = new Game({
 	    debug: true,
 	    forceCanvas: true
 	});
@@ -35,7 +35,16 @@ require(
 				w: 64,
 				h: 64,
 				width: 1,
-				height: 1
+				height: 1,
+				animations: {
+				    idle: {
+					frames: [
+					    [ 0, 0, 64, 64 ],
+					    [ 64, 0, 64, 64 ]
+					],
+					rate: 0.25
+				    }
+				}
 			    })
 			]
 		    });

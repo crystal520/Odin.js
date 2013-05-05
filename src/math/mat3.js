@@ -18,12 +18,6 @@ define([
         function Mat3( m11, m12, m13, m21, m22, m23, m31, m32, m33 ){
 	    
             this.elements = new Float32Array(9);
-	    this._mat4 = new Float32Array([
-		1, 0, 0, 0,
-		0, 1, 0, 0,
-		0, 0, 1, 0,
-		0, 0, 0, 1
-	    ]);
             
             this.set(
                 m11 !== undefined ? m11 : 1, m12 || 0, m13 || 0,

@@ -38,7 +38,7 @@ define([
 		    frames: [
 			[ this.x, this.y, this.w, this.h ]
 		    ],
-		    rate: 0.05
+		    rate: 0.25
 		}
 	    };
 	    
@@ -58,31 +58,32 @@ define([
 	
 	Sprite.prototype.play = function( name, mode ){
 	    
-	    this.animation = this.animations[ name ];
-	    
-	    switch( mode ){
+	    if( this.playing && this.animation === this.animations[ name ] ){
+		this.animation = this.animations[ name ];
 		
-		case Sprite.loop:
-		case "loop":
-		    this.mode = Sprite.loop;
-		    break;
+		switch( mode ){
+		    
+		    case Sprite.loop:
+		    case "loop":
+			this.mode = Sprite.loop;
+			break;
+		    
+		    case Sprite.pingPong:
+		    case "pingpong":
+			this.mode = Sprite.pingPong;
+			break;
+		    
+		    case Sprite.once:
+		    case "once":
+			this.mode = Sprite.once;
+			break;
+		    
+		    default:
+			this.mode = Sprite.loop;
+		}
 		
-		case Sprite.pingPong:
-		case "pingpong":
-		    this.mode = Sprite.pingPong;
-		    break;
-		
-		case Sprite.once:
-		case "once":
-		    this.mode = Sprite.once;
-		    break;
-		
-		default:
-		    this.mode = Sprite.loop;
-		    break;
+		this.playing = true;
 	    }
-	    
-	    this.playing = true;
 	};
 	
 	
