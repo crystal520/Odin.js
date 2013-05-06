@@ -2,15 +2,13 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
+	"base/class",
 	"base/time",
 	"core/components/component",
 	"math/vec2"
     ],
-    function( Time, Component, Vec2 ){
+    function( Class, Time, Component, Vec2 ){
         "use strict";
-        
-	var defaultImg = new Image;
-	defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 	
         
         function Sprite( opts ){
@@ -20,18 +18,18 @@ define([
 	    
 	    this.visible = opts.visible !== undefined ? opts.visible : true;
 	    
-	    this.image = opts.image instanceof Image ? opts.image : defaultImg;
+	    this.image = opts.image instanceof Image ? opts.image : undefined;
 	    
 	    this.offset = opts.offset instanceof Vec2 ? opts.offset : new Vec2;
 	    
-	    this.width = opts.width || this.image.width;
-	    this.height = opts.height || this.image.height;
+	    this.width = opts.width || 1;
+	    this.height = opts.height || 1;
 	    
             this.x = opts.x || 0;
             this.y = opts.y || 0;
             
-            this.w = opts.w || this.image.width;
-            this.h = opts.h || this.image.height;
+            this.w = opts.w || 1;
+            this.h = opts.h || 1;
 	    
 	    this.animations = opts.animations || {
 		idle: {
@@ -52,8 +50,7 @@ define([
 	    this.playing = this.animation !== undefined ? true : false;
         }
         
-        Sprite.prototype = Object.create( Component.prototype );
-        Sprite.prototype.constructor = Sprite;
+	Class.extend( Sprite, Component );
 	
 	
 	Sprite.prototype.play = function( name, mode ){

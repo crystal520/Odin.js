@@ -43,8 +43,7 @@ define([
             this.setDefault();
         }
         
-        WebGLRenderer.prototype = Object.create( Class.prototype );
-        WebGLRenderer.prototype.constructor = WebGLRenderer;
+	Class.extend( WebGLRenderer, Class );
         
         
         WebGLRenderer.prototype.getExtensions = function(){

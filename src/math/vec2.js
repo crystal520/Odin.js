@@ -230,53 +230,6 @@ define([
         };
         
         
-        Vec2.prototype.perp = function(){
-            var x = this.x, y = this.y;
-	    
-	    this.x = -y;
-	    this.y = x;
-	    
-            return this;
-        };
-        
-        
-        Vec2.prototype.invPerp = function(){
-            var x = this.x, y = this.y;
-	    
-	    this.x = y;
-	    this.y = -x;
-	    
-            return this;
-        };
-        
-        
-        Vec2.prototype.angle = function(){
-	    
-            return atan2( this.y, this.x );
-        };
-        
-        
-        Vec2.prototype.rotation = function( angle ){
-	    
-	    this.x = cos( angle );
-	    this.y = sin( angle );
-	    
-            return this;
-        };
-        
-        
-        Vec2.prototype.rotate = function( angle ){
-	    var x = this.x, y = this.y,
-		c = cos( angle ),
-		s = sin( angle );
-	    
-	    this.x = x * c - y * s;
-	    this.y = x * s + y * c;
-	    
-	    return this;
-        };
-        
-        
         Vec2.prototype.zero = function(){
             
 	    this.x = 0;

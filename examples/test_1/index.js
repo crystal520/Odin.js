@@ -23,7 +23,7 @@ require(
 	    scene = new Scene;
 	    camera = new Camera;
 	    
-	    for( var i = 0; i < 10; i++ ){
+	    for( var i = 0; i < 100; i++ ){
 		var pos = new Vec2( Mathf.randomRange(-1,1), Mathf.randomRange(-1,1) ),
 		    sprite = new GameObject({
 			position: pos,
@@ -68,6 +68,7 @@ require(
 	    scene.add( camera );
 	    
 	    this.addScene( scene );
+	    this.setScene( scene );
 	    this.setCamera( camera );
 	});
 	

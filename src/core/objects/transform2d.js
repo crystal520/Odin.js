@@ -33,8 +33,7 @@ define([
 	    this.updateMatrices();
         }
         
-        Transform2D.prototype = Object.create( Class.prototype );
-        Transform2D.prototype.constructor = Transform2D;
+	Class.extend( Transform2D, Class );
         
         
         Transform2D.prototype.clone = function(){

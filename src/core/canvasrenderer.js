@@ -10,6 +10,9 @@ define([
     function( Class, Dom, Device, Mat3 ){
 	"use strict";
 	
+	var defaultImg = new Image;
+	defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+	
 	
         function CanvasRenderer( opts ){
             opts || ( opts = {} );
@@ -23,9 +26,8 @@ define([
             this.context = Dom.get2DContext( this.canvas.element );
         }
         
-        CanvasRenderer.prototype = Object.create( Class.prototype );
-        CanvasRenderer.prototype.constructor = CanvasRenderer;
-        
+	Class.extend( CanvasRenderer, Class );
+	
         
         CanvasRenderer.prototype.setClearColor = function( color ){
             
@@ -124,7 +126,8 @@ define([
 	    return function( sprite, camera ){
 		var ctx = this.context,
 		    gameObject = sprite.gameObject,
-		    offset = sprite.offset;
+		    offset = sprite.offset,
+		    image = sprite.image || defaultImg;
 		
 		gameObject.matrixModelView.mmul( camera.matrixWorldInverse, gameObject.matrixWorld );
 		matrixPerspective.mmul( camera.matrixProjection, gameObject.matrixModelView );
@@ -134,7 +137,7 @@ define([
 		ctx.transform( me[0], me[1], me[3], me[4], me[6], me[7] );
 		
 		ctx.drawImage(
-		    sprite.image,
+		    image,
 		    sprite.x, sprite.y,
 		    sprite.w, sprite.h,
 		    offset.x - sprite.width * 0.5,

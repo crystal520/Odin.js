@@ -15,8 +15,7 @@ define([
             this.gameObject = undefined;
         }
         
-        Component.prototype = Object.create( Class.prototype );
-        Component.prototype.constructor = Component;
+	Class.extend( Component, Class );
         
         
         Component.prototype.init = function(){};

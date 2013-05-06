@@ -45,8 +45,7 @@ define([
             this.right = false;
         };
         
-        Mouse.prototype = Object.create( Class.prototype );
-	Mouse.prototype.constructor = Mouse;
+	Class.extend( Mouse, Class );
         
 	
         Mouse.prototype.update = function(){

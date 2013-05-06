@@ -22,8 +22,7 @@ define([
 	    this.z = 0;
         };
         
-        Accelerometer.prototype = Object.create( Class.prototype );
-	Accelerometer.prototype.constructor = Accelerometer;
+	Class.extend( Accelerometer, Class );
 	
         
         Accelerometer.prototype.handle_devicemotion = function( e ){

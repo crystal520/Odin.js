@@ -165,28 +165,6 @@ define([
 	};
         
         
-        Bounds.intersection = function(){
-	    var vec = new Vec2;
-	    
-	    return function( a, b ){
-		var aMin = a.min, aMax = a.max,
-		    bMin = b.min, bMax = b.max;
-		
-		var left = bMin.x - aMax.x,
-		    right = bMax.x - aMin.x,
-		    top = bMin.y - aMax.y,
-		    bottom = bMax.y - aMin.y;
-		    
-		if( left > 0 || right < 0 || top > 0 || bottom < 0 ) return vec;
-		
-		vec.x = abs( left ) < right ? left : right;
-		vec.y = abs( top ) < bottom ? top : bottom;
-		
-		return vec;
-	    };
-	}();
-        
-        
         Bounds.intersects = function( a, b ){
             var aMin = a.min, aMax = a.max,
 		bMin = b.min, bMax = b.max;

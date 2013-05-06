@@ -23,8 +23,7 @@ define([
             this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
         }
         
-        World.prototype = Object.create( Class.prototype );
-        World.prototype.constructor = World;
+	Class.extend( World, Class );
         
         
         World.prototype.add = function( body ){

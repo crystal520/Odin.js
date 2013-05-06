@@ -32,6 +32,8 @@ define(
 	Odin.Component = require("core/components/component");
 	Odin.Sprite = require("core/components/sprite");
 	
+	Odin.Game = require("core/game/game");
+	
 	Odin.Accelerometer = require("core/input/accelerometer");
 	Odin.Input = require("core/input/input");
 	Odin.Key = require("core/input/key");
@@ -47,7 +49,6 @@ define(
 	
 	Odin.Canvas = require("core/canvas");
 	Odin.CanvasRenderer = require("core/canvasrenderer");
-	Odin.Game = require("core/game");
 	Odin.Scene = require("core/scene");
 	Odin.WebGLRenderer = require("core/webglrenderer");
 	Odin.World = require("core/world");

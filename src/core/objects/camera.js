@@ -2,10 +2,11 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
+	"base/class",
 	"math/mat3",
 	"core/objects/gameobject"
     ],
-    function( Mat3, GameObject ){
+    function( Class, Mat3, GameObject ){
         "use strict";
 	
 	
@@ -30,8 +31,7 @@ define([
             this.needsUpdate = true;
         }
         
-        Camera.prototype = Object.create( GameObject.prototype );
-        Camera.prototype.constructor = Camera;
+	Class.extend( Camera, GameObject );
 	
 	
 	Camera.prototype.clone = function(){

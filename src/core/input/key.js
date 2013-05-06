@@ -26,8 +26,7 @@ define([
             this.endTime = -1;
         };
         
-        Key.prototype = Object.create( Class.prototype );
-	Key.prototype.constructor = Key;
+	Class.extend( Key, Class );
 	
         
         return Key;

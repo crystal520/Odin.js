@@ -22,9 +22,8 @@ define([
             
             this.element = undefined;
 	}
-	
-	Input.prototype = Object.create( Class.prototype );
-        Input.prototype.constructor = Input;
+        
+	Class.extend( Input, Class );
         
         
         Input.prototype.init = function( element ){

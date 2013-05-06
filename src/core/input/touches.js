@@ -31,8 +31,7 @@ define([
             }
         };
         
-        Touches.prototype = Object.create( Class.prototype );
-	Touches.prototype.constructor = Touches;
+	Class.extend( Touches, Class );
         
         
         Touches.prototype.clear = function(){

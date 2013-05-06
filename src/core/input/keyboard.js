@@ -22,8 +22,7 @@ define([
             }
         };
         
-        Keyboard.prototype = Object.create( Class.prototype );
-	Keyboard.prototype.constructor = Keyboard;
+	Class.extend( Keyboard, Class );
         
         
         Keyboard.prototype.handleEvents = function( e ){

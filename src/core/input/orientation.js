@@ -19,8 +19,7 @@ define([
 	    this.mode = "portrait_up";
         };
         
-        Orientation.prototype = Object.create( Class.prototype );
-	Orientation.prototype.constructor = Orientation;
+	Class.extend( Orientation, Class );
         
         
         Orientation.prototype.handleEvents = function( e ){

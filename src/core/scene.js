@@ -30,8 +30,7 @@ define([
             this.add.apply( this, opts.children );
         }
         
-        Scene.prototype = Object.create( Class.prototype );
-        Scene.prototype.constructor = Scene;
+	Class.extend( Scene, Class );
         
         
         Scene.prototype.forEach = function( callback ){

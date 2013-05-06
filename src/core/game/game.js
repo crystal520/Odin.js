@@ -21,13 +21,12 @@ define([
 	function Game( opts ){
 	    opts || ( opts = {} );
 	    
-	    Class.call( this );
-	    
-	    this.name = opts.name || ( this._class +"-"+ this._id );
+	    Class.call( this, opts );
 	    
 	    this.camera = undefined;
             this.scene = undefined;
-            this.scenes = [];
+	    
+	    this.scenes = [];
             
 	    if( Device.webgl && !opts.forceCanvas ){
 		this.renderer = new WebGLRenderer( opts );
@@ -36,21 +35,18 @@ define([
 		this.renderer = new CanvasRenderer( opts );
 	    }
 	    else{
-		throw new Error("Game "+ this.name +": Could not get rendering context");
+		throw new Error("Game: Could not get rendering context");
 	    }
 	    
 	    Input.init( this.renderer.canvas.element );
-	    
-            this.addScene.apply( this, opts.scenes );
             
 	    this.pause = false;
 	    
             addEvent( window, "focus", this.handleFocus, this );
             addEvent( window, "blur", this.handleBlur, this );
 	}
-	
-	Game.prototype = Object.create( Class.prototype );
-        Game.prototype.constructor = Game;
+        
+	Class.extend( Game, Class );
 	
 	
 	Game.prototype.addScene = function(){
@@ -62,18 +58,22 @@ define([
                 scene = arguments[i];
                 index = scenes.indexOf( scene );
                 
-                if( index === -1 && scene instanceof Scene ){
+                if( index === -1 ){
                     
-                    scenes.push( scene );
-		    scene.Game = this;
-                    
-                    scene.trigger("addToGame");
-                    this.trigger("addScene", scene );
-		    
-		    if( !this.scene ){
-			this.setScene( scene );
-		    };
+		    if( scene instanceof Scene ){
+			scenes.push( scene );
+			scene.game = this;
+			
+			scene.trigger("addToGame");
+			this.trigger("addScene", scene );
+		    }
+		    else{
+			console.warn("Game.add: Object is not an instance of Scene");
+		    }
                 }
+		else{
+		    console.warn("Game.add: "+ scene.name +" is already added to game");
+		}
             }
         };
         
@@ -90,15 +90,14 @@ define([
                 if( index !== -1 ){
                     
                     scenes.splice( index, 1 );
-		    scene.Game = undefined;
+		    scene.game = undefined;
                     
                     scene.trigger("removeFromGame");
                     this.trigger("removeScene", scene );
-		    
-		    if( this.scene === scene ){
-			this.scene = undefined;
-		    }
                 }
+		else{
+		    console.warn("Game.remove: "+ scene.name +" is not in game");
+		}
             }
         };
 	
@@ -132,7 +131,7 @@ define([
 		scene = this.scene;
 		
 	    if( !scene ){
-		console.warn("Game.setCamera: no active sceen for camera.");
+		console.warn("Game.setCamera: no active scene for camera.");
 		return;
 	    }
 	    

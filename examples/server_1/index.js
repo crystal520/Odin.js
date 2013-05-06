@@ -1,16 +1,21 @@
-var requirejs = require("requirejs");
-
-requirejs(
+require(
     {
-	baseUrl: __dirname +"/../../src/",
-	nodeRequire: require
+	baseUrl: __dirname +"../../src/"
     },
     [
-	"core/server"
+	"odin",
+	"core/game/clientgame",
     ],
-    function( Server ){
+    function( Odin, ClientGame ){
 	
-	var server = new Server;
+	Odin.globalize();
 	
+	game = new ClientGame({
+	    debug: true
+	});
+	
+	game.onMessage("connect", function( data ){
+	    console.log( data );
+	});
     }
 );

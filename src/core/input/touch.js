@@ -29,9 +29,8 @@ define([
 	    this.deltaTime = 0;
 	    this.endTime = 0;
         };
-	
-	Touch.prototype = Object.create( Class.prototype );
-	Touch.prototype.constructor = Touch;
+        
+	Class.extend( Touch, Class );
         
         
         Touch.prototype.clear = function(){

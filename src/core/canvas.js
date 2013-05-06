@@ -64,8 +64,7 @@ define([
 	    addEvent( window, "resize orientationchange", this.handleResize, this );
         }
         
-        Canvas.prototype = Object.create( Class.prototype );
-        Canvas.prototype.constructor = Canvas;
+	Class.extend( Canvas, Class );
         
         
 	Canvas.prototype.set = function( width, height ){

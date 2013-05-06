@@ -2,9 +2,10 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
+	"base/class",
 	"core/objects/transform2d"
     ],
-    function( Transform2D ){
+    function( Class, Transform2D ){
         "use strict";
 	
 	
@@ -25,8 +26,7 @@ define([
             this.addComponent.apply( this, opts.components );
         }
         
-        GameObject.prototype = Object.create( Transform2D.prototype );
-        GameObject.prototype.constructor = GameObject;
+	Class.extend( GameObject, Transform2D );
         
         
         GameObject.prototype.clone = function(){
