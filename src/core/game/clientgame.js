@@ -15,23 +15,9 @@ define([
 	    opts || ( opts = {} );
 	    
 	    Game.call( this, opts );
-	    
-	    this.io = io.connect( __host +":"+ __port );
 	}
         
 	Class.extend( ClientGame, Game );
-	
-	
-	ClientGame.prototype.sendMessage = function( name, data ){
-	    
-	    this.io.emit( name, data );
-	};
-	
-	
-	ClientGame.prototype.onMessage = function( name, fn ){
-	    
-	    this.io.on( name, fn );
-	};
 	
 	
 	return ClientGame;

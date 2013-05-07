@@ -1,8 +1,8 @@
 {
-  "name": "odin.js",
+  "name": "odin",
   "version": "0.0.1",
   "description": "2D HTML5 Canvas/WebGL Javascript Game Engine",
-  "main": "src/odinserver.js",
+  "main": "./src/odinserver.js",
   "bin": {
     "odin": "./bin/odin"
   },
@@ -13,6 +13,8 @@
   "keywords": [
     "odin.js",
     "odin",
+    "Odin.js",
+    "Odin",
     "webgl",
     "2d",
     "canvas",

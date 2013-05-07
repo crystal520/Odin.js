@@ -1,36 +1,42 @@
+var requirejs = require("requirejs");
+
+requirejs.config({
+    baseUrl: __dirname,
+    nodeRequire: require
+});
+
 if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define(
-    function( require ){
+    function(){
 	"use strict";
 	
 	
-	var OdinServer = {};
+	var Odin = {};
 	
-	OdinServer.Class = require("base/class");
-	OdinServer.Time = require("base/time");
-	OdinServer.Utils = require("base/utils");
+	Odin.Class = requirejs("base/class");
+	Odin.Time = requirejs("base/time");
+	Odin.Utils = requirejs("base/utils");
 	
-	OdinServer.Bounds = require("math/bounds");
-	OdinServer.Color = require("math/color");
-	OdinServer.Mat3 = require("math/mat3");
-	OdinServer.Mathf = require("math/mathf");
-	OdinServer.Vec2 = require("math/vec2");
+	Odin.Bounds = requirejs("math/bounds");
+	Odin.Color = requirejs("math/color");
+	Odin.Mat3 = requirejs("math/mat3");
+	Odin.Mathf = requirejs("math/mathf");
+	Odin.Vec2 = requirejs("math/vec2");
 	
-	OdinServer.Component = require("core/components/component");
-	OdinServer.Sprite = require("core/components/sprite");
+	Odin.Component = requirejs("core/components/component");
+	Odin.Sprite = requirejs("core/components/sprite");
 	
-	OdinServer.ServerGame = require("core/game/servergame");
+	Odin.ServerGame = requirejs("core/game/servergame");
 	
-	OdinServer.Camera = require("core/objects/camera");
-	OdinServer.GameObject = require("core/objects/gameobject");
-	OdinServer.Transform2D = require("core/objects/transform2d");
+	Odin.Camera = requirejs("core/objects/camera");
+	Odin.GameObject = requirejs("core/objects/gameobject");
+	Odin.Transform2D = requirejs("core/objects/transform2d");
 	
-	OdinServer.Scene = require("core/scene");
-	OdinServer.World = require("core/world");
+	Odin.Scene = requirejs("core/scene");
+	Odin.World = requirejs("core/world");
 	
-	
-	return OdinServer;
+	return Odin;
     }
 );

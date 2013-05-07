@@ -23,8 +23,6 @@ define([
 	    
 	    this.name = opts.name || ( this._class +"-"+ this._id );
 	    
-	    this.dirname = opts.dirname ? opts.dirname +"/" : "/";
-	    
 	    this.scenes = [];
 	    
 	    this.host = opts.host || "127.0.0.1";
@@ -37,18 +35,6 @@ define([
 	}
         
 	Class.extend( ServerGame, Class );
-	
-	
-	ServerGame.prototype.sendMessage = function( name, data ){
-	    
-	    this.io.emit( name, data );
-	};
-	
-	
-	ServerGame.prototype.onMessage = function( name, fn ){
-	    
-	    this.io.on( name, fn );
-	};
 	
 	
 	ServerGame.prototype.init = function(){
@@ -67,18 +53,22 @@ define([
 	};
 	
 	
+	ServerGame.prototype.sendMessage = function( name, data ){
+	    
+	    this.io.emit( name, data );
+	};
+	
+	
+	ServerGame.prototype.onMessage = function( name, fn ){
+	    
+	    this.io.on( name, fn );
+	};
+	
+	
 	ServerGame.prototype.onRequest = function( req, res ){
 	    var self = this,
 		path = url.parse( req.url ).pathname,
 		parts = path.split("/");
-		
-	    if( path === "/" ){
-		res.writeHead( 200, { "Content-Type": "text/html" });
-		res.write( ServerGame.page( this ) );
-		res.end();
-		
-		return;
-	    }
 	    
 	    fs.stat( path, function( error, stat ){
 		
@@ -135,48 +125,6 @@ define([
 	    setTimeout( this.animate.bind( this ), 0 );
 	    
 	    Time.sinceStart = Time.now();
-	};
-	
-	
-	ServerGame.page = function( game ){
-	    
-	    return [
-		"<!DOCTYPE html>",
-		"<html>",
-		    "<head>",
-			
-			"<meta http-equiv='cleartype' content='on'>",
-			"<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>",
-			
-			"<meta name='apple-mobile-web-app-status-bar-style' content='black' />",
-			"<meta name='apple-mobile-web-app-capable' content='yes' />",
-			
-			"<meta name='description' content=''>",
-			"<meta name='keywords' content=''>",
-			
-			"<meta name='viewport' content='width=device-width, initial-scale=1' />",
-			
-			"<title>"+ game.name +"</title>",
-			
-			"<script src='/socket.io/socket.io.js'></script>",
-			
-			"<script>",
-			    "window.__dirname = '"+ game.dirname +"';",
-			    "window.__host = '"+ game.host +"';",
-			    "window.__port= '"+ game.port +"';",
-			"</script>",
-			
-		    "</head>",
-		    
-		    "<body>",
-			
-			"<script src='"+ game.dirname +"require.js'></script>",
-			"<script src='"+ game.dirname +"index.js'></script>",
-		    
-		    "</body>",
-		    
-		"</html>"
-	    ].join("\n");
 	};
 	
 	

@@ -8,7 +8,6 @@ define(
 	
 	var Odin = {};
 	
-	
 	Odin.globalize = function(){
 	    
 	    for( var key in this ){
