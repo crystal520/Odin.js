@@ -33,6 +33,7 @@ define(
 	Odin.Sprite = require("core/components/sprite");
 	
 	Odin.Game = require("core/game/game");
+	Odin.ClientGame = require("core/game/clientgame");
 	
 	Odin.Accelerometer = require("core/input/accelerometer");
 	Odin.Input = require("core/input/input");

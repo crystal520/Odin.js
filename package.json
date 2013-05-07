@@ -1,10 +1,10 @@
 {
   "name": "odin.js",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "2D HTML5 Canvas/WebGL Javascript Game Engine",
-  "main": "src/odin.js",
-  "scripts": {
-    "test": "grunt"
+  "main": "src/odinserver.js",
+  "bin": {
+    "odin": "./bin/odin"
   },
   "repository": {
     "type": "git",
@@ -27,10 +27,8 @@
   "dependencies": {
     "requirejs": "~2.1.5",
     "amdefine": "0.0.4",
-    "socket.io": "~0.9.14"
-  },
-  "devDependencies": {
-    "grunt": "~0.4.1",
-    "grunt-contrib-uglify": "~0.2.0"
+    "socket.io": "~0.9.14",
+    "commander": "~1.1.1",
+    "mkdirp": "~0.3.5"
   }
 }
