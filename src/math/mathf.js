@@ -140,6 +140,12 @@ define(
         };
         
         
+        Mathf.prototype.randomInt = function( min, max ){
+	    
+	    return floor( this.randomRange( min, max ) );
+        };
+        
+        
         Mathf.prototype.randomChoice = function( array ){
 	    
 	    return array[ floor( random() * array.length ) ]

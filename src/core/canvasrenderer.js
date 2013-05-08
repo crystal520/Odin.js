@@ -20,6 +20,8 @@ define([
             
             Class.call( this );
             
+	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 128;
+	    
             this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas( opts.width, opts.height );
             
             this.autoClear = opts.autoClear !== undefined ? opts.autoClear : true;
@@ -42,10 +44,8 @@ define([
 	
         
         CanvasRenderer.prototype.clear = function(){
-            var ctx = this.context,
-		canvas = this.canvas
 	    
-            ctx.clearRect( -1, -1, 2, 2 );
+            this.context.clearRect( -1, -1, 2, 2 );
 	};
         
         
@@ -71,7 +71,7 @@ define([
 		var self = this,
 		    ctx = this.context,
 		    sprites = scene._sprites,
-		    sprite, i, il;
+		    i, il;
 		
 		if( lastScene !== scene ){
 		    this.setClearColor( scene.world.background );
@@ -79,8 +79,9 @@ define([
 		}
 		if( lastCamera !== camera ){
 		    var canvas = this.canvas,
-			w = canvas.width,
-			h = canvas.height,
+			ipr = 1 / this.pixelRatio,
+			w = canvas.width * ipr,
+			h = canvas.height * ipr,
 			hw = canvas.width * 0.5,
 			hh = canvas.height * 0.5;
 		    
@@ -92,8 +93,9 @@ define([
 		    if( this.canvas.fullScreen ){
 			this.canvas.on("resize", function(){
 			     var canvas = this.canvas,
-				w = this.width,
-				h = this.height,
+				ipr = 1 / self.pixelRatio,
+				w = this.width * ipr,
+				h = this.height * ipr,
 				hw = this.width * 0.5,
 				hh = this.height * 0.5;
 			    
@@ -112,9 +114,7 @@ define([
 		}
 		
 		for( i = 0, il = sprites.length; i < il; i++ ){
-		    sprite = sprites[i];
-		    
-		    this.renderSprite( sprite, camera );
+		    this.renderSprite( sprites[i], camera );
 		}
 	    };
         }();

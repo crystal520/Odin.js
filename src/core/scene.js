@@ -118,6 +118,7 @@ define([
 	    
 	    if( sprite ){
 		this._sprites.push( sprite );
+		this._sprites.sort( this.sort );
 	    }
 	    if( gameObject instanceof Camera ){
 		this._cameras.push( gameObject );
@@ -132,11 +133,19 @@ define([
 	    if( sprite ){
 		index = this._sprites.indexOf( sprite );
 		this._sprites.splice( index, 1 );
+		
+		this._sprites.sort( this.sort );
 	    }
 	    if( gameObject instanceof Camera ){
 		index = this._sprites.indexOf( gameObject );
 		this._cameras.splice( index, 1 );
 	    }
+	};
+        
+	
+	Scene.prototype.sort = function( a, b ){
+	    
+	    return a.gameObject.z - b.gameObject.z;
 	};
 	
         

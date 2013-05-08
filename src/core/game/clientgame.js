@@ -17,11 +17,18 @@ define([
 	    Game.call( this, opts );
 	    
 	    this.host = opts.host || "127.0.0.1";
+	    this.port = opts.port || 8080;
 	    
-	    this.io = io.connect("http://"+ this.host );
+	    this.io = io.connect("http://"+ this.host, { port: this.port });
+	    this.io.on("connect", this.onConnect.bind( this ) );
 	}
         
 	Class.extend( ClientGame, Game );
+	
+	
+	ClientGame.prototype.onConnect = function( data ){
+	    this.io.emit("newClient");
+	};
 	
 	
 	return ClientGame;

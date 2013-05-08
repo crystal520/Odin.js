@@ -24,6 +24,7 @@ define([
 	    
 	    this.name = opts.name || ( this._class +"-"+ this._id );
 	    
+	    this.clients = [];
 	    this.scenes = [];
 	    
 	    this.host = opts.host || "127.0.0.1";
@@ -105,7 +106,32 @@ define([
 	
 	
 	ServerGame.prototype.onConnect = function( socket ){
+	    var self = this,
+		clients = this.clients,
+		client, i, il;
 	    
+	    socket.on("newClient", function(){
+		
+		clients.push({
+		    id: socket.id,
+		    connectTime: Time.now()
+		});
+		
+		console.log("ServerGame: new Client with id "+ socket.id +" at "+ Time.now() );
+	    });
+	    
+	    socket.on("disconnect", function( data ){
+		
+		for( i = 0, il = self.clients.length; i < il; i++ ){
+		    client = clients[i];
+		    
+		    if( client.id === socket.id ){
+			console.log("ServerGame: Client with id "+ socket.id +" has left at "+ Time.now() );
+			clients.splice( i, 1 );
+			break;
+		    }
+		}
+	    });
 	};
 	
 	

@@ -7,6 +7,7 @@ define([
     function( Mathf ){
 	"use strict";
 	
+	
 	var abs = Math.abs,
 	    sqrt = Math.sqrt,
 	    acos = Math.acos,
@@ -282,6 +283,37 @@ define([
             
             return this;
         };
+        
+        
+        Vec2.prototype.projectOnVec2 = function(){
+	    var vec = new Vec2;
+	    
+	    return function( v ){
+		vec.copy( v );
+		var d = this.dot( vec );
+		return this.copy( vec ).smul( d );
+	    };
+	}();
+        
+        
+        Vec2.prototype.projectOnNormal = function(){
+	    var vec = new Vec2;
+	    
+	    return function( normal ){
+		vec.copy( this ).projectOnVec2( normal );
+		return this.sub( vec );
+	    };
+	}();
+        
+        
+        Vec2.prototype.reflect = function(){
+	    var vec = new Vec2;
+	    
+	    return function( v ){
+		vec.copy( this ).projectOnVec2( v ).smul( 2 );
+		return this.vsub( vec, this );
+	    };
+	}();
         
         
         Vec2.prototype.lenSq = function(){

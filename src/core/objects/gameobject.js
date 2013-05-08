@@ -16,6 +16,8 @@ define([
             
             this.name = opts.name || ( this._class +"-"+ this._id );
 	    
+	    this.z = opts.z !== undefined ? opts.z : 0;
+	    
             this.tags = [];
             this.components = {};
             

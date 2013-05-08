@@ -12,7 +12,7 @@ require(
         game = new ClientGame({
             name: "Game",
             host: "127.0.0.1",
-            forceCanvas: true,
+            port: 8080,
             debug: true
         });
         

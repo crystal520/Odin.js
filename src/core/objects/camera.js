@@ -4,9 +4,10 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/mat3",
+	"math/vec2",
 	"core/objects/gameobject"
     ],
-    function( Class, Mat3, GameObject ){
+    function( Class, Mat3, Vec2, GameObject ){
         "use strict";
 	
 	
@@ -24,7 +25,7 @@ define([
             
             this.matrixProjection = new Mat3;
             this.matrixProjectionInverse = new Mat3;
-            this.matrixProjectionScreen = new Mat3;
+            this.matrixViewProjection = new Mat3;
             
             this.matrixWorldInverse = new Mat3;
             
@@ -55,7 +56,6 @@ define([
             
             this.matrixProjection.copy( other.matrixProjection );
             this.matrixProjectionInverse.copy( other.matrixProjectionInverse );
-            this.matrixProjectionScreen.copy( other.matrixProjectionScreen );
             
             this.matrixWorldInverse.copy( other.matrixWorldInverse );
             
@@ -92,13 +92,22 @@ define([
         };
         
         
+        Camera.prototype.toWorld = function(){
+	    var vec = new Vec2;
+	    
+	    return function( v ){
+		
+		return vec;
+	    };
+	}();
+        
+        
         Camera.prototype.updateMatrixProjection = function(){
-	    var width = this.width * 0.25,
-		height = this.height * 0.25,
-		zoom = this.aspect > 1 ? this.zoom / height : this.zoom / width,
-		right = ( this.width * 0.5 ) * zoom,
+	    var zoom = this.zoom,
+		w = this.width, h = this.height,
+		right = ( w * 0.5 ) * zoom,
 		left = -right,
-		top = ( this.height * 0.5 ) * zoom,
+		top = ( h * 0.5 ) * zoom,
 		bottom = -top;
 		
 	    this.matrixProjection.makeOrthographic( left, right, top, bottom );
@@ -129,7 +138,6 @@ define([
             }
             
             this.matrixWorldInverse.getInverse( this.matrixWorld );
-            this.matrixProjectionScreen.mmul( this.matrixProjection, this.matrixWorldInverse );
 	    
             this.trigger("lateUpdate");
         };
