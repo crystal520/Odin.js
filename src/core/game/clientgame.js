@@ -15,6 +15,10 @@ define([
 	    opts || ( opts = {} );
 	    
 	    Game.call( this, opts );
+	    
+	    this.host = opts.host || "127.0.0.1";
+	    
+	    this.io = io.connect("http://"+ this.host );
 	}
         
 	Class.extend( ClientGame, Game );

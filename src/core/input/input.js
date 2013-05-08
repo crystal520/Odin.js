@@ -4,13 +4,14 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/dom",
+	"base/time",
 	"core/input/mouse",
 	"core/input/touches",
 	"core/input/keyboard",
 	"core/input/accelerometer",
 	"core/input/orientation",
     ],
-    function( Class, Dom, Mouse, Touches, Keyboard, Accelerometer, Orientation ){
+    function( Class, Dom, Time, Mouse, Touches, Keyboard, Accelerometer, Orientation ){
 	"use strict";
 	
 	var addEvent = Dom.addEvent;

@@ -5,8 +5,9 @@ define([
 	"base/class",
 	"base/dom",
 	"base/device",
+	"core/canvas"
     ],
-    function( Class, Dom, Device ){
+    function( Class, Dom, Device, Canvas ){
 	"use strict";
 	
 	

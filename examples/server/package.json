@@ -1,0 +1,12 @@
+{
+  "name": "game",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "node game.js"
+  },
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "requirejs": "~2.1.5",
+    "odin": "~0.0.1"
+  }
+}

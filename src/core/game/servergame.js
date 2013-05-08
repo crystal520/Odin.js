@@ -12,6 +12,7 @@ define([
 	
 	var http = require("http"),
 	    url = require("url"),
+	    path = require("path"),
 	    fs = require("fs"),
 	    io = require("socket.io");
 	
@@ -47,7 +48,7 @@ define([
 	    this.io = io.listen( this.server );
 	    this.server.listen( this.port, this.host );
 	    
-	    this.io.sockets.on("connection", this.onConnection.bind( this ) );
+	    this.io.sockets.on("connection", this.onConnect.bind( this ) );
 	    
 	    console.log("Game started at "+ this.host +":"+ this.port );
 	};
@@ -67,43 +68,44 @@ define([
 	
 	ServerGame.prototype.onRequest = function( req, res ){
 	    var self = this,
-		path = url.parse( req.url ).pathname,
-		parts = path.split("/");
+		uri = url.parse( req.url ).pathname,
+		filename = path.join( process.cwd(), uri ),
+		mime = ServerGame.mime[ uri.split(".").pop() ] || "text/plain";
 	    
-	    fs.stat( path, function( error, stat ){
+	    fs.exists( filename, function( exists ){
 		
-		if( error ){
-		    console.log( error );
-		    return self;
+		if( !exists ){
+		    res.writeHead( 404, {"Content-Type": "text/plain"});
+		    res.write("404 Not Found");
+		    res.end();
+		    return;
 		}
 		
-		return self.sendFile( req, res, path );
+		if( fs.statSync( filename ).isDirectory() ){
+		    filename += "index.html";
+		    mime = "text/html";
+		}
+		
+		fs.readFile( filename, function( error, file ){
+		    console.log( req.method +": "+ filename +" "+ mime );
+		    
+		    if( error ){
+			res.writeHead( 500, {"Content-Type": "text/plain"});
+			res.write( err + "\n");
+			res.end();
+			return;
+		    }
+		    
+		    res.writeHead( 200, {"Content-Type": mime });
+		    res.write( file, mime );
+		    res.end();
+		});
 	    });
 	};
 	
 	
-	ServerGame.prototype.onConnection = function( socket ){
+	ServerGame.prototype.onConnect = function( socket ){
 	    
-	};
-	
-	
-	ServerGame.prototype.sendFile = function( req, res, path ){
-	    var self = this,
-		file = fs.createReadStream( path );
-	    
-	    res.writeHead( 200, {
-		"Content-Type": ServerGame.mime[ path.split(".").pop() ] || "text/plain"
-	    });
-	    
-	    file.on("data", res.write.bind( res ) );
-	    
-	    file.on("close", function() {
-		res.end();
-	    });
-	    
-	    file.on("error", function( error ){
-		console.log( error );
-	    });
 	};
 	
 	

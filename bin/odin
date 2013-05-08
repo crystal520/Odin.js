@@ -38,20 +38,22 @@ path = program.args.shift() || ".";
 }( path ));
     
 
-function createIndexjs( path ){
+function createIndexjs(){
     return [
 	'require(',
 	'    {',
-	'        baseUrl: "'+ path +'/"',
+	'        baseUrl: "../node_modules/odin/src"',
 	'    },',
 	'    [',
 	'        "odin",',
 	'    ],',
 	'    function( Odin ){',
-	'        var game = new Odin.ClientGame({',
+	'        ',
+	'        Odin.globalize();',
+	'        ',
+	'        game = new ClientGame({',
 	'            name: "Game",',
 	'            host: "127.0.0.1",',
-	'            port: 8080,',
 	'            debug: true',
 	'        });',
 	'        ',
@@ -66,17 +68,17 @@ function createIndexjs( path ){
 }
 
 
-function createGamejs( path ){
+function createGamejs(){
     return [
 	'var requirejs = require("requirejs");',
-	
+	'',
 	'requirejs(',
 	'    {',
-	'        baseUrl: "'+ path +'/",',
+	'        baseUrl: "../",',
 	'        nodeRequire: require',
 	'    },',
 	'    [',
-	'        "odinserver"',
+	'        "odin"',
 	'    ],',
 	'    function( Odin ){',
 	'        var game = new Odin.ServerGame({',
@@ -91,13 +93,13 @@ function createGamejs( path ){
 }
 
 
-function createIndexhtml( path ){
+function createIndexhtml(){
     
     return [
 	'<!DOCTYPE html>',
 	'<html>',
 	'    <head>',
-	'        ',
+	'    ',
 	'        <meta http-equiv="cleartype" content="on">',
 	'        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">',
 	'        ',
@@ -110,12 +112,15 @@ function createIndexhtml( path ){
 	'        <title>Game</title>',
 	'        ',
 	'        <script src="/socket.io/socket.io.js"></script>',
+	'        <script src="./node_modules/requirejs/require.js"></script>',
+	'        ',
+	'        <script src="./client/index.js"></script>',
 	'        ',
 	'    </head>',
 	'    ',
 	'    <body></body>',
-	'',
-	'</html>'
+	'    ',
+	'</html>',
     ].join("\n");
 };
 
@@ -140,18 +145,18 @@ function createGame( path ){
 	console.log("        $ cd "+ path +"/ && npm install");
 	console.log();
 	console.log("    start game:");
-	console.log("        $ node game");
+	console.log("        $ node server/index.js");
 	console.log();
     });
     
-    mkdir( path +"/client");
-    mkdir( path +"/client/assets");
-    mkdir( path +"/client/js", function(){
-	write( path +"/client/js/index.js", createIndexjs( path ) );
-	write( path + "/client/index.html", createIndexhtml( path ) );
+    mkdir( path +"/assets");
+    mkdir( path +"/client", function(){
+	write( path +"/client/index.js", createIndexjs() );
     });
     
-    mkdir( path +"/server");
+    mkdir( path +"/server", function(){
+	write( path +"/server/index.js", createGamejs() );
+    });
     
     var pkg = {
 	name: "game",
@@ -161,11 +166,12 @@ function createGame( path ){
 	},
 	readmeFilename: "README.md",
 	dependencies: {
+	    requirejs: "~2.1.5",
 	    odin: "~"+ version
 	}
     };
     
-    write( path + "/game.js", createGamejs( path ) );
+    write( path + "/index.html", createIndexhtml() );
     write( path + "/README.md", createREADMEmd() );
     write( path + "/package.json", JSON.stringify( pkg, null, 2 ) );
 }

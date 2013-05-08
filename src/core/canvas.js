@@ -3,9 +3,10 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"base/dom"
+	"base/device",
+	"base/dom",
     ],
-    function( Class, Dom ){
+    function( Class, Device, Dom ){
         "use strict";
         
 	var addMeta = Dom.addMeta,
@@ -21,9 +22,6 @@ define([
 	    addMeta( this.viewportId, "viewport", "initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" );
 	    addMeta( this.viewportId +"-width", "viewport", "width=device-width" );
 	    addMeta( this.viewportId +"-height", "viewport", "height=device-height" );
-	    
-	    addMeta( undefined, "apple-mobile-web-app-status-bar-style", "black" );
-	    addMeta( undefined, "apple-mobile-web-app-capable", "yes" );
 	    
 	    var element = document.createElement("canvas")
 	    this.element = element; 

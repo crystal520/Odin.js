@@ -5,9 +5,10 @@ define([
 	"base/class",
 	"base/dom",
 	"base/device",
+	"core/canvas",
 	"math/mat3"
     ],
-    function( Class, Dom, Device, Mat3 ){
+    function( Class, Dom, Device, Canvas, Mat3 ){
 	"use strict";
 	
 	var defaultImg = new Image;
