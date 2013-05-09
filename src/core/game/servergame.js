@@ -110,7 +110,7 @@ define([
 		clients = this.clients,
 		client, i, il;
 	    
-	    socket.on("newClient", function(){
+	    socket.on("newclient", function(){
 		
 		clients.push({
 		    id: socket.id,

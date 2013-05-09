@@ -71,7 +71,7 @@ define([
 		    break;
 	    }
 	    
-	    this.trigger( "orientationChange", this.mode, orientation );
+	    this.trigger( "orientationchange", this.mode, orientation );
         };
         
         

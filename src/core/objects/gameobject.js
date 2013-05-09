@@ -135,7 +135,7 @@ define([
 			components[ component._class ] = component;
 			component.gameObject = this;
 			
-			this.trigger("addComponent", component );
+			this.trigger("addcomponent", component );
 			component.trigger("add", this );
 		    }
 		    else{
@@ -161,7 +161,7 @@ define([
                     component.gameObject = undefined;
                     delete components[ component._class ];
                     
-                    this.trigger("removeComponent", component );
+                    this.trigger("removecomponent", component );
                     component.trigger("remove", this );
                 }
 		else{
@@ -226,7 +226,7 @@ define([
             
             this.updateMatrices();
             
-            this.trigger("lateUpdate");
+            this.trigger("lateupdate");
         };
         
         

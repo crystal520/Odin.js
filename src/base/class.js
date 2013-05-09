@@ -75,17 +75,15 @@ define(
 	
 	
 	Class.extend = function( child, parent ){
-	    child.prototype = Object.create( parent.prototype );
-	    
 	    var parentProto = parent.prototype,
-		childProto = child.prototype,
+		childProto = child.prototype = Object.create( parentProto ),
 		key;
-		
+	    
 	    for( key in parentProto ){
 		childProto[ key ] = parentProto[ key ];
 	    }
 	    
-	    child.prototype.constructor = child;
+	    childProto.constructor = child;
         };
 	
 	

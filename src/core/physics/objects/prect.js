@@ -4,7 +4,7 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
-	"core/physics/pshape"
+	"core/physics/objects/pshape"
     ],
     function( Class, Vec2, PShape ){
 	"use strict";
@@ -15,7 +15,7 @@ define([
             PShape.call( this );
 	    
 	    this.extents = extents instanceof Vec2 ? extents : new Vec2( 0.5, 0.5 );
-	    this.type = PShape.rect;
+	    this.type = PShape.RECT;
 	    
 	    this.calculateAABB();
 	    this.calculateBoundingRadius();
@@ -28,7 +28,7 @@ define([
 	    
 	    this.boundingRadiusNeedsUpdate = false;
 	    this.boundingRadius = this.extents.len();
-	}
+	};
 	
 	
 	PRect.prototype.calculateAABB = function(){
@@ -70,7 +70,7 @@ define([
 	PRect.prototype.volume = function(){
 	    
 	    return this.width * this.height;
-	}
+	};
 	
         
         return PRect;

@@ -55,7 +55,7 @@ define([
                         key._first = false;
                     }
                     
-                    this.trigger("keyDown", key );
+                    this.trigger("keydown", key );
 		}
 	    }
         };
@@ -77,7 +77,7 @@ define([
                         key._first = true;
                     }
                     
-                    this.trigger("keyUp", key );
+                    this.trigger("keyup", key );
 		}
 	    }
         };

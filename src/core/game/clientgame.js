@@ -27,7 +27,7 @@ define([
 	
 	
 	ClientGame.prototype.onConnect = function( data ){
-	    this.io.emit("newClient");
+	    this.io.emit("newclient");
 	};
 	
 	

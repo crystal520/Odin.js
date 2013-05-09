@@ -66,8 +66,8 @@ define([
 			
 			this._add( child );
 			
-			child.trigger("addToScene");
-			this.trigger("addGameObject", child );
+			child.trigger("addtoscene");
+			this.trigger("addgameobject", child );
 			
 			child.init();
 		    }
@@ -103,8 +103,8 @@ define([
 		    
 		    this._remove( child );
                     
-		    child.trigger("removeFromScene");
-		    this.trigger("removeGameObject", child );
+		    child.trigger("removefromscene");
+		    this.trigger("removegameobject", child );
                 }
                 else{
                     console.warn("Scene.remove: "+ child +" is not in scene");
@@ -114,11 +114,15 @@ define([
         
 	
 	Scene.prototype._add = function( gameObject ){
-	    var sprite = gameObject.getComponent("Sprite");
+	    var sprite = gameObject.getComponent("Sprite"),
+		rigidbody = gameObject.getComponent("RigidBody");
 	    
 	    if( sprite ){
 		this._sprites.push( sprite );
 		this._sprites.sort( this.sort );
+	    }
+	    if( rigidbody ){
+		this.world.add( rigidbody );
 	    }
 	    if( gameObject instanceof Camera ){
 		this._cameras.push( gameObject );
@@ -128,6 +132,7 @@ define([
 	
 	Scene.prototype._remove = function( gameObject ){
 	    var sprite = gameObject.getComponent("Sprite"),
+		rigidbody = gameObject.getComponent("RigidBody"),
 		index;
 	    
 	    if( sprite ){
@@ -135,6 +140,9 @@ define([
 		this._sprites.splice( index, 1 );
 		
 		this._sprites.sort( this.sort );
+	    }
+	    if( rigidbody ){
+		this.world.remove( rigidbody );
 	    }
 	    if( gameObject instanceof Camera ){
 		index = this._sprites.indexOf( gameObject );
@@ -189,6 +197,8 @@ define([
                 i, il;
                 
             this.trigger("update");
+	    
+	    this.world.update();
             
             for( i = 0, il = children.length; i < il; i++ ){
                 children[i].update();

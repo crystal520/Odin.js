@@ -64,8 +64,8 @@ define([
 			scenes.push( scene );
 			scene.game = this;
 			
-			scene.trigger("addToGame");
-			this.trigger("addScene", scene );
+			scene.trigger("addtogame");
+			this.trigger("addscene", scene );
 		    }
 		    else{
 			console.warn("Game.add: Object is not an instance of Scene");
@@ -92,8 +92,8 @@ define([
                     scenes.splice( index, 1 );
 		    scene.game = undefined;
                     
-                    scene.trigger("removeFromGame");
-                    this.trigger("removeScene", scene );
+                    scene.trigger("removefromgame");
+                    this.trigger("removescene", scene );
                 }
 		else{
 		    console.warn("Game.remove: "+ scene.name +" is not in game");
@@ -176,7 +176,7 @@ define([
 		    scene.update();
 		}
 		
-		this.trigger("lateUpdate");
+		this.trigger("lateupdate");
 		
 		Time.end();
 	    }

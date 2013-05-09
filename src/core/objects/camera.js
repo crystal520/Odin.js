@@ -139,7 +139,7 @@ define([
             
             this.matrixWorldInverse.getInverse( this.matrixWorld );
 	    
-            this.trigger("lateUpdate");
+            this.trigger("lateupdate");
         };
         
         

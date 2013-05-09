@@ -20,7 +20,7 @@ define([
             
             Class.call( this );
             
-	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 128;
+	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 64;
 	    
             this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas( opts.width, opts.height );
             
@@ -86,7 +86,7 @@ define([
 			hh = canvas.height * 0.5;
 		    
 		    ctx.translate( hw, hh );
-		    ctx.scale( hw, hh );
+		    ctx.scale( hw, -hh );
 		    
 		    camera.setSize( w, h );
 		    
@@ -102,7 +102,7 @@ define([
 			    camera.setSize( w, h );
 			    
 			    ctx.translate( hw, hh );
-			    ctx.scale( hw, hh );
+			    ctx.scale( hw, -hh );
 			});
 		    }
 		    
@@ -136,6 +136,7 @@ define([
 		ctx.save();
 		
 		ctx.transform( me[0], me[1], me[3], me[4], me[6], me[7] );
+		ctx.scale( 1, -1 );
 		
 		ctx.drawImage(
 		    image,

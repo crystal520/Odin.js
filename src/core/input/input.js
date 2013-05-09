@@ -199,7 +199,7 @@ define([
                     gesture = "doubletap";
                     lastGesture = "doubletap";
                     lastGestureTime = Time.time;
-                    this.trigger("doubleTap", event );
+                    this.trigger("doubletap", event );
                 }
                 else{
                     gesture = "tap";
@@ -237,7 +237,7 @@ define([
             var event = Touches.array[0].identifier !== -1 ? Touches.array[0] : Mouse;
             
             if( gesture !== "drag" && dragTriggered ){
-                this.trigger("dragEnd", event );
+                this.trigger("dragend", event );
                 dragTriggered = false;
                 return;
             }
@@ -259,7 +259,7 @@ define([
                 
                 if( !dragTriggered ){
                     
-                    this.trigger("dragStart", event );
+                    this.trigger("dragstart", event );
                     dragTriggered = true;
                 }
                 
@@ -270,7 +270,7 @@ define([
                 
                 if( dragTriggered ){
                     
-                    this.trigger("dragEnd", event );
+                    this.trigger("dragend", event );
                     dragTriggered = false;
                 }
             }
@@ -288,7 +288,7 @@ define([
                 scale, rotation, scaleThreshold, rotationThreshold;
             
             if( gesture !== "transform" && transformTriggered ){
-                this.trigger("transformEnd" );
+                this.trigger("transformend" );
                 transformTriggered = false;
                 return;
             }
@@ -318,7 +318,7 @@ define([
                 gesture = "transform";
                 
                 if( !transformTriggered ){
-                    this.trigger("transformStart", scale, rotation );
+                    this.trigger("transformstart", scale, rotation );
                     transformTriggered = true;
                 }
                 
@@ -328,7 +328,7 @@ define([
             if( type === "touchend" || type === "mouseup" ){
                 
                 if( transformTriggered ){
-                    inst.trigger( "onTransformEnd", scale, rotation );
+                    inst.trigger( "onTransformend", scale, rotation );
                 }
                 
                 transformTriggered = false;

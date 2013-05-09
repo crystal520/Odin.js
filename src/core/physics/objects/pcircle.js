@@ -4,7 +4,7 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
-	"core/physics/pshape"
+	"core/physics/objects/pshape"
     ],
     function( Class, Vec2, PShape ){
 	"use strict";
@@ -12,28 +12,28 @@ define([
 	var PI = Math.PI;
 	
 	
-        function PSphere( radius ){
+        function PCircle( radius ){
             
             PShape.call( this );
 	    
 	    this.radius = radius !== undefined ? radius : 0.5;
-	    this.type = PShape.circle;
+	    this.type = PShape.CIRCLE;
 	    
 	    this.calculateAABB();
 	    this.calculateBoundingRadius();
         }
         
-	Class.extend( PSphere, PShape );
+	Class.extend( PCircle, PShape );
 	
 	
-	PSphere.prototype.calculateBoundingRadius = function(){
+	PCircle.prototype.calculateBoundingRadius = function(){
 	    
 	    this.boundingRadiusNeedsUpdate = false;
 	    this.boundingRadius = this.radius;
-	}
+	};
 	
 	
-	PSphere.prototype.calculateAABB = function(){
+	PCircle.prototype.calculateAABB = function(){
 	    var min = new Vec2,
 		max = new Vec2;
 	    
@@ -50,7 +50,7 @@ define([
 	}();
 	
 	
-	PSphere.prototype.calculateInertia = function(){
+	PCircle.prototype.calculateInertia = function(){
 	    var vec = new Vec2;
 	    
 	    return function( mass, target ){
@@ -67,13 +67,13 @@ define([
 	}();
 	
 	
-	PSphere.prototype.volume = function(){
+	PCircle.prototype.volume = function(){
 	    var r = this.radius;
 	    
 	    return PI * r * r;
-	}
+	};
 	
         
-        return PSphere;
+        return PCircle;
     }
 );

@@ -346,27 +346,19 @@ define([
         };
         
         
-        Vec2.prototype.inverseX = function(){
-            
-	    this.x = -this.x;
-	    
-            return this;
-        };
-        
-        
-        Vec2.prototype.inverseY = function(){
-            
-	    this.y = -this.y;
-	    
-            return this;
-        };
-        
-        
         Vec2.prototype.abs = function(){
 	    
 	    this.x = abs( this.x );
 	    this.y = abs( this.y );
             
+            return this;
+        };
+        
+        
+        Vec2.prototype.zero = function(){
+            
+	    this.x = this.y = 0;
+	    
             return this;
         };
         
