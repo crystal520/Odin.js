@@ -47,6 +47,11 @@ define(
 	Odin.GameObject = require("core/objects/gameobject");
 	Odin.Transform2D = require("core/objects/transform2d");
 	
+	Odin.PRigidBody = require("core/physics/prigidbody");
+	Odin.PRect = require("core/physics/prect");
+	Odin.PShape = require("core/physics/pshape");
+	Odin.PSphere = require("core/physics/psphere");
+	
 	Odin.Canvas = require("core/canvas");
 	Odin.CanvasRenderer = require("core/canvasrenderer");
 	Odin.Scene = require("core/scene");

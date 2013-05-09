@@ -74,16 +74,14 @@ define([
         
         
         Bounds.prototype.setFromPoints = function( points ){
-            var point, i = 1, il = points.length;
+            var point, i = 0, il = points.length;
             
             if ( il > 0 ){
-                point = points[0];
                 
-                this.min.copy( point );
-                this.max.copy( point );
+                this.min.set( Infinity, Infinity );
+                this.max.set( -Infinity, -Infinity );
                 
                 for( i; i < il; i++ ){
-                    
                     point = points[i];
                     
                     if( point.x < this.min.x ){
@@ -125,20 +123,35 @@ define([
         };
         
         
+        Bounds.prototype.rotate = function(){
+	    var min = new Vec2,
+		max = new Vec2,
+		points = [ new Vec2, new Vec2, new Vec2, new Vec2 ];
+		
+	    return function( a ){
+		min.copy( this.min );
+		max.copy( this.max );
+		
+		points[0].set( min.x, min.y ).rotate( a );
+		points[1].set( max.x, min.y ).rotate( a );
+		points[2].set( max.x, max.y ).rotate( a );
+		points[3].set( min.x, max.y ).rotate( a );
+		
+		console.log( points );
+		
+		this.setFromPoints( points );
+		
+		return this;
+	    };
+	}();
+        
+        
         Bounds.prototype.expand = function( v ){
             
             this.min.sub( v );
             this.max.add( v );
             
             this.setMinMax( this.min, this.max );
-            
-            return this;
-        };
-        
-        
-        Bounds.prototype.rotate = function( x ){
-	    
-	    
             
             return this;
         };

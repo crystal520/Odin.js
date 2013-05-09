@@ -346,12 +346,45 @@ define([
         };
         
         
+        Vec2.prototype.inverseX = function(){
+            
+	    this.x = -this.x;
+	    
+            return this;
+        };
+        
+        
+        Vec2.prototype.inverseY = function(){
+            
+	    this.y = -this.y;
+	    
+            return this;
+        };
+        
+        
         Vec2.prototype.abs = function(){
 	    
 	    this.x = abs( this.x );
 	    this.y = abs( this.y );
             
             return this;
+        };
+        
+        
+        Vec2.prototype.rotate = function( a ){
+            var x = this.x, y = this.y,
+		c = cos( a ), s = sin( a );
+	    
+	    this.x = ( x * c ) - ( y * s );
+	    this.y = ( x * s ) + ( y * c );
+	    
+            return this;
+        };
+        
+        
+        Vec2.prototype.rotateAround = function( a, v ){
+	    
+            return this.sub( v ).rotate( a ).add( v );
         };
         
         
