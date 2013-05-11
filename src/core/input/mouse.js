@@ -92,7 +92,7 @@ define([
 		offsetY = element.offsetTop,
             
 		x = ( e.pageX || e.clientX ) - offsetX,
-		y = ( e.pageY || e.clientY ) - offsetY;
+		y = ( window.innerHeight - ( e.pageY || e.clientY ) ) - offsetY;
             
             this.position.set( x, y );
         };

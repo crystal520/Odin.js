@@ -6,9 +6,10 @@ define([
 	"base/dom",
 	"base/device",
 	"core/canvas",
-	"math/mat3"
+	"math/color",
+	"math/affine"
     ],
-    function( Class, Dom, Device, Canvas, Mat3 ){
+    function( Class, Dom, Device, Canvas, Color, Affine ){
 	"use strict";
 	
 	var defaultImg = new Image;
@@ -20,7 +21,7 @@ define([
             
             Class.call( this );
             
-	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 64;
+	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 128;
 	    
             this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas( opts.width, opts.height );
             
@@ -35,7 +36,7 @@ define([
         CanvasRenderer.prototype.setClearColor = function( color ){
             
 	    if( color ){
-		this.canvas.element.style.background = color.rgb();
+		this.canvas.element.style.background = color.hex();
 	    }
 	    else{
 		this.canvas.element.style.background = "#000000";
@@ -65,16 +66,21 @@ define([
         
         
         CanvasRenderer.prototype.render = function(){
-	    var lastScene, lastCamera;
+	    var lastScene, lastCamera, lastBackground = new Color;
 	    
 	    return function( scene, camera ){
 		var self = this,
+		    background = scene.world.background,
 		    ctx = this.context,
 		    sprites = scene._sprites,
 		    i, il;
 		
+		if( !lastBackground.equals( background ) ){
+		    this.setClearColor( background );
+		    lastBackground.copy( background );
+		}
 		if( lastScene !== scene ){
-		    this.setClearColor( scene.world.background );
+		    this.setClearColor( background );
 		    lastScene = scene;
 		}
 		if( lastCamera !== camera ){
@@ -86,23 +92,23 @@ define([
 			hh = canvas.height * 0.5;
 		    
 		    ctx.translate( hw, hh );
-		    ctx.scale( hw, -hh );
+		    ctx.scale( hw, hh );
 		    
 		    camera.setSize( w, h );
 		    
 		    if( this.canvas.fullScreen ){
+			this.canvas.off("resize");
 			this.canvas.on("resize", function(){
-			     var canvas = this.canvas,
-				ipr = 1 / self.pixelRatio,
+			    var ipr = 1 / self.pixelRatio,
 				w = this.width * ipr,
 				h = this.height * ipr,
 				hw = this.width * 0.5,
 				hh = this.height * 0.5;
 			    
-			    camera.setSize( w, h );
-			    
 			    ctx.translate( hw, hh );
-			    ctx.scale( hw, -hh );
+			    ctx.scale( hw, hh );
+			    
+			    camera.setSize( w, h );
 			});
 		    }
 		    
@@ -121,8 +127,7 @@ define([
         
         
         CanvasRenderer.prototype.renderSprite = function(){
-	    var matrixPerspective = new Mat3,
-		me = matrixPerspective.elements;
+	    var mvp = new Affine;
 	    
 	    return function( sprite, camera ){
 		var ctx = this.context,
@@ -130,12 +135,12 @@ define([
 		    offset = sprite.offset,
 		    image = sprite.image || defaultImg;
 		
-		gameObject.matrixModelView.mmul( camera.matrixWorldInverse, gameObject.matrixWorld );
-		matrixPerspective.mmul( camera.matrixProjection, gameObject.matrixModelView );
+		gameObject.matrixModelView.amul( camera.matrixWorldInverse, gameObject.matrixWorld );
+		mvp.amul( gameObject.matrixModelView, camera.matrixProjection );
 		
 		ctx.save();
 		
-		ctx.transform( me[0], me[1], me[3], me[4], me[6], me[7] );
+		ctx.transform( mvp.a, mvp.c, mvp.b, mvp.d, mvp.x, mvp.y );
 		ctx.scale( 1, -1 );
 		
 		ctx.drawImage(

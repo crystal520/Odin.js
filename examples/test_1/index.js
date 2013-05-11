@@ -21,9 +21,9 @@ require(
 	    vec2_1 = new Vec2;
 	    
 	    scene = new Scene;
-	    camera = new Camera;
+	    camera = new Camera2D;
 	    
-	    sprite = new GameObject({
+	    sprite = new GameObject2D({
 		position: new Vec2( 0, 2 ),
 		components: [
 		    new Sprite({
@@ -46,12 +46,52 @@ require(
 		    }),
 		    new RigidBody({
 			shape: RigidBody.BOX,
+			mass: 1,
+			linearDamping: new Vec2( 0, 0 ),
+			angularDamping: new Vec2( 0, 0 ),
 			extents: new Vec2( 0.5, 0.5 )
 		    })
 		]
 	    });
 	    
-	    scene.add( sprite );
+	    sprite2 = new GameObject2D({
+		position: new Vec2( 0, 0 ),
+		components: [
+		    new Sprite({
+			image: player,
+			x: 0,
+			y: 0,
+			w: 64,
+			h: 64,
+			width: 1,
+			height: 1
+		    }),
+		    new RigidBody({
+			shape: RigidBody.BOX,
+			mass: 1,
+			linearDamping: new Vec2( 0, 0.5 ),
+			angularDamping: new Vec2( 0, 0 ),
+			extents: new Vec2( 0.5, 0.5 )
+		    })
+		]
+	    });
+	    
+	    scene.add( sprite, sprite2 );
+	    
+	    Keyboard.on("keydown", function( key ){
+		if( key.name === "up" ){
+		    sprite2.components.RigidBody.applyForce( vec2_1.set( 0, 100 ) );
+		}
+		if( key.name === "down" ){
+		    sprite2.components.RigidBody.applyForce( vec2_1.set( 0, -100 ) );
+		}
+		if( key.name === "right" ){
+		    sprite2.components.RigidBody.applyForce( vec2_1.set( 10, 0 ) );
+		}
+		if( key.name === "left" ){
+		    sprite2.components.RigidBody.applyForce( vec2_1.set( -10, 0 ) );
+		}
+	    });
 	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );

@@ -5,9 +5,9 @@ define([
 	"base/class",
 	"base/utils",
 	"math/vec2",
-	"math/mat3"
+	"math/affine"
     ],
-    function( Class, Utils, Vec2, Mat3 ){
+    function( Class, Utils, Vec2, Affine ){
         "use strict";
         
 	var isNumber = Utils.isNumber;
@@ -22,13 +22,14 @@ define([
             
             this.children = [];
             
-	    this.matrix = new Mat3;
-            this.matrixWorld = new Mat3;
-            this.matrixModelView = new Mat3;
+	    this.matrix = new Affine;
+            this.matrixWorld = new Affine;
+            this.matrixModelView = new Affine;
             
 	    this.position = opts.position instanceof Vec2 ? opts.position : new Vec2;
 	    this.rotation = !!opts.rotation ? opts.rotation : 0;
 	    this.scale = opts.scale instanceof Vec2 ? opts.scale : new Vec2( 1, 1 );
+	    this.skew = opts.skew instanceof Vec2 ? opts.skew : new Vec2;
 	    
 	    this.updateMatrices();
         }
@@ -137,53 +138,53 @@ define([
 	
         Transform2D.prototype.localToWorld = function( v ){
 	    
-	    return v.applyMat3( this.matrixWorld );
+	    return v.applyAffine( this.matrixWorld );
 	};
         
 	
         Transform2D.prototype.worldToLocal = function(){
-	    var mat = new Mat3;
+	    var mat = new Affine;
 	    
 	    return function( v ){
 		
-		return v.applyMat3( mat.getInverse( this.matrixWorld ) );
+		return v.applyAffine( mat.getInverse( this.matrixWorld ) );
 	    };
 	}();
 	
 	
-	Transform2D.prototype.applyMat3 = function(){
-	    var mat = new Mat3;
+	Transform2D.prototype.applyAffine = function(){
+	    var mat = new Affine;
 	    
 	    return function( matrix ){
 		
 		this.matrix.mmul( matrix, this.matrix );
 		
-		this.scale.getScaleMat3( this.matrix );
+		this.scale.getScaleAffine( this.matrix );
 		
 		mat.identity().extractRotation( this.matrix );
-		this.local.rotation = mat.getRotation();
+		this.rotation = mat.getRotation();
 		
-		this.position.getPositionMat3( this.matrix );
+		this.position.getPositionAffine( this.matrix );
 	    };
         }();
         
 	
         Transform2D.prototype.translate = function(){
 	    var vec = new Vec2,
-		mat = new Mat3;
+		mat = new Affine;
 	    
 	    return function( translation, relativeTo ){
 		vec.copy( translation );
 		
 		if( relativeTo instanceof Transform2D ){
-		    mat.setRotationAngle( relativeTo.rotation );
+		    mat.setRotation( relativeTo.rotation );
 		}
 		else if( isNumber( relativeTo ) ){
-		    mat.setRotationAngle( relativeTo );
+		    mat.setRotation( relativeTo );
 		}
 		
 		if( relativeTo ){
-		    vec.applyMat3( mat );
+		    vec.applyAffine( mat );
 		}
 		
 		this.position.add( vec );
@@ -198,21 +199,21 @@ define([
         
         
         Transform2D.prototype.scale = function(){
-	    var vec = new Vec2(),
-		mat = new Mat3();
+	    var vec = new Vec2,
+		mat = new Affine;
 	    
 	    return function( scale, relativeTo ){
 		vec.copy( scale );
 		
 		if( relativeTo instanceof Transform2D ){
-		    mat.setRotationAngle( relativeTo.rotation );
+		    mat.setRotation( relativeTo.rotation );
 		}
 		else if( isNumber( relativeTo ) ){
-		    mat.setRotationAngle( relativeTo );
+		    mat.setRotation( relativeTo );
 		}
 		
-		if( !!relativeTo ){
-		    vec.applyMat3( mat );
+		if( relativeTo ){
+		    vec.applyAffine( mat );
 		}
 		
 		this.scale.add( vec );
@@ -236,7 +237,7 @@ define([
         
         Transform2D.prototype.lookAt = function(){
 	    var vec = new Vec2,
-		mat = new Mat3;
+		mat = new Affine;
 	    
 	    return function( target ){
 		
@@ -276,16 +277,20 @@ define([
         
         Transform2D.prototype.updateMatrices = function(){
             var scale = this.scale,
+		skew = this.skew,
 		matrix = this.matrix,
 		matrixWorld = this.matrixWorld;
 	    
-            matrix.setRotationAngle( this.rotation );
+            matrix.setRotation( this.rotation );
 	    
 	    if( scale.x !== 1 || scale.y !== 1 ){
                 matrix.scale( scale );
             }
+	    if( skew.x !== 0 || skew.y !== 0 ){
+                matrix.skew( skew );
+            }
 	    
-            matrix.setPositionVec2( this.position );
+            matrix.setTranslation( this.position );
             
             if( this.root === this ){
                 matrixWorld.copy( matrix );

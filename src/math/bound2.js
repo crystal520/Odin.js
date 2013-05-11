@@ -11,7 +11,7 @@ define([
 	    abs = Math.abs;
 	
         
-        function Bounds( center, size ){
+        function Bound2( center, size ){
             
             this.center = center instanceof Vec2 ? center : new Vec2();
             this.size = size instanceof Vec2 ? size : new Vec2();
@@ -23,15 +23,15 @@ define([
 	}
         
         
-        Bounds.prototype.clone = function(){
-            var clone = new Bounds();
+        Bound2.prototype.clone = function(){
+            var clone = new Bound2();
             clone.copy( this );
             
             return clone;
 	};
         
         
-        Bounds.prototype.copy = function( other ){
+        Bound2.prototype.copy = function( other ){
             
             this.center.copy( other.center );
             this.size.copy( other.size );
@@ -45,7 +45,7 @@ define([
 	};
         
         
-        Bounds.prototype.set = function( center, size ){
+        Bound2.prototype.set = function( center, size ){
             
             this.center.copy( center instanceof Vec2 ? center : this.center );
             this.size.copy( size instanceof Vec2 ? size : this.size );
@@ -59,7 +59,7 @@ define([
         };
         
         
-        Bounds.prototype.setMinMax = function( min, max ){
+        Bound2.prototype.setMinMax = function( min, max ){
             
             this.min.copy( min instanceof Vec2 ? min : this.min );
             this.max.copy( max instanceof Vec2 ? max : this.max );
@@ -73,7 +73,7 @@ define([
         };
         
         
-        Bounds.prototype.setFromPoints = function( points ){
+        Bound2.prototype.setFromPoints = function( points ){
             var point, i = 0, il = points.length;
             
             if ( il > 0 ){
@@ -109,21 +109,32 @@ define([
         };
         
         
-        Bounds.prototype.clear = function(){
+        Bound2.prototype.setCenter = function( v ){
+	    
+	    this.min.add( v );
+	    this.max.add( v );
             
-            this.center.set( 0, 0, 0 );
-            this.size.set( 0, 0, 0 );
+	    this.center.vadd( this.max, this.min ).smul( 0.5 );
+	    
+            return this;
+        };
+        
+        
+        Bound2.prototype.clear = function(){
             
-            this.extents.set( 0, 0, 0 );
+            this.center.set( 0, 0 );
+            this.size.set( 0, 0 );
             
-            this.min.set( 0, 0, 0 );
-            this.max.set( 0, 0, 0 );
+            this.extents.set( 0, 0 );
+            
+            this.min.set( 0, 0 );
+            this.max.set( 0, 0 );
             
             return this;
         };
         
         
-        Bounds.prototype.rotate = function(){
+        Bound2.prototype.rotate = function(){
 	    var min = new Vec2,
 		max = new Vec2,
 		points = [ new Vec2, new Vec2, new Vec2, new Vec2 ];
@@ -137,8 +148,6 @@ define([
 		points[2].set( max.x, max.y ).rotate( a );
 		points[3].set( min.x, max.y ).rotate( a );
 		
-		console.log( points );
-		
 		this.setFromPoints( points );
 		
 		return this;
@@ -146,7 +155,7 @@ define([
 	}();
         
         
-        Bounds.prototype.expand = function( v ){
+        Bound2.prototype.expand = function( v ){
             
             this.min.sub( v );
             this.max.add( v );
@@ -157,7 +166,7 @@ define([
         };
         
         
-        Bounds.prototype.contains = function( point ){
+        Bound2.prototype.contains = function( point ){
             
 	    return !(
 		point.x < this.min.x || point.x > this.max.x ||
@@ -166,19 +175,26 @@ define([
 	};
         
         
-        Bounds.prototype.intersects = function( other ){
+        Bound2.prototype.intersects = function( other ){
             
-	    return Bounds.intersects( this, other );
+	    return Bound2.intersects( this, other );
 	};
         
         
-        Bounds.prototype.equals = function( other ){
-            
-            return Bounds.equals( this, other );
+        Bound2.prototype.toString = function(){
+            var min = this.min, max = this.max;
+	    
+            return "Bound2( min: "+ min.x +", "+ min.y +", max: "+ max.x +", "+ max.y +" )";
 	};
         
         
-        Bounds.intersects = function( a, b ){
+        Bound2.prototype.equals = function( other ){
+            
+            return Bound2.equals( this, other );
+	};
+        
+        
+        Bound2.intersects = function( a, b ){
             var aMin = a.min, aMax = a.max,
 		bMin = b.min, bMax = b.max;
 	    
@@ -189,14 +205,14 @@ define([
 	};
         
         
-        Bounds.equals = function( a, b ){
+        Bound2.equals = function( a, b ){
             
-            return (
-                vec2Equals( a.min, b.min ) &&
-                vec2Equals( a.max, b.max )
+            return !(
+                !vec2Equals( a.min, b.min ) ||
+                !vec2Equals( a.max, b.max )
             );
 	};
         
-        return Bounds;
+        return Bound2;
     }
 );

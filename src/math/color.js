@@ -503,11 +503,11 @@ define([
         
         Color.equals = function( a, b ){
             
-            return (
-                equals( a.r, b.r ) &&
-                equals( a.g, b.g ) &&
-                equals( a.b, b.b ) &&
-                equals( a.a, b.a )
+            return !(
+                !equals( a.r, b.r ) ||
+                !equals( a.g, b.g ) ||
+                !equals( a.b, b.b ) ||
+                !equals( a.a, b.a )
             );
         };
         

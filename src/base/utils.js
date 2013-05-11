@@ -104,6 +104,36 @@ define(
 	};
 	
 	
+	Utils.prototype.isFloat32Array = function( obj ){
+	    
+	    return toString.call( obj ) === "[object Float32Array]";
+	};
+	
+	
+	Utils.prototype.isFloat64Array = function( obj ){
+	    
+	    return toString.call( obj ) === "[object Float64Array]";
+	};
+	
+	
+	Utils.prototype.isInt32Array = function( obj ){
+	    
+	    return toString.call( obj ) === "[object Int32Array]";
+	};
+	
+	
+	Utils.prototype.isInt16Array = function( obj ){
+	    
+	    return toString.call( obj ) === "[object Int16Array]";
+	};
+	
+	
+	Utils.prototype.isInt8Array = function( obj ){
+	    
+	    return toString.call( obj ) === "[object Int8Array]";
+	};
+	
+	
 	return new Utils;
     }
 );

@@ -135,7 +135,7 @@ define([
 		return;
 	    }
 	    
-	    if( camera instanceof Camera ){
+	    if( camera.matrixProjection ){
 		index = scene.children.indexOf( camera );
 		
 		if( index === -1 ){
@@ -146,7 +146,7 @@ define([
 		this.camera = camera;
 	    }
             else if( isString( camera ) ){
-                this.camera = scene.findByName( camera ).getComponent("Camera");
+                this.camera = scene.findByName( camera );
             }
 	    
             if( !this.camera ){

@@ -8,19 +8,23 @@ define(
 	var random = Math.random,
 	    floor = Math.floor,
 	    abs = Math.abs,
-	    atan2 = Math.atan2;
+	    atan2 = Math.atan2,
+	    EPSILON = 0.000001,
+	    PI = 3.141592653589793,
+	    TO_RADS = PI / 180,
+	    TO_DEGS = 180 / PI;
 	
 	
 	function Mathf(){
 	    
-	    this.PI = 3.141592653589793;
-	    this.TWO_PI = this.PI * 2;
-	    this.HALF_PI = this.PI / 2;
+	    this.PI = PI;
+	    this.TWO_PI = PI * 2;
+	    this.HALF_PI = PI * 0.5;
 	    
 	    this.EPSILON = 0.000001;
 	    
-	    this.TO_RADS = this.PI / 180;
-	    this.TO_DEGS = 180 / this.PI;
+	    this.TO_RADS = TO_RADS;
+	    this.TO_DEGS = TO_DEGS;
 	}
 	
 	
@@ -48,7 +52,7 @@ define(
 	
 	Mathf.prototype.equals = function( a, b ){
 	    
-	    return abs( a - b ) <= this.EPSILON;
+	    return abs( a - b ) <= EPSILON;
 	};
 	
 	
@@ -80,6 +84,18 @@ define(
 	Mathf.prototype.clamp = function( x, min, max ){
 	    
 	    return x < min ? min : x > max ? max : x;
+	};
+	
+	
+	Mathf.prototype.clampBottom = function( x, min ){
+	    
+	    return x < min ? min : x;
+	};
+	
+	
+	Mathf.prototype.clampTop = function( x, max ){
+	    
+	    return x > max ? max : x;
 	};
 	
 	
@@ -124,29 +140,29 @@ define(
         
         Mathf.prototype.toRadians = function( x ){
 	    
-	    return this.standardRadian( x * this.TO_RADS );
+	    return this.standardRadian( x * TO_RADS );
         };
         
         
         Mathf.prototype.toDegrees = function( x ){
 	    
-	    return this.standardAngle( x * this.TO_DEGS );
+	    return this.standardAngle( x * TO_DEGS );
+        };
+	
+        
+        Mathf.prototype.randInt = function( min, max ){
+	    
+	    return floor( this.randomRange( min, max + 1 ) );
         };
         
         
-        Mathf.prototype.randomRange = function( min, max ){
+        Mathf.prototype.randFloat = function( min, max ){
 	    
 	    return min + ( random() * ( max - min ) );
         };
         
         
-        Mathf.prototype.randomInt = function( min, max ){
-	    
-	    return floor( this.randomRange( min, max ) );
-        };
-        
-        
-        Mathf.prototype.randomChoice = function( array ){
+        Mathf.prototype.randChoice = function( array ){
 	    
 	    return array[ floor( random() * array.length ) ]
         };

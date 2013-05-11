@@ -3,18 +3,21 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/mat3",
+	"math/mathf",
 	"math/vec2",
-	"core/objects/gameobject"
+	"math/affine",
+	"core/objects/gameobject2d"
     ],
-    function( Class, Mat3, Vec2, GameObject ){
+    function( Class, Mathf, Vec2, Affine, GameObject2D ){
         "use strict";
 	
+	var clampBottom = Mathf.clampBottom;
 	
-        function Camera( opts ){
+	
+        function Camera2D( opts ){
 	    opts || ( opts = {} );
 	    
-            GameObject.call( this, opts );
+            GameObject2D.call( this, opts );
 	    
 	    this.width = window.innerWidth;
             this.height = window.innerHeight;
@@ -23,27 +26,26 @@ define([
             
             this.zoom = opts.zoom !== undefined ? opts.zoom : 1;
             
-            this.matrixProjection = new Mat3;
-            this.matrixProjectionInverse = new Mat3;
-            this.matrixViewProjection = new Mat3;
+            this.matrixProjection = new Affine;
+            this.matrixProjectionInverse = new Affine;
             
-            this.matrixWorldInverse = new Mat3;
+            this.matrixWorldInverse = new Affine;
             
             this.needsUpdate = true;
         }
         
-	Class.extend( Camera, GameObject );
+	Class.extend( Camera2D, GameObject2D );
 	
 	
-	Camera.prototype.clone = function(){
-            var clone = new Camera();
+	Camera2D.prototype.clone = function(){
+            var clone = new Camera2D();
             clone.copy( this );
             
             return clone;
         };
         
         
-        Camera.prototype.copy = function( other ){
+        Camera2D.prototype.copy = function( other ){
             
 	    GameObject.call( this, other );
 	    
@@ -65,7 +67,7 @@ define([
         };
         
         
-        Camera.prototype.setSize = function( width, height ){
+        Camera2D.prototype.setSize = function( width, height ){
             
             this.width = width !== undefined ? width : this.width;
             this.height = height !== undefined ? height : this.height;
@@ -76,7 +78,7 @@ define([
         };
         
         
-        Camera.prototype.setZoom = function( zoom ){
+        Camera2D.prototype.setZoom = function( zoom ){
             
             this.zoom = zoom !== undefined ? zoom : this.zoom;
             
@@ -84,7 +86,7 @@ define([
         };
         
         
-        Camera.prototype.zoomBy = function( zoom ){
+        Camera2D.prototype.zoomBy = function( zoom ){
             
             this.zoom += zoom !== undefined ? zoom : 0;
             
@@ -92,7 +94,7 @@ define([
         };
         
         
-        Camera.prototype.toWorld = function(){
+        Camera2D.prototype.toWorld = function(){
 	    var vec = new Vec2;
 	    
 	    return function( v ){
@@ -102,22 +104,22 @@ define([
 	}();
         
         
-        Camera.prototype.updateMatrixProjection = function(){
-	    var zoom = this.zoom,
+        Camera2D.prototype.updateMatrixProjection = function(){
+	    var zoom = clampBottom( this.zoom, 0.001 ),
 		w = this.width, h = this.height,
 		right = ( w * 0.5 ) * zoom,
 		left = -right,
 		top = ( h * 0.5 ) * zoom,
 		bottom = -top;
 		
-	    this.matrixProjection.makeOrthographic( left, right, top, bottom );
+	    this.matrixProjection.orthographic( left, right, top, bottom );
             this.matrixProjectionInverse.getInverse( this.matrixProjection );
             
             this.needsUpdate = false;
         };
         
         
-        Camera.prototype.update = function(){
+        Camera2D.prototype.update = function(){
             var components = this.components,
                 type, component;
             
@@ -143,6 +145,6 @@ define([
         };
         
         
-	return Camera;
+	return Camera2D;
     }
 );

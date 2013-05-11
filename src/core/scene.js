@@ -4,10 +4,9 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/utils",
-	"core/world",
-	"core/objects/camera"
+	"core/world"
     ],
-    function( Class, Utils, World, Camera ){
+    function( Class, Utils, World ){
         "use strict";
 	
 	var isString = Utils.isString;
@@ -54,26 +53,20 @@ define([
 		
                 if( index === -1 ){
 		    
-                    if( child instanceof GameObject ){
-			
-			child.scene = this;
-			
-			children.push( child );
-			
-			if( child.children.length > 0 ){
-			    this.add.apply( this, child.children );
-			}
-			
-			this._add( child );
-			
-			child.trigger("addtoscene");
-			this.trigger("addgameobject", child );
-			
-			child.init();
+		    child.scene = this;
+		    
+		    children.push( child );
+		    
+		    if( child.children.length > 0 ){
+			this.add.apply( this, child.children );
 		    }
-		    else{
-                        console.warn("Scene.add: Object is not an instance of GameObject");
-		    }
+		    
+		    this._add( child );
+		    
+		    child.trigger("addtoscene");
+		    this.trigger("addgameobject", child );
+		    
+		    child.init();
                 }
                 else{
                     console.warn("Scene.add: "+ child.name +" is already added to scene");
@@ -124,7 +117,7 @@ define([
 	    if( rigidbody ){
 		this.world.add( rigidbody );
 	    }
-	    if( gameObject instanceof Camera ){
+	    if( gameObject.matrixProjection ){
 		this._cameras.push( gameObject );
 	    }
 	};
@@ -144,7 +137,7 @@ define([
 	    if( rigidbody ){
 		this.world.remove( rigidbody );
 	    }
-	    if( gameObject instanceof Camera ){
+	    if( gameObject.matrixProjection ){
 		index = this._sprites.indexOf( gameObject );
 		this._cameras.splice( index, 1 );
 	    }

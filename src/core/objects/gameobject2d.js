@@ -9,7 +9,7 @@ define([
         "use strict";
 	
 	
-        function GameObject( opts ){
+        function GameObject2D( opts ){
 	    opts || ( opts = {} );
 	    
             Transform2D.call( this, opts );
@@ -28,18 +28,18 @@ define([
             this.addComponent.apply( this, opts.components );
         }
         
-	Class.extend( GameObject, Transform2D );
+	Class.extend( GameObject2D, Transform2D );
         
         
-        GameObject.prototype.clone = function(){
-            var clone = new GameObject;
+        GameObject2D.prototype.clone = function(){
+            var clone = new GameObject2D;
 	    clone.copy( this );
 	    
             return clone;
         };
         
         
-        GameObject.prototype.copy = function( other ){
+        GameObject2D.prototype.copy = function( other ){
             var name, component, prop;
             
 	    Transform2D.call( this, other );
@@ -62,7 +62,7 @@ define([
         };
 	
 	
-        GameObject.prototype.init = function(){
+        GameObject2D.prototype.init = function(){
             var components = this.components,
                 type, component;
                 
@@ -80,7 +80,7 @@ define([
         };
         
         
-        GameObject.prototype.addTag = function(){
+        GameObject2D.prototype.addTag = function(){
             var tags = this.tags,
                 tag, index,
                 i, il;
@@ -96,7 +96,7 @@ define([
         };
         
         
-        GameObject.prototype.removeTag = function(){
+        GameObject2D.prototype.removeTag = function(){
             var tags = this.tags,
                 tag, index,
                 i, il;
@@ -112,13 +112,13 @@ define([
         };
         
         
-        GameObject.prototype.hasTag = function( tag ){
+        GameObject2D.prototype.hasTag = function( tag ){
 	    
 	    return this.tags.indexOf( tag ) !== -1;
         };
         
         
-        GameObject.prototype.addComponent = function(){
+        GameObject2D.prototype.addComponent = function(){
             var components = this.components,
                 component, i, il;
             
@@ -139,17 +139,17 @@ define([
 			component.trigger("add", this );
 		    }
 		    else{
-			console.warn("GameObject.addComponent: "+ component._class +" is not an instance of Component");
+			console.warn("GameObject2D.addComponent: "+ component._class +" is not an instance of Component");
 		    }
                 }
 		else{
-		    console.warn("GameObject.addComponent: GameObject already has a "+ component +" Component");
+		    console.warn("GameObject2D.addComponent: GameObject2D already has a "+ component +" Component");
 		}
             }
         };
         
         
-        GameObject.prototype.removeComponent = function(){
+        GameObject2D.prototype.removeComponent = function(){
             var components = this.components,
                 component, i, il;
             
@@ -165,25 +165,25 @@ define([
                     component.trigger("remove", this );
                 }
 		else{
-		    console.warn("GameObject.removeComponent: Component is not attached GameObject");
+		    console.warn("GameObject2D.removeComponent: Component is not attached GameObject2D");
 		}
             }
         };
         
         
-        GameObject.prototype.hasComponent = function( type ){
+        GameObject2D.prototype.hasComponent = function( type ){
             
             return !!this.components[ type ];
         };
         
         
-        GameObject.prototype.getComponent = function( type ){
+        GameObject2D.prototype.getComponent = function( type ){
             
             return this.components[ type ];
         };
         
         
-        GameObject.prototype.getComponents = function( results ){
+        GameObject2D.prototype.getComponents = function( results ){
             results = results || [];
 	    var key;
             
@@ -195,7 +195,7 @@ define([
         };
         
         
-        GameObject.prototype.forEachComponent = function( callback ){
+        GameObject2D.prototype.forEachComponent = function( callback ){
             var components = this.components,
                 type, component;
                 
@@ -210,7 +210,7 @@ define([
         };
         
         
-        GameObject.prototype.update = function(){
+        GameObject2D.prototype.update = function(){
             var components = this.components,
                 type, component;
             
@@ -230,6 +230,6 @@ define([
         };
         
         
-	return GameObject;
+	return GameObject2D;
     }
 );

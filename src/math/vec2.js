@@ -13,7 +13,6 @@ define([
 	    acos = Math.acos,
 	    sin = Math.sin,
 	    cos = Math.cos,
-	    atan2 = Math.atan2,
 	    lerp = Mathf.lerp,
 	    clamp = Mathf.clamp,
 	    equals= Mathf.equals;
@@ -219,7 +218,7 @@ define([
         };
         
         
-        Vec2.prototype.vcross = function( a, b ){
+        Vec2.vcross = Vec2.prototype.vcross = function( a, b ){
             
             return a.x * b.y - a.y * b.x;
         };
@@ -231,6 +230,19 @@ define([
         };
         
         
+        Vec2.prototype.vproject = function( a, b ){
+	    var theta = Vec2.vdot( a, b );
+	    
+	    return this.copy( b ).norm().smul( theta );
+	};
+        
+        
+        Vec2.prototype.project = function( other ){
+	    
+	    return this.vproject( this, other );
+	};
+        
+        
         Vec2.prototype.zero = function(){
             
 	    this.x = 0;
@@ -240,80 +252,35 @@ define([
         };
         
         
-        Vec2.prototype.applyMat3 = function( m ){
-            var x = this.x, y = this.y,
-                me = m.elements;
+        Vec2.prototype.applyAffine = function( m ){
+            var x = this.x, y = this.y;
                 
-            this.x = me[0] * x + me[3] * y + me[6];
-            this.y = me[1] * x + me[4] * y + me[7];
+            this.x = m.a * x + m.c * y + m.x;
+            this.y = m.b * x + m.d * y + m.y;
             
             return this;
         };
         
         
-        Vec2.prototype.applyProjection = function( m ){
-            var x = this.x, y = this.y,
-                me = m.elements,
-                d = 1 / ( me[2] * x + me[5] * y + me[8] );
-	    
-            this.x = ( me[0] * x + me[3] * y + me[6] ) * d;
-            this.y = ( me[1] * x + me[4] * y + me[7] ) * d;
+        Vec2.prototype.getPositionAffine = function( m ){
+            
+            this.x = m.x;
+            this.y = m.y;
             
             return this;
         };
         
         
-        Vec2.prototype.getPositionMat3 = function( m ){
-            var me = m.elements;
-            
-            this.x = me[6];
-            this.y = me[7];
-            
-            return this;
-        };
-        
-        
-        Vec2.prototype.getScaleMat3 = function( m ){
+        Vec2.prototype.getScaleAffine = function( m ){
             var me = m.elements,
-                sx = this.set( me[0], me[1] ).len(),
-                sy = this.set( me[3], me[4] ).len();
+                sx = this.set( m.a, m.c ).len(),
+                sy = this.set( m.b, m.d ).len();
             
             this.x = sx;
             this.y = sy;
             
             return this;
         };
-        
-        
-        Vec2.prototype.projectOnVec2 = function(){
-	    var vec = new Vec2;
-	    
-	    return function( v ){
-		vec.copy( v );
-		var d = this.dot( vec );
-		return this.copy( vec ).smul( d );
-	    };
-	}();
-        
-        
-        Vec2.prototype.projectOnNormal = function(){
-	    var vec = new Vec2;
-	    
-	    return function( normal ){
-		vec.copy( this ).projectOnVec2( normal );
-		return this.sub( vec );
-	    };
-	}();
-        
-        
-        Vec2.prototype.reflect = function(){
-	    var vec = new Vec2;
-	    
-	    return function( v ){
-		vec.copy( this ).projectOnVec2( v ).smul( 2 );
-		return this.vsub( vec, this );
-	    };
-	}();
         
         
         Vec2.prototype.lenSq = function(){
@@ -340,7 +307,7 @@ define([
         };
         
         
-        Vec2.prototype.inverse = function(){
+        Vec2.prototype.negate = function(){
             
             return this.smul( -1 );
         };
@@ -439,9 +406,9 @@ define([
         
         Vec2.equals = function( a, b ){
 	    
-            return (
-                equals( a.x, b.x ) &&
-                equals( a.y, b.y )
+            return !(
+                !equals( a.x, b.x ) ||
+                !equals( a.y, b.y )
             );
         };
 	

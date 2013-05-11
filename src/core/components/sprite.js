@@ -60,23 +60,23 @@ define([
 		
 		switch( mode ){
 		    
-		    case Sprite.loop:
+		    case Sprite.LOOP:
 		    case "loop":
-			this.mode = Sprite.loop;
+			this.mode = Sprite.LOOP;
 			break;
 		    
-		    case Sprite.pingPong:
+		    case Sprite.PINGPONG:
 		    case "pingpong":
-			this.mode = Sprite.pingPong;
+			this.mode = Sprite.PINGPONG;
 			break;
 		    
-		    case Sprite.once:
+		    case Sprite.ONCE:
 		    case "once":
-			this.mode = Sprite.once;
+			this.mode = Sprite.ONCE;
 			break;
 		    
 		    default:
-			this.mode = Sprite.loop;
+			this.mode = Sprite.LOOP;
 		}
 		
 		this.playing = true;
@@ -112,7 +112,7 @@ define([
 			if( this.mode === Sprite.loop ){
 			    this._frame = 0;
 			}
-			else if( this.mode === Sprite.once ){
+			else if( this.mode === Sprite.ONCE ){
 			    this.stop();
 			}
 		    }
@@ -124,9 +124,9 @@ define([
 	};
 	
 	
-	Sprite.once = 0;
-	Sprite.loop = 1;
-	Sprite.pingPong = 2;
+	Sprite.ONCE = 0;
+	Sprite.LOOP = 1;
+	Sprite.PINGPONG = 2;
 	
         
         return Sprite;

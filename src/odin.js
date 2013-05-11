@@ -22,9 +22,9 @@ define(
 	Odin.Time = require("base/time");
 	Odin.Utils = require("base/utils");
 	
-	Odin.Bounds = require("math/bounds");
+	Odin.Affine = require("math/affine");
+	Odin.Bound2 = require("math/bound2");
 	Odin.Color = require("math/color");
-	Odin.Mat3 = require("math/mat3");
 	Odin.Mathf = require("math/mathf");
 	Odin.Vec2 = require("math/vec2");
 	
@@ -44,20 +44,9 @@ define(
 	Odin.Touch = require("core/input/touch");
 	Odin.Touches = require("core/input/touches");
 	
-	Odin.Camera = require("core/objects/camera");
-	Odin.GameObject = require("core/objects/gameobject");
+	Odin.Camera2D = require("core/objects/camera2d");
+	Odin.GameObject2D = require("core/objects/gameobject2d");
 	Odin.Transform2D = require("core/objects/transform2d");
-	
-	Odin.PBroadphase = require("core/physics/collision/pbroadphase");
-	
-	Odin.PBody = require("core/physics/objects/pbody");
-	Odin.PCircle = require("core/physics/objects/pcircle");
-	Odin.PParticle = require("core/physics/objects/pparticle");
-	Odin.PRect = require("core/physics/objects/prect");
-	Odin.PRigidBody = require("core/physics/objects/prigidbody");
-	Odin.PShape = require("core/physics/objects/pshape");
-	
-	Odin.PWorld = require("core/physics/pworld");
 	
 	Odin.Canvas = require("core/canvas");
 	Odin.CanvasRenderer = require("core/canvasrenderer");
