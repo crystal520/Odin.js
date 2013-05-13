@@ -45,10 +45,10 @@ require(
 			}
 		    }),
 		    new RigidBody({
-			shape: RigidBody.BOX,
+			shape: RigidBody.RECT,
 			mass: 1,
-			linearDamping: new Vec2( 0, 0 ),
-			angularDamping: new Vec2( 0, 0 ),
+			linearDamping: new Vec2( 0.5, 0.5 ),
+			angularDamping: 0,
 			extents: new Vec2( 0.5, 0.5 )
 		    })
 		]
@@ -68,12 +68,15 @@ require(
 		    }),
 		    new RigidBody({
 			shape: RigidBody.BOX,
-			mass: 1,
-			linearDamping: new Vec2( 0, 0.5 ),
-			angularDamping: new Vec2( 0, 0 ),
+			mass: 0,
+			linearDamping: new Vec2( 0.5, 0.5 ),
+			angularDamping: 0,
 			extents: new Vec2( 0.5, 0.5 )
 		    })
 		]
+	    });
+	    sprite2.on("update", function(){
+		this.rotation += Math.PI*Time.delta;
 	    });
 	    
 	    scene.add( sprite, sprite2 );

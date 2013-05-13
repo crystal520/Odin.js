@@ -4,13 +4,15 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/utils",
+	"math/mathf",
 	"math/vec2",
 	"math/affine"
     ],
-    function( Class, Utils, Vec2, Affine ){
+    function( Class, Utils, Mathf, Vec2, Affine ){
         "use strict";
         
-	var isNumber = Utils.isNumber;
+	var isNumber = Utils.isNumber,
+	    standardRadian = Mathf.standardRadian;
 	
 	
         function Transform2D( opts ){
@@ -29,7 +31,6 @@ define([
 	    this.position = opts.position instanceof Vec2 ? opts.position : new Vec2;
 	    this.rotation = !!opts.rotation ? opts.rotation : 0;
 	    this.scale = opts.scale instanceof Vec2 ? opts.scale : new Vec2( 1, 1 );
-	    this.skew = opts.skew instanceof Vec2 ? opts.skew : new Vec2;
 	    
 	    this.updateMatrices();
         }
@@ -160,10 +161,7 @@ define([
 		this.matrix.mmul( matrix, this.matrix );
 		
 		this.scale.getScaleAffine( this.matrix );
-		
-		mat.identity().extractRotation( this.matrix );
-		this.rotation = mat.getRotation();
-		
+		this.rotation = this.matrix.getRotation();
 		this.position.getPositionAffine( this.matrix );
 	    };
         }();
@@ -277,17 +275,15 @@ define([
         
         Transform2D.prototype.updateMatrices = function(){
             var scale = this.scale,
-		skew = this.skew,
 		matrix = this.matrix,
 		matrixWorld = this.matrixWorld;
+	    
+	    this.rotation = standardRadian( this.rotation );
 	    
             matrix.setRotation( this.rotation );
 	    
 	    if( scale.x !== 1 || scale.y !== 1 ){
                 matrix.scale( scale );
-            }
-	    if( skew.x !== 0 || skew.y !== 0 ){
-                matrix.skew( skew );
             }
 	    
             matrix.setTranslation( this.position );
@@ -296,7 +292,7 @@ define([
                 matrixWorld.copy( matrix );
             }
             else{
-                matrixWorld.mmul( this.parent.matrixWorld, matrix );
+                matrixWorld.mmul( matrix, this.parent.matrixWorld );
             }
         };
         

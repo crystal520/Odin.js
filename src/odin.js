@@ -22,11 +22,21 @@ define(
 	Odin.Time = require("base/time");
 	Odin.Utils = require("base/utils");
 	
+	Odin.AABB2 = require("math/aabb2");
 	Odin.Affine = require("math/affine");
-	Odin.Bound2 = require("math/bound2");
 	Odin.Color = require("math/color");
 	Odin.Mathf = require("math/mathf");
 	Odin.Vec2 = require("math/vec2");
+	
+	Odin.PCircle = require("physics2d/shape/pcircle");
+	Odin.PRect = require("physics2d/shape/prect");
+	Odin.PShape2D = require("physics2d/shape/pshape2d");
+	
+	Odin.PBody2D = require("physics2d/body/pbody2d");
+	Odin.PParticle2D = require("physics2d/body/pparticle2d");
+	Odin.PRigidBody2D = require("physics2d/body/prigidbody2d");
+	
+	Odin.PWorld2D = require("physics2d/pworld2d");
 	
 	Odin.Component = require("core/components/component");
 	Odin.RigidBody = require("core/components/rigidbody");

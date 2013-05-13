@@ -5,9 +5,10 @@ define([
 	"base/class",
 	"base/time",
 	"math/color",
-	"math/vec2"
+	"math/vec2",
+	"physics2d/pworld2d"
     ],
-    function( Class, Time, Color, Vec2 ){
+    function( Class, Time, Color, Vec2, PWorld2D ){
         "use strict";
         
         
@@ -21,6 +22,8 @@ define([
             this.background = opts.background instanceof Color ? opts.background : new Color( 0.5, 0.5, 0.5, 1 );
 	    
             this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
+	    
+	    this.physicsWorld = new PWorld2D( opts );
         }
         
 	Class.extend( World, Class );
@@ -28,15 +31,19 @@ define([
         
         World.prototype.add = function( rigidbody ){
 	    
+	    this.physicsWorld.add( rigidbody.body );
         };
         
         
         World.prototype.remove = function( rigidbody ){
 	    
+	    this.physicsWorld.remove( rigidbody.body );
         };
         
         
         World.prototype.update = function(){
+	    
+	    this.physicsWorld.step( Time.delta );
 	};
         
         

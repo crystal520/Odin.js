@@ -313,6 +313,32 @@ define([
         };
         
         
+        Vec2.prototype.negate = function(){
+            
+            return this.smul( -1 );
+        };
+        
+        
+        Vec2.prototype.normalRight = function(){
+            var x = this.x, y = this.y;
+	    
+	    this.x = -y;
+	    this.y = x;
+	    
+            return this.norm();
+        };
+        
+        
+        Vec2.prototype.normalLeft = function(){
+            var x = this.x, y = this.y;
+	    
+	    this.x = y;
+	    this.y = -x;
+	    
+            return this.norm();
+        };
+        
+        
         Vec2.prototype.abs = function(){
 	    
 	    this.x = abs( this.x );

@@ -81,7 +81,7 @@ define([
         };
 	
 	
-	Affine.prototype.amul = function( a, b ){
+	Affine.prototype.mmul = function( a, b ){
 	    var aa = a.a, ab = a.b,
 		ac = a.c, ad = a.d,
 		ax = a.x, ay = a.y,
@@ -105,7 +105,7 @@ define([
 	
 	Affine.prototype.mul = function( other ){
             
-            return this.amul( this, other );
+            return this.mmul( this, other );
         };
 	
 	

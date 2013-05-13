@@ -47,7 +47,7 @@ define([
         
         Camera2D.prototype.copy = function( other ){
             
-	    GameObject.call( this, other );
+	    GameObject2D.call( this, other );
 	    
             this.width = other.width;
             this.height = other.height;

@@ -11,17 +11,20 @@ define(
 	    atan2 = Math.atan2,
 	    EPSILON = 0.000001,
 	    PI = 3.141592653589793,
+	    TWO_PI = PI * 2,
+	    HALF_PI = PI * 0.5,
 	    TO_RADS = PI / 180,
-	    TO_DEGS = 180 / PI;
+	    TO_DEGS = 180 / PI,
+	    modulo, clamp01, standardRadian, standardAngle, randFloat;
 	
 	
 	function Mathf(){
 	    
 	    this.PI = PI;
-	    this.TWO_PI = PI * 2;
-	    this.HALF_PI = PI * 0.5;
+	    this.TWO_PI = TWO_PI;
+	    this.HALF_PI = HALF_PI;
 	    
-	    this.EPSILON = 0.000001;
+	    this.EPSILON = EPSILON;
 	    
 	    this.TO_RADS = TO_RADS;
 	    this.TO_DEGS = TO_DEGS;
@@ -56,22 +59,22 @@ define(
 	};
 	
 	
-	Mathf.prototype.modulo = function( a, b ){
+	Mathf.prototype.modulo = modulo = function( a, b ){
             var r = a % b;
             
             return ( r * b < 0 ) ? r + b : r;
         };
 	
 	
-	Mathf.prototype.standardRadian = function( x ){
+	Mathf.prototype.standardRadian = standardRadian = function( x ){
 	    
-	    return this.modulo( x, this.TWO_PI );
+	    return modulo( x, TWO_PI );
 	};
 	
 	
-	Mathf.prototype.standardAngle = function( x ){
+	Mathf.prototype.standardAngle = standardAngle = function( x ){
 	    
-	    return this.modulo( x, 360 );
+	    return modulo( x, 360 );
 	};
 	
 	
@@ -99,7 +102,7 @@ define(
 	};
 	
 	
-	Mathf.prototype.clamp01 = function( x ){
+	Mathf.prototype.clamp01 = clamp01 = function( x ){
 	    
 	    return x < 0 ? 0 : x > 1 ? 1 : x;
 	};
@@ -107,25 +110,25 @@ define(
 	
 	Mathf.prototype.lerp = function( a, b, t ){
 	    
-	    return a + ( b - a ) * this.clamp01( t );
+	    return a + ( b - a ) * clamp01( t );
 	};
 	
 	
 	Mathf.prototype.lerpAngle = function( a, b, t ){
 	    
-	    return this.standardRadian( a + ( b - a ) * this.clamp01( t ) );
+	    return standardRadian( a + ( b - a ) * clamp01( t ) );
 	};
 	
 	
 	Mathf.prototype.smoothStep = function( x, min, max ){
-            x = ( this.clamp01( x ) - min ) / ( max - min );
+            x = ( clamp01( x ) - min ) / ( max - min );
             
             return x * x * ( 3 - 2 * t );
         };
         
         
         Mathf.prototype.smootherStep = function( x, min, max ){
-            x = ( this.clamp01( x ) - min ) / ( max - min );
+            x = ( clamp01( x ) - min ) / ( max - min );
             
             return x * x * x * ( x * ( x * 6 - 15 ) + 10 );
         };
@@ -140,23 +143,23 @@ define(
         
         Mathf.prototype.toRadians = function( x ){
 	    
-	    return this.standardRadian( x * TO_RADS );
+	    return standardRadian( x * TO_RADS );
         };
         
         
         Mathf.prototype.toDegrees = function( x ){
 	    
-	    return this.standardAngle( x * TO_DEGS );
+	    return standardAngle( x * TO_DEGS );
         };
 	
         
         Mathf.prototype.randInt = function( min, max ){
 	    
-	    return floor( this.randomRange( min, max + 1 ) );
+	    return floor( randFloat( min, max + 1 ) );
         };
         
         
-        Mathf.prototype.randFloat = function( min, max ){
+        Mathf.prototype.randFloat = randFloat = function( min, max ){
 	    
 	    return min + ( random() * ( max - min ) );
         };

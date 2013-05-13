@@ -135,12 +135,12 @@ define([
 		    offset = sprite.offset,
 		    image = sprite.image || defaultImg;
 		
-		gameObject.matrixModelView.amul( camera.matrixWorldInverse, gameObject.matrixWorld );
-		mvp.amul( gameObject.matrixModelView, camera.matrixProjection );
+		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
+		mvp.mmul( gameObject.matrixModelView, camera.matrixProjection );
 		
 		ctx.save();
 		
-		ctx.transform( mvp.a, mvp.c, mvp.b, mvp.d, mvp.x, mvp.y );
+		ctx.transform( mvp.a, mvp.b, mvp.c, mvp.d, mvp.x, mvp.y );
 		ctx.scale( 1, -1 );
 		
 		ctx.drawImage(
