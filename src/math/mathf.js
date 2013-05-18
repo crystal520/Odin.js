@@ -80,7 +80,7 @@ define(
 	
 	Mathf.prototype.sign = function( x ){
 	    
-	    return x < 0 ? -1 : 1;
+	    return x ? x < 0 ? -1 : 1 : 0;
 	};
 	
 	
@@ -106,6 +106,18 @@ define(
 	    
 	    return x < 0 ? 0 : x > 1 ? 1 : x;
 	};
+	
+	
+	Mathf.prototype.contains = function( x, min, max ){
+            var tmp = min;
+	    
+	    if( max < min ){
+		min = max;
+		max = tmp;
+	    }
+	    
+	    return ( x >= min && x <= max );
+        };
 	
 	
 	Mathf.prototype.lerp = function( a, b, t ){

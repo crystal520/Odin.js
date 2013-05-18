@@ -22,6 +22,7 @@ define([
             this.children = [];
 	    
             this._sprites = [];
+            this._rigidbodies = [];
             this._cameras = [];
 	    
             this.world = opts.world instanceof World ? opts.world : new World;
@@ -115,6 +116,7 @@ define([
 		this._sprites.sort( this.sort );
 	    }
 	    if( rigidbody ){
+		this._rigidbodies.push( rigidbody );
 		this.world.add( rigidbody );
 	    }
 	    if( gameObject.matrixProjection ){
@@ -135,6 +137,8 @@ define([
 		this._sprites.sort( this.sort );
 	    }
 	    if( rigidbody ){
+		index = this._rigidbodies.indexOf( sprite );
+		this._rigidbodies.splice( index, 1 );
 		this.world.remove( rigidbody );
 	    }
 	    if( gameObject.matrixProjection ){

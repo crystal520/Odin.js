@@ -3,9 +3,11 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/aabb2"
+	"math/aabb2",
+	"math/vec2",
+	"math/affine"
     ],
-    function( Class, AABB2 ){
+    function( Class, AABB2, Vec2, Affine ){
 	"use strict";
 	
 	
@@ -13,52 +15,48 @@ define([
 	    
 	    Class.call( this );
 	    
-	    this.aabb = new AABB2;
+	    this.min = 0;
+	    this.max = 0;
 	    
-	    this.volume = 0;
-	    this.volumeNeedsUpdate = true;
+	    this.aabb = new AABB2;
+	    this.aabbNeedsUpdate = true;
 	    
 	    this.boundingRadius = 0;
 	    this.boundingRadiusNeedsUpdate = true;
+	    
+	    this.calculateBoundingRadius();
 	}
 	
 	Class.extend( PShape2D, Class );
 	
 	
-	PShape2D.prototype.calculateBoundingRadius = function(){};
-	
-	
-	PShape2D.prototype.getBoundingRadius = function(){
-	    
-	    if( this.boundingRadiusNeedsUpdate ){
-		this.calculateBoundingRadius();
-	    }
-	    
-	    return this.boundingRadius;
-	};
-	
-	
-	PShape2D.prototype.calculateVolume = function(){
+	PShape2D.prototype.project = function( axis ){
 	    return this;
 	};
 	
 	
-	PShape2D.prototype.getVolume = function(){
-	    
-	    if( this.volumeNeedsUpdate ){
-		this.calculateVolume();
-	    }
-	    
-	    return this.volume;
-	};
-	
-	
-	PShape2D.prototype.calculateAABB = function(){
+	PShape2D.prototype.calculateBoundingRadius = function(){
 	    return this;
 	};
 	
 	
-	PShape2D.prototype.calculateInertia = function(){
+	PShape2D.prototype.calculateWorldAABB = function( position, rotation, aabb ){
+	    var thisAABB = this.aabb,
+		min = thisAABB.min, max = thisAABB.max;
+	    
+	    if( this.aabbNeedsUpdate ){
+		this.calculateAABB();
+	    }
+	    
+	    aabb.min.vadd( min, position );
+	    aabb.max.vadd( max, position );
+	    aabb.rotate( rotation );
+	    
+	    return aabb;
+	};
+	
+	
+	PShape2D.prototype.calculateInertia = function( mass ){
 	    return this;
 	};
 	

@@ -240,10 +240,10 @@ define([
 		x = a * a + c * c,
 		y = b * b + d * d,
 		
-		sx = x !== 0 ? 1 / sqrt( x ) : 0,
-		sy = y !== 0 ? 1 / sqrt( y ) : 0;
+		sx = x === 0 ? 1 : 1 / sqrt( x ),
+		sy = y === 0 ? 1 : 1 / sqrt( y );
 		
-	    return atan2( this.b, this.a );
+	    return atan2( b * sy, a * sx );
         };
 	
 	

@@ -190,7 +190,11 @@ define([
         }();
         
         
-        Transform2D.prototype.rotate = function( angle ){
+        Transform2D.prototype.rotate = function( angle, relativeTo ){
+	    
+	    if( relativeTo ){
+		angle += relativeTo.rotation;
+	    }
 	    
 	    this.rotation += angle;
         };
@@ -259,11 +263,11 @@ define([
 	    return function( target, damping, relativeTo ){
 		damping = damping > 0 ? damping : 1;
 		
-		if( target instanceof Transform3D ){
-		    vec.sub( target.position, this.position );
+		if( target instanceof Transform2D ){
+		    vec.vsub( target.position, this.position );
 		}
 		else if( target instanceof Vec2 ){
-		    vec.sub( target, this.position );
+		    vec.vsub( target, this.position );
 		}
 		
 		if( vec.lenSq() > 0.1 ){
@@ -277,8 +281,6 @@ define([
             var scale = this.scale,
 		matrix = this.matrix,
 		matrixWorld = this.matrixWorld;
-	    
-	    this.rotation = standardRadian( this.rotation );
 	    
             matrix.setRotation( this.rotation );
 	    

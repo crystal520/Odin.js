@@ -24,40 +24,30 @@ define([
 	Class.extend( PCircle, PShape2D );
 	
 	
-	PCircle.prototype.calculateBoundingRadius = function(){
-	    
-	    this.boundingRadiusNeedsUpdate = false;
-	    this.boundingRadius = this.radius;
-	    
-	    return this;
-	};
-	
-	
-	PCircle.prototype.calculateVolume = function(){
-	    var r = this.radius;
-	    
-	    this.volumeNeedsUpdate = false;
-	    this.volume = PI * r * r;
-	    
-	    return this;
-	};
-	
-	
 	PCircle.prototype.calculateAABB = function(){
 	    var r = this.radius;
 	    
 	    this.aabb.min.set( -r, -r );
 	    this.aabb.max.set( r, r );
+	    this.aabbNeedsUpdate = false;
 	    
 	    return this;
 	};
 	
 	
-	PCircle.prototype.calculateInertia = function( mass, v ){
-	    var r = this.radius,
-		I = ( mass * r * r ) * 0.5;
+	PCircle.prototype.calculateBoundingRadius = function(){
 	    
-	    return v.set( I, I );
+	    this.boundingRadius = this.radius;
+	    this.boundingRadiusNeedsUpdate = false;
+	    
+	    return this;
+	};
+	
+	
+	PCircle.prototype.calculateInertia = function( mass ){
+	    var r = this.radius;
+	    
+	    return ( mass * r * r ) * 0.5;
 	};
 	
 	

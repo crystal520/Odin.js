@@ -4,9 +4,11 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
-	"physics2d/body/pbody2d"
+	"physics2d/body/pbody2d",
+	"physics2d/collision/pbroadphase2d",
+	"physics2d/collision/psolver2d"
     ],
-    function( Class, Vec2, PBody2D ){
+    function( Class, Vec2, PBody2D, PBroadphase2D, PSolver2D ){
 	"use strict";
 	
 	var pow = Math.pow,
@@ -20,9 +22,23 @@ define([
 	    
 	    Class.call( this );
 	    
+	    this.time = 0;
+	    this.allowSleep = true;
+	    
 	    this.bodies = [];
 	    
+	    this.contacts = [];
+	    
+	    this._pairsA = [];
+	    this._pairsB = [];
+	    
 	    this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
+	    
+	    opts.aabbBroadphase = true;
+	    this.broadphase = new PBroadphase2D( this, opts.aabbBroadphase );
+	    this.solver = new PSolver2D( this );
+	    
+	    this._removeList = [];
 	}
 	
 	Class.extend( PWorld2D, Class );
@@ -35,92 +51,51 @@ define([
 	    if( index === -1 ){
 		body.world = this;
 		bodies.push( body );
+		body.trigger("add");
 	    }
 	};
 	
 	
 	PWorld2D.prototype.remove = function( body ){
-	    var bodies = this.bodies,
-		index = bodies.indexOf( body );
 	    
-	    if( index !== -1 ){
-		body.world = undefined;
-		bodies.splice( index, 1 );
+	    this._removeList.push( body );
+	};
+	
+	
+	PWorld2D.prototype._remove = function(){
+	    var bodies = this.bodies,
+		removeList = this._removeList,
+		body, index, i, il;
+	    
+	    for( i = 0, il = removeList.length; i < il; i++ ){
+		body = removeList[i];
+		index = bodies.indexOf( body );
+		
+		if( index !== -1 ){
+		    bodies.splice( index, 1 );
+		    body.trigger("remove");
+		}
 	    }
 	};
 	
 	
-	PWorld2D.prototype.step = function(){
-	    var linearDamping = new Vec2;
+	PWorld2D.prototype.step = function( dt ){
+	    var bodies = this.bodies,
+		body, i, il;
 	    
-	    return function( dt ){
-		var bodies = this.bodies,
-		    gravity = this.gravity,
-		    body, i, il,
-		    type, mass, invMass, invInertia, force, torque,
-		    vel, aVel, angularDamping,
-		    pos;
-		
-		for( i = 0, il = bodies.length; i < il; i++ ){
-		    body = bodies[i];
-		    type = body.type;
-		    mass = body.mass;
-		    force = body.force;
-		    torque = body.torque;
-		    vel = body.velocity;
-		    aVel = body.angularVelocity;
-		    pos = body.position;
-		    
-		    if( type === DYNAMIC ){
-			force.x += gravity.x * mass;
-			force.y += gravity.y * mass;
-			
-			linearDamping.set(
-			    pow( 1 - body.linearDamping.x, dt ),
-			    pow( 1 - body.linearDamping.y, dt )
-			);
-			
-			vel.mul( linearDamping );
-			
-			if( aVel ){
-			    angularDamping = pow( 1 - body.angularDamping, dt );
-			    aVel *= angularDamping;
-			}
-		    }
-		    
-		    if( type === DYNAMIC || type === KINEMATIC ){
-			invMass = body.invMass;
-			invInertia = body.invInertia;
-			
-			vel.x += force.x * invMass * dt;
-			vel.y += force.y * invMass * dt;
-			
-			if( aVel ){
-			    aVel += torque * invMass * dt;
-			}
-			
-			if( !body.isSleeping() ){
-			    pos.x += vel.x * dt;
-			    pos.y += vel.y * dt;
-			    
-			    if( aVel ){
-				body.rotation += aVel * dt;
-			    }
-			    
-			    if( body.aabb ){
-				body.aabbNeedsUpdate = true;
-			    }
-			}
-		    }
-		    
-		    force.zero();
-		    
-		    if( torque ){
-			body.torque = 0;
-		    }
-		}
-	    };
-	}();
+	    if( this._removeList.length ){
+		this._remove();
+	    }
+	    
+	    this.time += dt;
+	    
+	    this.broadphase.collisionPairs();
+	    this.solver.solve();
+	    
+	    for( i = 0, il = bodies.length; i < il; i++ ){
+		bodies[i].update( dt );
+	    }
+	};
 	
 	
 	return PWorld2D;

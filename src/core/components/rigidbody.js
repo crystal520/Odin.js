@@ -66,8 +66,15 @@ define([
 	};
 	
 	
-	RigidBody.prototype.applyForce = function( force, point ){
+	RigidBody.prototype.applyForce = function( force, worldPoint ){
 	    
+	    this.body.applyForce( force, worldPoint );
+	};
+	
+	
+	RigidBody.prototype.applyImpulse = function( impulse, worldPoint ){
+	    
+	    this.body.applyImpulse( impulse, worldPoint );
 	};
 	
 	

@@ -22,9 +22,13 @@ require(
 	    
 	    scene = new Scene;
 	    camera = new Camera2D;
+	    camera.on("update", function(){
+		this.follow( sprite, 16 );
+	    });
 	    
 	    sprite = new GameObject2D({
 		position: new Vec2( 0, 2 ),
+		rotation: 0,
 		components: [
 		    new Sprite({
 			image: player,
@@ -47,7 +51,9 @@ require(
 		    new RigidBody({
 			shape: RigidBody.RECT,
 			mass: 1,
-			linearDamping: new Vec2( 0.5, 0.5 ),
+			velocity: new Vec2( 0, 1 ),
+			angularVelocity: 0,
+			linearDamping: new Vec2( 0, 0 ),
 			angularDamping: 0,
 			extents: new Vec2( 0.5, 0.5 )
 		    })
@@ -56,6 +62,7 @@ require(
 	    
 	    sprite2 = new GameObject2D({
 		position: new Vec2( 0, 0 ),
+		rotation: 0,
 		components: [
 		    new Sprite({
 			image: player,
@@ -67,32 +74,30 @@ require(
 			height: 1
 		    }),
 		    new RigidBody({
-			shape: RigidBody.BOX,
+			shape: RigidBody.RECT,
 			mass: 0,
-			linearDamping: new Vec2( 0.5, 0.5 ),
-			angularDamping: 0,
 			extents: new Vec2( 0.5, 0.5 )
 		    })
 		]
 	    });
 	    sprite2.on("update", function(){
-		this.rotation += Math.PI*Time.delta;
+		//this.rotation += Math.PI*Time.delta;
 	    });
 	    
 	    scene.add( sprite, sprite2 );
 	    
 	    Keyboard.on("keydown", function( key ){
 		if( key.name === "up" ){
-		    sprite2.components.RigidBody.applyForce( vec2_1.set( 0, 100 ) );
+		    sprite.components.RigidBody.applyForce( vec2_1.set( 0, 1 ) );
 		}
 		if( key.name === "down" ){
-		    sprite2.components.RigidBody.applyForce( vec2_1.set( 0, -100 ) );
+		    sprite.components.RigidBody.applyForce( vec2_1.set( 0, -1 ) );
 		}
 		if( key.name === "right" ){
-		    sprite2.components.RigidBody.applyForce( vec2_1.set( 10, 0 ) );
+		    sprite.components.RigidBody.applyForce( vec2_1.set( 1, 0 ) );
 		}
 		if( key.name === "left" ){
-		    sprite2.components.RigidBody.applyForce( vec2_1.set( -10, 0 ) );
+		    sprite.components.RigidBody.applyForce( vec2_1.set( -1, 0 ) );
 		}
 	    });
 	    

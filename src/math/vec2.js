@@ -59,7 +59,10 @@ define([
         
         Vec2.prototype.add = function( other ){
             
-            return this.vadd( this, other );
+            this.x += other.x;
+	    this.y += other.y;
+            
+            return this;
         };
         
         
@@ -83,7 +86,10 @@ define([
         
         Vec2.prototype.sub = function( other ){
             
-            return this.vsub( this, other );
+            this.x -= other.x;
+	    this.y -= other.y;
+            
+            return this;
         };
         
         
@@ -107,7 +113,10 @@ define([
         
         Vec2.prototype.mul = function( other ){
             
-            return this.vmul( this, other );
+            this.x *= other.x;
+	    this.y *= other.y;
+            
+            return this;
         };
         
         
@@ -123,37 +132,27 @@ define([
         Vec2.prototype.vdiv = function( a, b ){
             var x = b.x, y = b.y;
             
-            if( x !== 0 && y !== 0 ){
-                this.x = a.x / x;
-                this.y = a.y / y;
-            }
-            else{
-                this.x = 0;
-                this.y = 0;
-            }
+	    this.x = x !== 0 ? a.x / x : 0;
+	    this.y = y !== 0 ? a.y / y : 0;
             
             return this;
         };
         
         
         Vec2.prototype.div = function( other ){
+            var x = other.x, y = other.y;
             
-            return this.vdiv( this, other );
+	    this.x = x !== 0 ? this.x / x : 0;
+	    this.y = y !== 0 ? this.y / y : 0;
+            
+            return this;
         };
         
         
         Vec2.prototype.sdiv = function( s ){
-            
-            if( s !== 0 ){
-		s = 1 / s;
-		
-                this.x *= s;
-                this.y *= s;
-            }
-            else{
-                this.x = 0;
-                this.y = 0;
-            }
+	    
+	    this.x = s !== 0 ? this.x / s : 0;
+	    this.y = s !== 0 ? this.y / s : 0;
             
             return this;
         };
@@ -167,7 +166,7 @@ define([
         
         Vec2.prototype.dot = function( other ){
             
-            return this.vdot( this, other );
+	    return this.x * other.x + this.y * other.y;
         };
         
         
@@ -220,36 +219,38 @@ define([
         
         Vec2.vcross = Vec2.prototype.vcross = function( a, b ){
             
-            return a.x * b.y - a.y * b.x;
+            return a.x * b.y - b.x * a.y;
         };
         
         
         Vec2.prototype.cross = function( other ){
             
-            return this.vcross( this, other );
+	    return this.x * other.y - other.x * this.y;
         };
         
         
-        Vec2.prototype.vproject = function( a, b ){
-	    var theta = Vec2.vdot( a, b );
+        Vec2.prototype.vprojectN = function( a, b ){
 	    
-	    return this.copy( b ).norm().smul( theta );
+	    return a.smul( a.dot( b ) );
+	};
+        
+        
+        Vec2.prototype.projectN = function( other ){
+	    
+	    return this.smul( this.dot( other ) );
+	};
+        
+        
+        Vec2.prototype.vproject = function( a, b ){
+	    
+	    return a.smul( a.dot( b ) / b.lenSq() );
 	};
         
         
         Vec2.prototype.project = function( other ){
 	    
-	    return this.vproject( this, other );
+	    return this.smul( this.dot( other ) / other.lenSq() );
 	};
-        
-        
-        Vec2.prototype.zero = function(){
-            
-	    this.x = 0;
-	    this.y = 0;
-	    
-            return this;
-        };
         
         
         Vec2.prototype.applyAffine = function( m ){
@@ -309,17 +310,14 @@ define([
         
         Vec2.prototype.negate = function(){
             
-            return this.smul( -1 );
+	    this.x *= -1;
+	    this.y *= -1;
+	    
+            return this;
         };
         
         
-        Vec2.prototype.negate = function(){
-            
-            return this.smul( -1 );
-        };
-        
-        
-        Vec2.prototype.normalRight = function(){
+        Vec2.prototype.normL = function(){
             var x = this.x, y = this.y;
 	    
 	    this.x = -y;
@@ -329,7 +327,7 @@ define([
         };
         
         
-        Vec2.prototype.normalLeft = function(){
+        Vec2.prototype.normR = function(){
             var x = this.x, y = this.y;
 	    
 	    this.x = y;
@@ -348,14 +346,6 @@ define([
         };
         
         
-        Vec2.prototype.zero = function(){
-            
-	    this.x = this.y = 0;
-	    
-            return this;
-        };
-        
-        
         Vec2.prototype.rotate = function( a ){
             var x = this.x, y = this.y,
 		c = cos( a ), s = sin( a );
@@ -369,8 +359,8 @@ define([
         
         Vec2.prototype.rotateAround = function( a, v ){
 	    
-            return this.sub( v ).rotate( a ).add( v );
-        };
+	    return this.sub( v ).rotate( a ).add( v );
+	};
         
         
         Vec2.prototype.min = function( other ){
@@ -402,14 +392,13 @@ define([
         };
         
         
-        Vec2.distSq = Vec2.prototype.distSq = function(){
-	    var dist = new Vec2();
+        Vec2.distSq = Vec2.prototype.distSq = function( a, b ){
+	    var x = b.x - a.x,
+		y = b.y - a.y,
+		d = x * x + d * d;
 	    
-	    return function( a, b ){
-		
-		return dist.vsub( a, b ).lenSq();
-	    };
-        }();
+	    return x * x + d * d;
+	};
         
         
         Vec2.dist = Vec2.prototype.dist = function( a, b ){

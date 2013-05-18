@@ -12,7 +12,9 @@ define([
     function( Class, Dom, Device, Canvas, Color, Affine ){
 	"use strict";
 	
-	var defaultImg = new Image;
+	var PI = Math.PI,
+	    defaultImg = new Image;
+	    
 	defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 	
 	
@@ -73,6 +75,7 @@ define([
 		    background = scene.world.background,
 		    ctx = this.context,
 		    sprites = scene._sprites,
+		    rigidbodies = scene._rigidbodies,
 		    i, il;
 		
 		if( !lastBackground.equals( background ) ){
@@ -122,8 +125,63 @@ define([
 		for( i = 0, il = sprites.length; i < il; i++ ){
 		    this.renderSprite( sprites[i], camera );
 		}
+		
+		for( i = 0, il = rigidbodies.length; i < il; i++ ){
+		    this.renderRigidBody( rigidbodies[i], camera );
+		}
 	    };
         }();
+        
+        
+        CanvasRenderer.prototype.renderRigidBody = function(){
+	    var mvp = new Affine;
+	    
+	    return function( rigidbody, camera ){
+		var ctx = this.context,
+		    gameObject = rigidbody.gameObject,
+		    body = rigidbody.body,
+		    shape = body.shape,
+		    vertices, vertex,
+		    i, il;
+		    
+		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
+		mvp.mmul( gameObject.matrixModelView, camera.matrixProjection );
+		
+		ctx.save();
+		
+		ctx.transform( mvp.a, mvp.b, mvp.c, mvp.d, mvp.x, mvp.y );
+		ctx.scale( 1, -1 );
+		
+		ctx.strokeStyle = "#ff0000";
+		ctx.lineWidth = 1/this.pixelRatio;
+		
+		if( shape.radius ){
+		    
+		}
+		else if( shape.vertices ){
+		    
+		    ctx.beginPath();
+		    ctx.arc( 0 , 0, shape.boundingRadius , 0, 2*PI, true );
+		    ctx.closePath();
+		    ctx.stroke();
+		    
+		    vertices = shape.vertices;
+		    
+		    ctx.beginPath();
+		    ctx.moveTo( vertices[0].x, vertices[0].y );
+		    
+		    for( i = 0, il = vertices.length; i < il; i++ ){
+			ctx.lineTo( vertices[i].x, vertices[i].y );
+		    }
+		    
+		    ctx.lineTo( vertices[0].x, vertices[0].y );
+		    ctx.closePath();
+		    ctx.stroke();
+		}
+		
+		ctx.restore();
+	    };
+	}();
         
         
         CanvasRenderer.prototype.renderSprite = function(){
