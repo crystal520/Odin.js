@@ -23,45 +23,11 @@ require(
 	    scene = new Scene;
 	    camera = new Camera2D;
 	    camera.on("update", function(){
-		this.follow( sprite, 16 );
+		this.follow( ball, 8 );
 	    });
 	    
-	    sprite = new GameObject2D({
+	    ball = new GameObject2D({
 		position: new Vec2( 0, 2 ),
-		components: [
-		    new Sprite({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1,
-			animations: {
-			    idle: {
-				frames: [
-				    [ 0, 0, 64, 64 ],
-				    [ 64, 0, 64, 64 ]
-				],
-				rate: 0.5
-			    }
-			}
-		    }),
-		    new RigidBody({
-			shape: RigidBody.RECT,
-			mass: 1,
-			velocity: new Vec2( 0, 1 ),
-			angularVelocity: 0,
-			linearDamping: new Vec2( 0, 0 ),
-			angularDamping: 0,
-			extents: new Vec2( 0.5, 0.5 )
-		    })
-		]
-	    });
-	    
-	    sprite2 = new GameObject2D({
-		position: new Vec2( 0, 0 ),
-		rotation: 0,
 		components: [
 		    new Sprite({
 			image: player,
@@ -73,32 +39,34 @@ require(
 			height: 1
 		    }),
 		    new RigidBody({
-			shape: RigidBody.RECT,
-			mass: 0,
-			extents: new Vec2( 0.5, 0.5 )
+			shape: RigidBody.CIRCLE,
+			mass: 1,
+			radius: 0.5
 		    })
 		]
 	    });
-	    sprite2.on("update", function(){
-		//this.rotation += Math.PI*Time.delta;
+	    
+	    ball2 = new GameObject2D({
+		position: new Vec2( 0, 0 ),
+		components: [
+		    new Sprite({
+			image: player,
+			x: 0,
+			y: 0,
+			w: 64,
+			h: 64,
+			width: 1,
+			height: 1
+		    }),
+		    new RigidBody({
+			shape: RigidBody.CIRCLE,
+			mass: 0,
+			radius: 0.5
+		    })
+		]
 	    });
 	    
-	    scene.add( sprite, sprite2 );
-	    
-	    Keyboard.on("keydown", function( key ){
-		if( key.name === "up" ){
-		    sprite.components.RigidBody.applyForce( vec2_1.set( 0, 100 ) );
-		}
-		if( key.name === "down" ){
-		    sprite.components.RigidBody.applyForce( vec2_1.set( 0, -1 ) );
-		}
-		if( key.name === "right" ){
-		    sprite.components.RigidBody.applyForce( vec2_1.set( 1, 0 ) );
-		}
-		if( key.name === "left" ){
-		    sprite.components.RigidBody.applyForce( vec2_1.set( -1, 0 ) );
-		}
-	    });
+	    scene.add( ball, ball2 );
 	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );

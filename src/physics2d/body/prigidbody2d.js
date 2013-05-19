@@ -94,12 +94,6 @@ define([
 	}();
 	
 	
-	PRigidBody2D.prototype.updateShape = function(){
-	    
-	    this.shape.update( this );
-	};
-	
-	
 	PRigidBody2D.prototype.update = function(){
 	    var linearDamping = new Vec2;
 	    

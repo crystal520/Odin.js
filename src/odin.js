@@ -32,7 +32,7 @@ define(
 	Odin.PRigidBody2D = require("physics2d/body/prigidbody2d");
 	
 	Odin.PBroadphase2D = require("physics2d/collision/pbroadphase2d");
-	Odin.PCollision2D = require("physics2d/collision/pcollision2d");
+	Odin.PContact2D = require("physics2d/collision/pcontact2d");
 	Odin.PSolver2D = require("physics2d/collision/psolver2d");
 	
 	Odin.PCircle = require("physics2d/shape/pcircle");
@@ -40,6 +40,7 @@ define(
 	Odin.PRect = require("physics2d/shape/prect");
 	Odin.PShape2D = require("physics2d/shape/pshape2d");
 	
+	Odin.PContactGenerator2D = require("physics2d/pcontactgenerator2d");
 	Odin.PWorld2D = require("physics2d/pworld2d");
 	
 	Odin.Component = require("core/components/component");

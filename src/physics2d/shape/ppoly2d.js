@@ -35,22 +35,100 @@ define([
 	Class.extend( PPoly2D, PShape2D );
 	
 	
-	PPoly2D.prototype.project = function( axis ){
-	    var vertices = this.worldVertices,
-		d = vertices[0].dot( axis ),
-		min = d, max = d,
-		i, il;
-		
-	    for( i = 1, il = vertices.length; i < il; i++ ){
-		d = vertices[i].dot( axis );
-		
-		if( d < min ) min = d;
-		else if( d > max ) max = d;
-	    }
+	PPoly2D.prototype.findSeparatingAxis = function(){
+	    var dist = new Vec2;
 	    
-	    this.min = min;
-	    this.max = max;
-	};
+	    return function( other, posA, posB, sepAxis ){
+		var normalsA = this.normals, normalsB = other.normals,
+		    axis, d, dmin = Infinity, i, il;
+		    
+		for( i = 0, il = normalsA.length; i < il; i++ ){
+		    axis = normalsA[i];
+		    
+		    d = this.testSepAxis( axis, other );
+		    
+		    if( d === false ){
+			return false;
+		    }
+		    
+		    if( d < dmin ){
+			dmin = d;
+			sepAxis.copy( axis );
+		    }
+		}
+		
+		for( i = 0, il = normalsB.length; i < il; i++ ){
+		    axis = normalsB[i];
+		    
+		    d = other.testSepAxis( axis, this );
+		    
+		    if( d === false ){
+			return false;
+		    }
+		    
+		    if( d < dmin ){
+			dmin = d;
+			sepAxis.copy( axis );
+		    }
+		}
+		
+		dist.vsub( posB, posA );
+		
+		if( dist.dot( sepAxis ) < 0 ){
+		    sepAxis.negate();
+		}
+		
+		return true;
+	    };
+	}();
+	
+	
+	PPoly2D.prototype.testSepAxis = function(){
+	    var minmaxA = [],
+		minmaxB = [];
+		
+	    function project( axis, shape, minmax ){
+		var vertices = shape.worldVertices,
+		    d = vertices[0].dot( axis ),
+		    tmp, min = d, max = d,
+		    i, il;
+		    
+		for( i = 1, il = vertices.length; i < il; i++ ){
+		    d = vertices[i].dot( axis );
+		    
+		    if( d < min ) min = d;
+		    else if( d > max ) max = d;
+		}
+		
+		if( min > max ){
+		    tmp = min; min = max; max = tmp;
+		}
+		
+		minmax[0] = min;
+		minmax[1] = max;
+	    };
+	    
+	    return function( axis, other ){
+		var aMin, aMax, bMin, bMax,
+		    d1, d2, depth;
+		
+		project( axis, this, minmaxA );
+		project( axis, other, minmaxB );
+		
+		aMin = minmaxA[0]; aMax = minmaxA[1];
+		bMin = minmaxB[0]; bMax = minmaxB[1];
+		
+		if( aMax < bMin || bMax < aMin ){
+		    return false;
+		}
+		
+		d1 = aMax - bMin;
+		d2 = bMax - aMin;
+		depth = d1 < d2 ? d1 : d2;
+		
+		return depth;
+	    };
+	}();
 	
 	
 	PPoly2D.prototype.calculateNormals = function(){

@@ -20,107 +20,133 @@ define([
 	    Class.call( this );
 	    
 	    this.world = world;
-	    this.useAABBBroadphase = aabbBroadphase !== undefined ? aabbBroadphase : true;
+	    this.aabbBroadphase = aabbBroadphase !== undefined ? aabbBroadphase : true;
 	}
 	
 	Class.extend( PBroadphase2D, Class );
 	
 	
-	PBroadphase2D.prototype.needBroadphaseCollision = function( a, b ){
+	PBroadphase2D.prototype.needBroadphaseTest = function( a, b ){
 	    
-	    return !(
-		a.filterGroup !== b.filterGroup ||
-		!a.shape && !b.shape ||
-		(( a.type === DYNAMIC || a.type === STATIC || a.isSleeping() ) && ( b.type === DYNAMIC || b.type === STATIC || b.isSleeping() ))
-	    );
+	    if( a.filterGroup !== b.filterGroup ){
+		return false;
+	    }
+	    
+	    if( !a.shape && !b.shape ){
+		return false;
+	    }
+	    
+	    if( ( a.type === DYNAMIC || a.type === STATIC || a.isSleeping() ) && ( b.type === DYNAMIC || b.type === STATIC || b.isSleeping() ) ){
+		return false;
+	    }
+	    
+	    return true;
 	};
 	
 	
 	PBroadphase2D.prototype.collisionPairs = function(){
-	    
-	    if( this.useAABBBroadphase ){
-		this.aabbBroadphase();
-	    }
-	    else{
-		this.boundingRadiusBroadphase();
-	    }
-	};
-	
-	
-	PBroadphase2D.prototype.aabbBroadphase = function(){
 	    var world = this.world,
+		pairsA = world.pairsA, pairsB = world.pairsB,
 		bodies = world.bodies,
-		pairsA = world._pairsA, pairsB = world._pairsB,
-		aBody, bBody,
+		bodyA, bodyB,
 		i, j, il;
 	    
-	    pairsA.length = 0;
-	    pairsB.length = 0;
+	    pairsA.length = pairsB.length = 0;
 	    
 	    for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
-		aBody = bodies[i];
-		bBody = bodies[j];
+		bodyA = bodies[i];
+		bodyB = bodies[j];
 		
-		if( this.needBroadphaseCollision( aBody, bBody ) ){
+		if( this.needBroadphaseTest( bodyA, bodyB ) ){
 		    continue;
 		}
 		
-		if( aBody.aabbNeedsUpdate ){
-		    aBody.calculateAABB();
-		}
-		if( bBody.aabbNeedsUpdate ){
-		    bBody.calculateAABB();
-		}
-		
-		if( AABB2.intersects( aBody.aabb, bBody.aabb ) ){
-		    pairsA.push( aBody );
-		    pairsB.push( bBody );
-		}
+		this.intersectionTest( bodyA, bodyB, pairsA, pairsB );
 	    }
 	};
 	
 	
-	PBroadphase2D.prototype.boundingRadiusBroadphase = function(){
+	PBroadphase2D.prototype.intersectionTest = function( bodyA, bodyB, pairsA, pairsB ){
+	    
+	    if( this.aabbBroadphase ){
+		this.doAABBBroadphase( bodyA, bodyB, pairsA, pairsB );
+	    }
+	    else{
+		this.doBoundingRadiusBroadphase( bodyA, bodyB, pairsA, pairsB );
+	    }
+	};
+	
+	
+	PBroadphase2D.prototype.doAABBBroadphase = function( bodyA, bodyB, pairsA, pairsB ){
+	    
+	    if( bodyA.aabbNeedsUpdate ){
+		bodyA.calculateAABB();
+	    }
+	    if( bodyB.aabbNeedsUpdate ){
+		bodyB.calculateAABB();
+	    }
+	    
+	    if( AABB2.intersects( bodyA.aabb, bodyB.aabb ) ){
+		pairsA.push( bodyA );
+		pairsB.push( bodyB );
+	    }
+	};
+	
+	
+	PBroadphase2D.prototype.doBoundingRadiusBroadphase = function(){
 	    var dist = new Vec2;
+	    
+	    return function( bodyA, bodyB, pairsA, pairsB ){
+		var aShape = bodyA.shape, bShape = bodyB.shape,
+		    radius, radiusSq, distSq;
+		    
+		if( aShape.boundingRadiusNeedsUpdate ){
+		    aShape.calculateBoundingRadius();
+		}
+		if( bShape.boundingRadiusNeedsUpdate ){
+		    bShape.calculateBoundingRadius();
+		}
+		
+		radius = aShape.boundingRadius + bShape.boundingRadius;
+		radiusSq = radius * radius;
+		
+		distSq = dist.vsub( bodyA.position, bodyB.position ).lenSq();
+		
+		if( distSq <= radiusSq ){
+		    pairsA.push( bodyA );
+		    pairsB.push( bodyB );
+		}
+	    };
+	}();
+	
+	
+	PBroadphase2D.prototype.makePairsUnique = function(){
+	    var pA = [], pB = [], tmp = [];
 	    
 	    return function(){
 		var world = this.world,
-		    bodies = world.bodies,
 		    pairsA = world._pairsA, pairsB = world._pairsB,
-		    aBody, bBody, aShape, bShape,
-		    radius, radiusSq, distSq,
-		    i, j, il;
+		    idx, idA, idB, i, il = pairsA.length;
+		    
+		for( i = 0; i < il; i++ ){
+		    pA[i] = pairsA[i];
+		    pB[i] = pairsB[i];
+		}
 		
-		pairsA.length = 0;
-		pairsB.length = 0;
+		pairsA.length = pairsB.length = 0;
 		
-		for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
-		    aBody = bodies[i];
-		    aShape = aBody.shape;
-		    
-		    bBody = bodies[j];
-		    bShape = bBody.shape;
-		    
-		    if( this.needBroadphaseCollision( aBody, bBody ) ){
-			continue;
-		    }
-		    
-		    if( aShape.boundingRadiusNeedsUpdate ){
-			aShape.calculateBoundingRadius();
-		    }
-		    if( bShape.boundingRadiusNeedsUpdate ){
-			bShape.calculateBoundingRadius();
-		    }
-		    
-		    radius = aShape.boundingRadius + bShape.boundingRadius;
-		    radiusSq = radius * radius;
-		    
-		    distSq = dist.vsub( aBody.position, bBody.position ).lenSq();
-		    
-		    if( distSq <= radiusSq ){
-			pairsA.push( aBody );
-			pairsB.push( bBody );
-		    }
+		for( i = 0; i < il; i++ ){
+		    idA = pA[i]._id;
+		    idB = pB[i]._id;
+		    idx = idA < idB ? idA +","+ idB : idB +","+ idB;
+		    tmp[ idx ] = i;
+		}
+		
+		for( idx in tmp ){
+		    i = tmp[ idx ];
+		    pairsA.push( pA[i] );
+		    pairsB.push( pB[i] );
+		    delete tmp[ idx ];
 		}
 	    };
 	}();

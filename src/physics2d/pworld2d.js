@@ -4,11 +4,11 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
+	"physics2d/pcontactgenerator2d",
 	"physics2d/body/pbody2d",
-	"physics2d/collision/pbroadphase2d",
-	"physics2d/collision/psolver2d"
+	"physics2d/collision/pbroadphase2d"
     ],
-    function( Class, Vec2, PBody2D, PBroadphase2D, PSolver2D ){
+    function( Class, Vec2, PContactGenerator2D, PBody2D, PBroadphase2D ){
 	"use strict";
 	
 	var pow = Math.pow,
@@ -27,16 +27,13 @@ define([
 	    
 	    this.bodies = [];
 	    
-	    this.contacts = [];
-	    
-	    this._pairsA = [];
-	    this._pairsB = [];
+	    this.pairsA = [];
+	    this.pairsB = [];
 	    
 	    this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
 	    
-	    opts.aabbBroadphase = true;
 	    this.broadphase = new PBroadphase2D( this, opts.aabbBroadphase );
-	    this.solver = new PSolver2D( this );
+	    this.contactGenerator = new PContactGenerator2D( this );
 	    
 	    this._removeList = [];
 	}
@@ -81,6 +78,7 @@ define([
 	
 	PWorld2D.prototype.step = function( dt ){
 	    var bodies = this.bodies,
+		contacts = this.contactGenerator.contacts,
 		body, i, il;
 	    
 	    if( this._removeList.length ){
@@ -90,7 +88,11 @@ define([
 	    this.time += dt;
 	    
 	    this.broadphase.collisionPairs();
-	    this.solver.solve();
+	    this.contactGenerator.getContacts();
+	    
+	    for( i = 0, il = contacts.length; i < il; i++ ){
+		contacts[i].solve( dt );
+	    }
 	    
 	    for( i = 0, il = bodies.length; i < il; i++ ){
 		bodies[i].update( dt );
