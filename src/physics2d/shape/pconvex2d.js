@@ -17,13 +17,18 @@ define([
 	    vcross = Vec2.vcross;
 	
 	
-	function PPoly2D( vertices ){
+	function PConvex2D( vertices ){
+	    
+	    this.vertices = vertices || [
+		new Vec2( 0, 0.5 ),
+		new Vec2( -0.5, -0.5 ),
+		new Vec2( 0.5, -0.5 )
+	    ];
 	    
 	    PShape2D.call( this );
 	    
-	    this.type = PShape2D.POLY;
+	    this.type = PShape2D.CONVEX;
 	    
-	    this.vertices = vertices;
 	    this.worldVertices = [];
 	    
 	    this.normals = [];
@@ -32,10 +37,10 @@ define([
 	    this.calculateNormals();
 	}
 	
-	Class.extend( PPoly2D, PShape2D );
+	Class.extend( PConvex2D, PShape2D );
 	
 	
-	PPoly2D.prototype.findSeparatingAxis = function(){
+	PConvex2D.prototype.findSeparatingAxis = function(){
 	    var dist = new Vec2;
 	    
 	    return function( other, posA, posB, sepAxis ){
@@ -74,7 +79,7 @@ define([
 		
 		dist.vsub( posB, posA );
 		
-		if( dist.dot( sepAxis ) < 0 ){
+		if( dist.dot( sepAxis ) > 0 ){
 		    sepAxis.negate();
 		}
 		
@@ -83,7 +88,7 @@ define([
 	}();
 	
 	
-	PPoly2D.prototype.testSepAxis = function(){
+	PConvex2D.prototype.testSepAxis = function(){
 	    var minmaxA = [],
 		minmaxB = [];
 		
@@ -131,7 +136,60 @@ define([
 	}();
 	
 	
-	PPoly2D.prototype.calculateNormals = function(){
+	PConvex2D.prototype.clipAgainstConvex = function(){
+	    var edge = new Vec2,
+		l = new Vec2,
+		r = new Vec2;
+	    
+	    return function( axis, other, results ){
+		var vertices = this.worldVertices,
+		    d, max = -Infinity, index,
+		    v, v1, v2, i, il;
+		
+		for( i = 0, il = vertices.length; i < il; i++ ){
+		    d = vertices[i].dot( axis );
+		    if( d > max ){
+			max = d;
+			index = i;
+		    }
+		}
+		
+		v = vertices[index];
+		v1 = vertices[index-1] || vertices[0];
+		v2 = vertices[index+1] || vertices[0];
+		
+		l.vsub( v, v2 );
+		r.vsub( v, v1 );
+		
+		if( r.dot( axis ) <= l.dot( axis ) ){
+		    edge.vsub( v1, v );
+		}
+		else{
+		    edge.vsub( v2, v );
+		}
+		
+		this.clipEdgeAgainstConvex( edge, axis, other, results );
+	    };
+	}();
+	
+	
+	PConvex2D.prototype.clipEdgeAgainstConvex = function(){
+	    
+	    function Manifold( point, normal, depth ){
+		this.point = point instanceof Vec2 ? point : new Vec2;
+		this.normal = normal instanceof Vec2 ? normal : new Vec2;
+		this.depth = depth !== undefined ? depth : 0;
+	    }
+	    
+	    return function( edge, axis, other, results ){
+		
+		
+		results.push( edge );
+	    };
+	}();
+	
+	
+	PConvex2D.prototype.calculateNormals = function(){
 	    var vertices = this.vertices,
 		normals = this.normals,
 		i, il, normal, v1, v2;
@@ -153,7 +211,7 @@ define([
 	};
 	
 	
-	PPoly2D.prototype.calculateAABB = function(){
+	PConvex2D.prototype.calculateAABB = function(){
 	    
 	    this.aabb.setFromPoints( this.vertices );
 	    this.aabbNeedsUpdate = false;
@@ -162,7 +220,7 @@ define([
 	};
 	
 	
-	PPoly2D.prototype.calculateBoundingRadius = function(){
+	PConvex2D.prototype.calculateBoundingRadius = function(){
 	    var vertices = this.vertices,
 		radiusSq = vertices[0].lenSq(), lenSq, i, il;
 		
@@ -181,7 +239,7 @@ define([
 	};
 	
 	
-	PPoly2D.prototype.calculateInertia = function( mass ){
+	PConvex2D.prototype.calculateInertia = function( mass ){
 	    var vertices = this.vertices,
 		v1, v2, a, b,
 		denom = 0, numer = 0,
@@ -202,7 +260,7 @@ define([
 	};
 	
 	
-	PPoly2D.prototype.calculateWorldVertices = function( position, rotation ){
+	PConvex2D.prototype.calculateWorldVertices = function( position, rotation ){
 	    var vertices = this.vertices,
 		worldVertices = this.worldVertices,
 		worldVertex, i, il;
@@ -221,7 +279,7 @@ define([
 	};
 	
 	
-	PPoly2D.prototype.calculateWorldNormals = function( rotation ){
+	PConvex2D.prototype.calculateWorldNormals = function( rotation ){
 	    var normals = this.normals,
 		worldNormals = this.worldNormals,
 		worldNormal, i, il;
@@ -239,6 +297,6 @@ define([
 	};
 	
 	
-	return PPoly2D;
+	return PConvex2D;
     }
 );

@@ -18,10 +18,10 @@ define([
         
         function Affine( a, b, c, d, x, y ){
 	    
-            this.a = a || 1;
+            this.a = a !== undefined ? a : 1;
             this.b = b || 0;
             this.c = c || 0;
-            this.d = d || 1;
+            this.d = d !== undefined ? d : 1;
             this.x = x || 0;
             this.y = y || 0;
 	}
@@ -109,6 +109,34 @@ define([
         };
 	
 	
+	Affine.prototype.smul = function( s ){
+	    
+	    this.a *= s;
+            this.b *= s;
+	    this.c *= s;
+            this.d *= s;
+	    this.x *= s;
+            this.y *= s;
+	    
+	    return this;
+        };
+        
+        
+        Affine.prototype.sdiv = function( s ){
+	    
+	    s = s !== 0 ? 1 / s : 1;
+	    
+	    this.a *= s;
+            this.b *= s;
+	    this.c *= s;
+            this.d *= s;
+	    this.x *= s;
+            this.y *= s;
+            
+            return this;
+        };
+	
+	
 	Affine.prototype.transpose = function(){
             var tmp = this.c; this.c = this.b; this.b = tmp;
 	    
@@ -116,7 +144,7 @@ define([
         };
 	
 	
-	Affine.prototype.getInverse = function( other ){
+	Affine.prototype.minv = function( other ){
 	    var a = other.a, b = other.b,
 		c = other.c, d = other.d,
 		x = other.x, y = other.y,
@@ -130,51 +158,16 @@ define([
 	    this.x = c * y - d * x;
 	    this.y = -( a * y - b * x );
 	    
-	    det = a * d - b * c;
-	    
-	    if( det === 0 ){
-		this.identity();
-	    }
-	    else{
-		this.smul( 1 / det );
-	    }
+	    this.smul( a * d - b * c );
 	    
             return this;
 	};
 	
 	
-	Affine.prototype.inverse = function(){
+	Affine.prototype.inv = function(){
 	    
             return this.getInverse( this );
 	};
-	
-	
-	Affine.prototype.smul = function( s ){
-	    var te = this.elements;
-	    
-	    this.a *= s;
-            this.b *= s;
-	    this.c *= s;
-            this.d *= s;
-	    this.x *= s;
-            this.y *= s;
-	    
-	    return this;
-        };
-	
-	
-	Affine.prototype.abs = function(){
-	    var te = this.elements;
-	    
-	    this.a = abs( this.a );
-            this.b = abs( this.b );
-	    this.c = abs( this.c );
-            this.d = abs( this.d );
-	    this.x = abs( this.x );
-            this.y = abs( this.y );
-	    
-	    return this;
-        };
 	
 	
 	Affine.prototype.alerp = function( a, b, t ){
@@ -200,6 +193,19 @@ define([
 	Affine.prototype.lerp = function( other, t ){
 	    
 	    return this.alerp( this, other, t );
+        };
+	
+	
+	Affine.prototype.abs = function(){
+	    
+	    this.a = abs( this.a );
+            this.b = abs( this.b );
+	    this.c = abs( this.c );
+            this.d = abs( this.d );
+	    this.x = abs( this.x );
+            this.y = abs( this.y );
+	    
+	    return this;
         };
 	
 	
@@ -334,7 +340,7 @@ define([
 	    this.a = 2 * w;
 	    this.b = 0;
 	    this.c = 0;
-	    this.d = -2 * h;
+	    this.d = 2 * -h;
 	    
 	    this.x = x;
 	    this.y = y;

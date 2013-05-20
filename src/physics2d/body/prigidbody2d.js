@@ -25,7 +25,7 @@ define([
 	    
 	    CIRCLE = PShape2D.CIRCLE,
 	    RECT = PShape2D.RECT,
-	    POLY = PShape2D.POLY;
+	    CONVEX = PShape2D.CONVEX;
 	
 	
 	function PRigidBody2D( opts ){
@@ -141,7 +141,7 @@ define([
 			
 			this.aabbNeedsUpdate = true;
 			
-			if( shapeType === RECT || shapeType === POLY ){
+			if( shapeType === RECT || shapeType === CONVEX ){
 			    shape.calculateWorldVertices( pos, this.rotation );
 			    shape.calculateWorldNormals( this.rotation );
 			}

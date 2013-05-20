@@ -7,9 +7,9 @@ define([
 	"math/vec2",
 	"math/aabb2",
 	"physics2d/shape/pshape2d",
-	"physics2d/shape/ppoly2d"
+	"physics2d/shape/pconvex2d"
     ],
-    function( Class, Mathf, Vec2, AABB2, PShape2D, PPoly2D ){
+    function( Class, Mathf, Vec2, AABB2, PShape2D, PConvex2D ){
 	"use strict";
 	
 	
@@ -26,12 +26,12 @@ define([
 		    new Vec2( w, -h )
 		];
 	    
-	    PPoly2D.call( this, vertices );
+	    PConvex2D.call( this, vertices );
 	    
 	    this.type = PShape2D.RECT;
 	}
 	
-	Class.extend( PRect, PPoly2D );
+	Class.extend( PRect, PConvex2D );
 	
 	
 	PRect.prototype.calculateAABB = function(){

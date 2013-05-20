@@ -113,7 +113,7 @@ define([
 		bottom = -top;
 		
 	    this.matrixProjection.orthographic( left, right, top, bottom );
-            this.matrixProjectionInverse.getInverse( this.matrixProjection );
+            this.matrixProjectionInverse.minv( this.matrixProjection );
             
             this.needsUpdate = false;
         };
@@ -139,7 +139,7 @@ define([
                 this.updateMatrixProjection();
             }
             
-            this.matrixWorldInverse.getInverse( this.matrixWorld );
+            this.matrixWorldInverse.minv( this.matrixWorld );
 	    
             this.trigger("lateupdate");
         };

@@ -63,7 +63,7 @@ define([
 	
 	PShape2D.CIRCLE = 0;
 	PShape2D.RECT = 1;
-	PShape2D.POLY = 2;
+	PShape2D.CONVEX = 2;
 	
 	
 	return PShape2D;

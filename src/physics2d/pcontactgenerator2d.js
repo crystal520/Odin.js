@@ -19,7 +19,7 @@ define([
 	    
 	    CIRCLE = PShape2D.CIRCLE,
 	    RECT = PShape2D.RECT,
-	    POLY = PShape2D.POLY,
+	    CONVEX = PShape2D.CONVEX,
 	    
 	    DYNAMIC = PBody2D.DYNAMIC,
 	    STATIC = PBody2D.STATIC,
@@ -95,26 +95,33 @@ define([
 	}
 	
 	
-	function circlePoly( contacts, a, b, sa, sb ){
+	function circleCONVEX( contacts, a, b, sa, sb ){
 	    var c = makeContact( a, b );
 	    
 	    contacts.push( c );
 	}
 	
 	
-	var sepAxis = new Vec2;
+	var sepAxis = new Vec2,
+	    manifolds = [];
 	
-	function polyPoly( contacts, a, b, sa, sb ){
+	function CONVEXCONVEX( contacts, a, b, sa, sb ){
+	    var c, i, il;
 	    
 	    if( sa.findSeparatingAxis( sb, a.position, b.position, sepAxis ) ){
-		var c = makeContact( a, b );
+		manifolds.length = 0;
+		sa.clipAgainstConvex( sepAxis, sb, manifolds );
 		
-		c.na.copy( sepAxis );
-		
-		c.ca.copy( c.na );
-		c.cb.copy( c.na ).negate();
-		
-		contacts.push( c );
+		for( i = 0, il = manifolds.length; i < il; i++ ){
+		    c = makeContact( a, b );
+		    
+		    c.na.copy( sepAxis ).negate();
+		    
+		    c.ca.copy( manifolds[i] ).negate();
+		    c.cb.copy( manifolds[i] );
+		    
+		    contacts.push( c );
+		}
 	    }
 	}
 	
@@ -132,22 +139,22 @@ define([
 			    break;
 			
 			case RECT:
-			case POLY:
-			    circlePoly( contacts, a, b, sa, sb );
+			case CONVEX:
+			    circleCONVEX( contacts, a, b, sa, sb );
 			    break;
 		    }
 		}
-		else if( sa.type === RECT || a.type === POLY ){
+		else if( sa.type === RECT || a.type === CONVEX ){
 		    
 		    switch( sb.type ){
 			
 			case CIRCLE:
-			    circlePoly( contacts, b, a, sa, sb );
+			    circleCONVEX( contacts, b, a, sa, sb );
 			    break;
 			
 			case RECT:
-			case POLY:
-			    polyPoly( contacts, a, b, sa, sb );
+			case CONVEX:
+			    CONVEXCONVEX( contacts, a, b, sa, sb );
 			    break;
 		    }
 		}

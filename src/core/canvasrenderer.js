@@ -13,6 +13,8 @@ define([
 	"use strict";
 	
 	var PI = Math.PI,
+	    TWO_PI = PI * 2,
+	    HALF_PI = PI * 0.5,
 	    defaultImg = new Image;
 	    
 	defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
@@ -24,6 +26,7 @@ define([
             Class.call( this );
             
 	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 128;
+	    this.invPixelRatio = 1 / this.pixelRatio;
 	    
             this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas( opts.width, opts.height );
             
@@ -74,6 +77,7 @@ define([
 		var self = this,
 		    background = scene.world.background,
 		    ctx = this.context,
+		    rigidbodies = scene._rigidbodies,
 		    sprites = scene._sprites,
 		    i, il;
 		
@@ -124,8 +128,55 @@ define([
 		for( i = 0, il = sprites.length; i < il; i++ ){
 		    this.renderSprite( sprites[i], camera );
 		}
+		
+		for( i = 0, il = rigidbodies.length; i < il; i++ ){
+		    this.renderRigidBody( rigidbodies[i], camera );
+		}
 	    };
         }();
+        
+        
+        CanvasRenderer.prototype.renderRigidBody = function(){
+	    var mvp = new Affine;
+	    
+	    return function( rigidbody, camera ){
+		var ctx = this.context,
+		    gameObject = rigidbody.gameObject,
+		    body = rigidbody.body,
+		    shape = body.shape,
+		    radius = shape.radius,
+		    vertices = shape.vertices,
+		    vertex, i, il;
+		
+		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
+		mvp.mmul( gameObject.matrixModelView, camera.matrixProjection );
+		
+		ctx.save();
+		
+		ctx.transform( mvp.a, mvp.b, mvp.c, mvp.d, mvp.x, mvp.y );
+		ctx.scale( 1, -1 );
+		
+		ctx.strokeStyle = "#ff0000";
+		ctx.lineWidth = this.invPixelRatio;
+		
+		ctx.beginPath();
+		
+		if( radius ){
+		    ctx.arc( 0, 0, radius, 0, TWO_PI );
+		}
+		if( vertices ){
+		    for( i = 0, il = vertices.length; i < il; i++ ){
+			vertex = vertices[i];
+			ctx.lineTo( vertex.x, vertex.y );
+		    }
+		}
+		
+		ctx.closePath();
+		ctx.stroke();
+		
+		ctx.restore();
+	    };
+	}();
         
         
         CanvasRenderer.prototype.renderSprite = function(){

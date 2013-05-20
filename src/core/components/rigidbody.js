@@ -7,10 +7,11 @@ define([
 	"core/components/component",
 	"math/vec2",
 	"physics2d/shape/pcircle",
+	"physics2d/shape/pconvex2d",
 	"physics2d/shape/prect",
 	"physics2d/body/prigidbody2d"
     ],
-    function( Class, Time, Component, Vec2, PCircle, PRect, PRigidBody2D ){
+    function( Class, Time, Component, Vec2, PCircle, PConvex2D, PRect, PRigidBody2D ){
         "use strict";
 	
         
@@ -25,13 +26,18 @@ define([
 		
 		case RigidBody.CIRCLE:
 		    
-		    shape = new PCircle( this.radius );
+		    shape = new PCircle( opts.radius );
+		    break;
+		    
+		case RigidBody.CONVEX:
+		    
+		    shape = new PConvex2D( opts.vertices );
 		    break;
 		    
 		case RigidBody.RECT:
 		default:
 		    
-		    shape = new PRect( this.extents );
+		    shape = new PRect( opts.extents );
 		    break;
 	    }
 	    
@@ -55,13 +61,13 @@ define([
 	    var body = this.body,
 		gameObject = this.gameObject;
 	    
-	    if( body.mass <= 0 ){
-		body.position.copy( gameObject.position );
-		body.rotation = gameObject.rotation;
-	    }
-	    else{
+	    if( body.mass > 0 ){
 		gameObject.position.copy( body.position );
 		gameObject.rotation = body.rotation;
+	    }
+	    else{
+		body.position.copy( gameObject.position );
+		body.rotation = gameObject.rotation;
 	    }
 	};
 	
@@ -80,6 +86,7 @@ define([
 	
 	RigidBody.CIRCLE = 0;
 	RigidBody.RECT = 1;
+	RigidBody.CONVEX = 2;
 	
         
         return RigidBody;

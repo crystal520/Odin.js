@@ -3,15 +3,17 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
+	"math/mathf",
 	"math/vec2",
 	"physics2d/pcontactgenerator2d",
 	"physics2d/body/pbody2d",
 	"physics2d/collision/pbroadphase2d"
     ],
-    function( Class, Vec2, PContactGenerator2D, PBody2D, PBroadphase2D ){
+    function( Class, Mathf, Vec2, PContactGenerator2D, PBody2D, PBroadphase2D ){
 	"use strict";
 	
 	var pow = Math.pow,
+	    clamp = Mathf.clamp,
 	    DYNAMIC = PBody2D.DYNAMIC,
 	    STATIC = PBody2D.STATIC,
 	    KINEMATIC = PBody2D.KINEMATIC;
@@ -76,28 +78,45 @@ define([
 	};
 	
 	
-	PWorld2D.prototype.step = function( dt ){
-	    var bodies = this.bodies,
-		contacts = this.contactGenerator.contacts,
-		body, i, il;
+	PWorld2D.prototype.step = function(){
+	    var accumulator = 0,
+		max = 1 / 24,
+		lastTime = 0,
+		time = 1 / 60;
 	    
-	    if( this._removeList.length ){
-		this._remove();
-	    }
-	    
-	    this.time += dt;
-	    
-	    this.broadphase.collisionPairs();
-	    this.contactGenerator.getContacts();
-	    
-	    for( i = 0, il = contacts.length; i < il; i++ ){
-		contacts[i].solve( dt );
-	    }
-	    
-	    for( i = 0, il = bodies.length; i < il; i++ ){
-		bodies[i].update( dt );
-	    }
-	};
+	    return function( dt ){
+		var bodies = this.bodies,
+		    contacts = this.contactGenerator.contacts,
+		    body, i, il;
+		
+		this.time = time += dt;
+		
+		accumulator += time - lastTime;
+		accumulator = accumulator < max ? accumulator : max;
+		
+		lastTime = time;
+		
+		if( this._removeList.length ){
+		    this._remove();
+		}
+		
+		while( accumulator > dt ){
+		    
+		    this.broadphase.collisionPairs();
+		    this.contactGenerator.getContacts();
+		    
+		    for( i = 0, il = contacts.length; i < il; i++ ){
+			contacts[i].solve( dt );
+		    }
+		    
+		    for( i = 0, il = bodies.length; i < il; i++ ){
+			bodies[i].update( dt );
+		    }
+		    
+		    accumulator -= dt;
+		}
+	    };
+	}();
 	
 	
 	return PWorld2D;

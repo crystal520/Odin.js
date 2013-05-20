@@ -25,7 +25,9 @@ define(
 	Odin.AABB2 = require("math/aabb2");
 	Odin.Affine = require("math/affine");
 	Odin.Color = require("math/color");
+	Odin.Mat2 = require("math/mat2");
 	Odin.Mathf = require("math/mathf");
+	Odin.Ray2 = require("math/ray2");
 	Odin.Vec2 = require("math/vec2");
 	
 	Odin.PBody2D = require("physics2d/body/pbody2d");
@@ -36,7 +38,7 @@ define(
 	Odin.PSolver2D = require("physics2d/collision/psolver2d");
 	
 	Odin.PCircle = require("physics2d/shape/pcircle");
-	Odin.PPoly2D = require("physics2d/shape/ppoly2d");
+	Odin.PConvex2D = require("physics2d/shape/pconvex2d");
 	Odin.PRect = require("physics2d/shape/prect");
 	Odin.PShape2D = require("physics2d/shape/pshape2d");
 	

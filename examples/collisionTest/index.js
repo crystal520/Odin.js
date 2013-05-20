@@ -23,7 +23,7 @@ require(
 	    scene = new Scene;
 	    camera = new Camera2D;
 	    camera.on("update", function(){
-		this.follow( ball, 8 );
+		this.follow( ball, 16 );
 	    });
 	    
 	    ball = new GameObject2D({
