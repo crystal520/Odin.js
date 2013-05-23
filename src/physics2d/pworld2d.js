@@ -18,7 +18,6 @@ define([
 	    STATIC = PBody2D.STATIC,
 	    KINEMATIC = PBody2D.KINEMATIC;
 	
-	
 	function PWorld2D( opts ){
 	    opts || ( opts = {} );
 	    
@@ -29,15 +28,18 @@ define([
 	    
 	    this.bodies = [];
 	    
-	    this.pairsA = [];
-	    this.pairsB = [];
+	    this.contacts = [];
+	    
+	    this.pairsi = [];
+	    this.pairsj = [];
 	    
 	    this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
 	    
-	    this.broadphase = new PBroadphase2D( this, opts.aabbBroadphase );
-	    this.contactGenerator = new PContactGenerator2D( this );
+	    this.broadphase = new PBroadphase2D( opts.aabbBroadphase );
+	    this.contactGenerator = new PContactGenerator2D();
+	    this.solver = new PSolver2D();
 	    
-	    this._removeList = [];
+	    this.removeList = [];
 	}
 	
 	Class.extend( PWorld2D, Class );
@@ -63,7 +65,7 @@ define([
 	
 	PWorld2D.prototype._remove = function(){
 	    var bodies = this.bodies,
-		removeList = this._removeList,
+		removeList = this.removeList,
 		body, index, i, il;
 	    
 	    for( i = 0, il = removeList.length; i < il; i++ ){
@@ -80,34 +82,41 @@ define([
 	
 	PWorld2D.prototype.step = function(){
 	    var accumulator = 0,
-		max = 1 / 24,
+		max = 0.25,
 		lastTime = 0,
-		time = 1 / 60;
+		ddt = 1 / 60,
+		time = 0;
 	    
 	    return function( dt ){
 		var bodies = this.bodies,
+		    solver = this.solver,
 		    contacts = this.contactGenerator.contacts,
-		    body, i, il;
+		    pairsi = this.pairsi, pairsj = this.pairsj,
+		    contacts = this.contacts,
+		    c, i, il, j, jl;
 		
 		this.time = time += dt;
 		
 		accumulator += time - lastTime;
-		accumulator = accumulator < max ? accumulator : max;
+		accumulator = accumulator > max ? max : accumulator;
+		dt = dt !== 0 ? dt : ddt;
 		
-		lastTime = time;
-		
-		if( this._removeList.length ){
+		if( this.removeList.length ){
 		    this._remove();
 		}
 		
-		while( accumulator > dt ){
+		while( accumulator >= dt ){
 		    
-		    this.broadphase.collisionPairs();
-		    this.contactGenerator.getContacts();
+		    this.broadphase.collisionPairs( this, pairsi, pairsj );
+		    this.contactGenerator.getContacts( this, pairsi, pairsj, contacts );
 		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
-			contacts[i].solve( dt );
+			c = contacts[i];
+			solver.add( c );
 		    }
+		    
+		    solver.solve( dt, this );
+		    solver.clear();
 		    
 		    for( i = 0, il = bodies.length; i < il; i++ ){
 			bodies[i].update( dt );
@@ -115,6 +124,8 @@ define([
 		    
 		    accumulator -= dt;
 		}
+		
+		lastTime = time;
 	    };
 	}();
 	

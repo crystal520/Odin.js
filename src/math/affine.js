@@ -13,6 +13,8 @@ define([
 	    atan2 = Math.atan2,
 	    abs = Math.abs,
 	    sqrt = Math.sqrt,
+	    HALF_PI = Math.PI * 0.5,
+	    lerp = Mathf.lerp,
 	    equals = Mathf.equals;
         
         
@@ -192,7 +194,14 @@ define([
 	
 	Affine.prototype.lerp = function( other, t ){
 	    
-	    return this.alerp( this, other, t );
+	    this.a = lerp( this.a, other.a, t );
+	    this.b = lerp( this.b, other.b, t );
+	    this.c = lerp( this.c, other.c, t );
+	    this.d = lerp( this.d, other.d, t );
+	    this.x = lerp( this.x, other.x, t );
+	    this.y = lerp( this.y, other.y, t );
+	    
+	    return this;
         };
 	
 	
@@ -282,6 +291,21 @@ define([
 	};
 	
 	
+	Affine.prototype.lookAt = function( eye, target ){
+	    var x = target.x - eye.x,
+		y = target.y - eye.y,
+		a = atan2( y, x ) - HALF_PI,
+		c = cos( a ), s = sin( a );
+	    
+	    this.a = c;
+	    this.b = s;
+	    this.c = -s;
+	    this.d = c;
+	    
+	    return this;
+	};
+	
+	
 	Affine.prototype.translate = function( v ){
 	    var x = v.x, y = v.y;
 	    
@@ -361,7 +385,14 @@ define([
         
         Affine.prototype.equals = function( other ){
             
-            return Affine.equals( this, other );
+            return !(
+		!equals( this.a, other.a ) ||
+		!equals( this.b, other.b ) ||
+		!equals( this.c, other.c ) ||
+		!equals( this.d, other.d ) ||
+		!equals( this.x, other.x ) ||
+		!equals( this.y, other.y )
+	    );
         };
 	
         

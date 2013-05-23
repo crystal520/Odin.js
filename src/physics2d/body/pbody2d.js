@@ -31,9 +31,11 @@ define([
 	    this.mass = opts.mass !== undefined ? opts.mass : 1;
 	    this.invMass = this.mass <= 0 ? 0 : 1 / this.mass;
 	    
-	    this.type = this.mass < 0 ? PBody2D.STATIC : PBody2D.DYNAMIC;
+	    this.type = opts.type ? opts.type : this.mass <= 0 ? PBody2D.STATIC : PBody2D.DYNAMIC;
 	    
 	    this.force = new Vec2;
+	    
+	    this.vlambda = new Vec2;
 	    
 	    this.allowSleep = true;
 	    this.sleepState = AWAKE;
@@ -63,10 +65,10 @@ define([
 	};
 	
 	
-	PBody2D.prototype.wakeUp = function(){
+	PBody2D.prototype.wake = function(){
 	    
 	    if( this.sleepState === SLEEPING ){
-		this.trigger("wakeup");
+		this.trigger("wake");
 	    }
 	    this.sleepState = AWAKE;
 	};
@@ -74,6 +76,9 @@ define([
 	
 	PBody2D.prototype.sleep = function(){
 	    
+	    if( this.sleepState !== SLEEPING ){
+		this.trigger("sleep");
+	    }
 	    this.sleepState = SLEEPING;
 	};
 	
@@ -93,66 +98,60 @@ define([
 		    this.trigger("sleepy");
 		}
 		else if( sleepState === SLEEPY && speedSq > speedLimitSq ){
-		    this.wakeUp();
+		    
+		    this.wake();
 		}
 		else if( sleepState === SLEEPY && ( time - this.timeLastSleepy ) > this.timeLastSleepy ){
 		    
-		    this.sleepState = SLEEPING;
-		    this.trigger("sleep");
+		    this.sleep();
 		}
 	    }
 	};
 	
 	
-	PBody2D.prototype.update = function(){
-	    var linearDamping = new Vec2;
+	PBody2D.prototype.update = function( dt ){
+	    var world = this.world,
+		gravity = world.gravity,
+		
+		sleepState = this.sleepState,
+		type = this.type,
+		
+		force = this.force,
+		vel = this.velocity,
+		pos = this.position,
+		mass = this.mass, invMass = this.invMass;
 	    
-	    return function( dt ){
-		var world = this.world,
-		    gravity = world.gravity,
-		    
-		    sleepState = this.sleepState,
-		    type = this.type,
-		    
-		    force = this.force,
-		    vel = this.velocity,
-		    pos = this.position,
-		    mass = this.mass, invMass = this.invMass;
+	    this.trigger("prestep");
+	    
+	    if( type === DYNAMIC ){
+		force.x += gravity.x * mass;
+		force.y += gravity.y * mass;
 		
-		this.trigger("prestep");
+		vel.x *= pow( 1 - this.linearDamping.x, dt );
+		vel.y *= pow( 1 - this.linearDamping.y, dt );
+	    }
+	    
+	    if( type === DYNAMIC || type === KINEMATIC ){
+		vel.x += force.x * invMass * dt;
+		vel.y += force.y * invMass * dt;
 		
-		if( type === DYNAMIC ){
-		    force.x += gravity.x * mass;
-		    force.y += gravity.y * mass;
+		if( sleepState !== SLEEPING ){
+		    pos.x += vel.x * dt;
+		    pos.y += vel.y * dt;
 		    
-		    linearDamping.x = pow( 1 - this.linearDamping.x, dt );
-		    linearDamping.y = pow( 1 - this.linearDamping.y, dt );
-		    
-		    vel.mul( linearDamping );
+		    this.aabbNeedsUpdate = true;
 		}
-		
-		if( type === DYNAMIC || type === KINEMATIC ){
-		    vel.x += force.x * invMass * dt;
-		    vel.y += force.y * invMass * dt;
-		    
-		    if( sleepState !== SLEEPING ){
-			pos.x += vel.x * dt;
-			pos.y += vel.y * dt;
-			
-			this.aabbNeedsUpdate = true;
-		    }
-		}
-		
-		force.x = 0;
-		force.y = 0;
-		
-		this.trigger("poststep");
-		
-		if( world.allowSleep ){
-		    this.sleepTick( world.time );
-		}
-	    };
-	}();
+	    }
+	    
+	    force.x = 0;
+	    force.y = 0;
+	    
+	    if( world.allowSleep ){
+		this.sleepTick( world.time );
+	    }
+	    
+	    this.trigger("poststep");
+	};
 	
 	
 	PBody2D.DYNAMIC = 0;

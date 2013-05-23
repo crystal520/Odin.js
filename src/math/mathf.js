@@ -16,7 +16,7 @@ define(
 	    TO_RADS = PI / 180,
 	    TO_DEGS = 180 / PI,
 	    modulo, clamp01, standardRadian, standardAngle, randFloat;
-	
+	    
 	
 	function Mathf(){
 	    

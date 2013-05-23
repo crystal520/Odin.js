@@ -56,6 +56,17 @@ define([
             
             return this;
         };
+	
+	
+	Mat2.prototype.identity = function(){
+            
+            this.set(
+                1, 0,
+                0, 1
+            );
+            
+            return this;
+        };
         
         
         Mat2.prototype.mmul = function( a, b ){
@@ -146,15 +157,26 @@ define([
 	    te[2] = -m21;
 	    te[3] = m11;
 	    
-	    this.smul( m11 * m22 - m12 * m21 );
+	    this.sdiv( m11 * m22 - m12 * m21 );
 	    
             return this;
 	};
 	
 	
 	Mat2.prototype.inv = function(){
+	    var te = this.elements,
+		
+		m11 = te[0], m12 = te[2],
+		m21 = te[1], m22 = te[3];
+            
+	    te[0] = m22;
+	    te[1] = -m12;
+	    te[2] = -m21;
+	    te[3] = m11;
 	    
-            return this.getInverse( this );
+	    this.sdiv( m11 * m22 - m12 * m21 );
+	    
+            return this;
 	};
         
         
@@ -245,8 +267,15 @@ define([
 	
         
         Mat2.prototype.equals = function( other ){
-            
-            return Mat2.equals( this, other );
+            var ae = this.elements,
+		be = other.elements;
+	    
+            return !(
+                !equals( ae[0], be[0] ) ||
+                !equals( ae[1], be[1] ) ||
+                !equals( ae[2], be[2] ) ||
+                !equals( ae[3], be[3] )
+            );
         };
         
         

@@ -146,6 +146,7 @@ define([
 		    shape = body.shape,
 		    radius = shape.radius,
 		    vertices = shape.vertices,
+		    aabb = shape.aabb,
 		    vertex, i, il;
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );

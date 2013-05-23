@@ -497,7 +497,12 @@ define([
         
         Color.prototype.equals = function( other ){
             
-            return Color.equals( this, other );
+            return !(
+                !equals( this.r, other.r ) ||
+                !equals( this.g, other.g ) ||
+                !equals( this.b, other.b ) ||
+                !equals( this.a, other.a )
+            );
         };
         
         

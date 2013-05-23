@@ -19,6 +19,8 @@ define([
 	    this.radius = radius !== undefined ? radius : 0.5;
 	    
 	    this.type = PShape2D.CIRCLE;
+	    
+	    this.calculateBoundingRadius();
 	}
 	
 	Class.extend( PCircle, PShape2D );
@@ -31,6 +33,11 @@ define([
 	    this.aabb.max.set( r, r );
 	    this.aabbNeedsUpdate = false;
 	    
+	    return this;
+	};
+	
+	
+	PCircle.prototype.calculateWorldAABB = function( position, rotation, aabb ){
 	    return this;
 	};
 	

@@ -2,31 +2,31 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
-	"math/vec2"
+	"math/vec3"
     ],
-    function( Vec2 ){
+    function( Vec3 ){
         "use strict";
         
-	var vEquals = Vec2.equals;
+	var vEquals = Vec3.equals;
 	
         
-        function Ray2( origin, direction ){
+        function Ray3( origin, direction ){
             
-            this.origin = origin instanceof Vec2 ? origin : new Vec2;
-            this.direction = direction instanceof Vec2 ? direction : new Vec2;
+            this.origin = origin instanceof Vec3 ? origin : new Vec3;
+            this.direction = direction instanceof Vec3 ? direction : new Vec3;
 	}
         
         
-        Ray2.prototype.clone = function(){
+        Ray3.prototype.clone = function(){
             
-            return new Ray2(
+            return new Ray3(
 		this.origin.clone(),
 		this.direction.clone()
 	    );
 	};
         
         
-        Ray2.prototype.copy = function( other ){;
+        Ray3.prototype.copy = function( other ){;
             
             this.origin.copy( other.origin );
             this.direction.copy( other.direction );
@@ -35,7 +35,7 @@ define([
 	};
         
         
-        Ray2.prototype.set = function( origin, direction ){;
+        Ray3.prototype.set = function( origin, direction ){;
             
             this.origin.copy( origin );
             this.direction.copy( direction );
@@ -44,33 +44,23 @@ define([
 	};
         
         
-        Ray2.prototype.at = function( length, target ){
-            target = target || new Vec2;
+        Ray3.prototype.at = function( length, target ){
+            target = target || new Vec3;
 	    
             return target.copy( this.direction ).smul( length ).add( this.origin );
         };
         
         
-        Ray2.prototype.clear = function(){
+        Ray3.prototype.clear = function(){
             
-            this.origin.set( 0, 0 );
-            this.direction.set( 0, 0 );
+            this.origin.set( 0, 0, 0 );
+            this.direction.set( 0, 0, 0 );
             
             return this;
         };
 	
 	
-	Ray2.prototype.applyAffine = function( m ){
-	    
-	    this.direction.add( this.origin ).applyAffine( m );
-	    this.origin.applyAffine( m );
-	    this.direction.sub( this.origin );
-	    
-	    return this;
-	};
-	
-	
-	Ray2.prototype.applyMat3 = function( m ){
+	Ray3.prototype.applyMat3 = function( m ){
 	    
 	    this.direction.add( this.origin ).applyMat3( m );
 	    this.origin.applyMat3( m );
@@ -80,7 +70,7 @@ define([
 	};
 	
 	
-	Ray2.prototype.applyMat4 = function( m ){
+	Ray3.prototype.applyMat4 = function( m ){
 	    
 	    this.direction.add( this.origin ).applyMat4( m );
 	    this.origin.applyMat4( m );
@@ -90,14 +80,14 @@ define([
 	};
         
         
-        Ray2.prototype.toString = function(){
+        Ray3.prototype.toString = function(){
             var origin = this.origin, direction = this.direction;
 	    
-            return "Ray2( origin: "+ origin.x +", "+ origin.y +", max: "+ direction.x +", "+ direction.y +" )";
+            return "Ray3( origin: "+ origin.x +", "+ origin.y +", "+ origin.z +", max: "+ direction.x +", "+ direction.y +", "+ direction.z +" )";
 	};
         
         
-        Ray2.prototype.equals = function( other ){
+        Ray3.prototype.equals = function( other ){
             
             return !(
                 !vEquals( this.origin, other.origin ) ||
@@ -106,7 +96,7 @@ define([
 	};
         
         
-        Ray2.equals = function( a, b ){
+        Ray3.equals = function( a, b ){
             
             return !(
                 !vEquals( a.origin, b.origin ) ||
@@ -114,6 +104,6 @@ define([
             );
 	};
         
-        return Ray2;
+        return Ray3;
     }
 );

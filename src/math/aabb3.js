@@ -2,34 +2,34 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
-	"math/vec2"
+	"math/vec3"
     ],
-    function( Vec2 ){
+    function( Vec3 ){
         "use strict";
         
-	var vEquals = Vec2.equals,
+	var vEquals = Vec3.equals,
 	    abs = Math.abs,
 	    cos = Math.cos,
 	    sin = Math.sin;
 	
         
-        function AABB2( min, max ){
+        function AABB3( min, max ){
             
-            this.min = min instanceof Vec2 ? min : new Vec2;
-            this.max = max instanceof Vec2 ? max : new Vec2;
+            this.min = min instanceof Vec3 ? min : new Vec3;
+            this.max = max instanceof Vec3 ? max : new Vec3;
 	}
         
         
-        AABB2.prototype.clone = function(){
+        AABB3.prototype.clone = function(){
             
-            return new AABB2(
+            return new AABB3(
 		this.min.clone(),
 		this.max.clone()
 	    );
 	};
         
         
-        AABB2.prototype.copy = function( other ){;
+        AABB3.prototype.copy = function( other ){;
             
             this.min.copy( other.min );
             this.max.copy( other.max );
@@ -38,7 +38,7 @@ define([
 	};
         
         
-        AABB2.prototype.setFromPoints = function( points ){
+        AABB3.prototype.setFromPoints = function( points ){
             var point, i = 0, il = points.length,
 		min = this.min, max = this.max;
             
@@ -62,16 +62,16 @@ define([
         };
         
         
-        AABB2.prototype.clear = function(){
+        AABB3.prototype.clear = function(){
             
-            this.min.set( 0, 0 );
-            this.max.set( 0, 0 );
+            this.min.set( 0, 0, 0);
+            this.max.set( 0, 0, 0 );
             
             return this;
         };
         
         
-        AABB2.prototype.setCenter = function( center ){
+        AABB3.prototype.setCenter = function( center ){
 	    
 	    this.min.add( center );
 	    this.max.add( center );
@@ -80,52 +80,36 @@ define([
 	};
         
         
-        AABB2.prototype.rotate = function(){
-	    var points = [ new Vec2, new Vec2, new Vec2, new Vec2 ];
-	    
-	    return function( a ){
-		var min = this.min, max = this.max;
-		
-		points[0].set( max.x, max.y ).rotate( a );
-		points[1].set( min.x, max.y ).rotate( a );
-		points[2].set( min.x, min.y ).rotate( a );
-		points[3].set( max.x, min.y ).rotate( a );
-		
-		this.setFromPoints( points );
-		
-		return this;
-	    };
-	}();
-        
-        
-        AABB2.prototype.contains = function( point ){
+        AABB3.prototype.contains = function( point ){
             
 	    return !(
 		point.x < this.min.x || point.x > this.max.x ||
-                point.y < this.min.y || point.y > this.max.y
+                point.y < this.min.y || point.y > this.max.y ||
+                point.z < this.min.z || point.z > this.max.z
 	    );
 	};
         
         
-        AABB2.prototype.intersects = function( other ){
+        AABB3.prototype.intersects = function( other ){
             var aMin = this.min, aMax = this.max,
 		bMin = other.min, bMax = other.max;
 	    
 	    return !(
 		aMax.x < bMin.x || aMax.y < bMin.y || 
-                aMin.x > bMax.x || aMin.y > bMax.y
+                aMin.x > bMax.x || aMin.y > bMax.y || 
+                aMin.z > bMax.z || aMin.z > bMax.z
 	    );
 	};
         
         
-        AABB2.prototype.toString = function(){
+        AABB3.prototype.toString = function(){
             var min = this.min, max = this.max;
 	    
-            return "AABB2( min: "+ min.x +", "+ min.y +", max: "+ max.x +", "+ max.y +" )";
+            return "AABB3( min: "+ min.x +", "+ min.y +", "+ min.z +", max: "+ max.x +", "+ max.y +", "+ max.z +" )";
 	};
         
         
-        AABB2.prototype.equals = function( other ){
+        AABB3.prototype.equals = function( other ){
             
             return !(
                 !vEquals( this.min, other.min ) ||
@@ -134,18 +118,18 @@ define([
 	};
         
         
-        AABB2.intersects = function( a, b ){
+        AABB3.intersects = function( a, b ){
             var aMin = a.min, aMax = a.max,
 		bMin = b.min, bMax = b.max;
 	    
 	    return !(
-		aMax.x < bMin.x || aMax.y < bMin.y || 
-                aMin.x > bMax.x || aMin.y > bMax.y
+		aMax.x < bMin.x || aMax.y < bMin.y || aMax.z < bMin.z ||
+                aMin.x > bMax.x || aMin.y > bMax.y || aMin.z > bMax.z
 	    );
 	};
         
         
-        AABB2.equals = function( a, b ){
+        AABB3.equals = function( a, b ){
             
             return !(
                 !vEquals( a.min, b.min ) ||
@@ -153,6 +137,6 @@ define([
             );
 	};
         
-        return AABB2;
+        return AABB3;
     }
 );

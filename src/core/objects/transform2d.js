@@ -12,6 +12,7 @@ define([
         "use strict";
         
 	var isNumber = Utils.isNumber,
+	    EPSILON = Mathf.EPSILON,
 	    standardRadian = Mathf.standardRadian;
 	
 	
@@ -250,9 +251,7 @@ define([
 		    vec.copy( target );
 		}
 		
-		mat.lookAt( this.position, vec );
-		
-		this.rotation = mat.getRotation();
+		this.rotation = mat.lookAt( this.position, vec ).getRotation();
 	    };
         }();
 	
@@ -261,7 +260,7 @@ define([
 	    var vec = new Vec2;
 	    
 	    return function( target, damping, relativeTo ){
-		damping = damping > 0 ? damping : 1;
+		damping = damping ? damping : 1;
 		
 		if( target instanceof Transform2D ){
 		    vec.vsub( target.position, this.position );
@@ -270,7 +269,7 @@ define([
 		    vec.vsub( target, this.position );
 		}
 		
-		if( vec.lenSq() > 0.1 ){
+		if( vec.lenSq() > EPSILON ){
 		    this.translate( vec.smul( 1 / damping ), relativeTo );
 		}
 	    };

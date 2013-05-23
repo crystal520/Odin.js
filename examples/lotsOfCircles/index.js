@@ -24,51 +24,44 @@ require(
 	    camera = new Camera2D({
 		zoom: 2
 	    });
-	    camera.on("update", function(){
-		this.follow( ball, 16 );
-	    });
 	    
-	    ball = new GameObject2D({
-		position: new Vec2( 0, 4 ),
-		components: [
-		    new Sprite({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1
-		    }),
-		    new RigidBody({
-			shape: RigidBody.CIRCLE,
-			mass: 1,
-			radius: 0.5
+	    for( var i = 0; i < 100; i++ ){
+		scene.add(
+		    new GameObject2D({
+			position: new Vec2( Mathf.randFloat( -1, 1 ), Mathf.randFloat( -5, 10 ) ),
+			components: [
+			    new Sprite({
+				image: player,
+				x: 0,
+				y: 0,
+				w: 64,
+				h: 64,
+				width: 1,
+				height: 1
+			    }),
+			    new RigidBody({
+				shape: RigidBody.CIRCLE,
+				linearDamping: new Vec2( 0, 0 ),
+				mass: Math.random(),
+				radius: 0.5
+			    })
+			]
 		    })
-		]
-	    });
+		);
+	    }
 	    
-	    ball2 = new GameObject2D({
-		position: new Vec2( 0, 0 ),
+	    ground = new GameObject2D({
+		position: new Vec2( 0, -1029 ),
 		components: [
-		    new Sprite({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1
-		    }),
 		    new RigidBody({
 			shape: RigidBody.CIRCLE,
 			mass: 0,
-			radius: 0.5
+			radius: 1024
 		    })
 		]
 	    });
 	    
-	    scene.add( ball, ball2 );
+	    scene.add( ground );
 	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );

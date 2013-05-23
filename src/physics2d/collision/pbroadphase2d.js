@@ -15,28 +15,29 @@ define([
 	    KINEMATIC = PBody2D.KINEMATIC;
 	
 	
-	function PBroadphase2D( world, aabbBroadphase ){
+	function PBroadphase2D( aabbBroadphase ){
 	    
 	    Class.call( this );
 	    
-	    this.world = world;
 	    this.aabbBroadphase = aabbBroadphase !== undefined ? aabbBroadphase : true;
 	}
 	
 	Class.extend( PBroadphase2D, Class );
 	
 	
-	PBroadphase2D.prototype.needBroadphaseTest = function( a, b ){
+	PBroadphase2D.prototype.needBroadphaseTest = function( bi, bj ){
 	    
-	    if( a.filterGroup !== b.filterGroup ){
+	    if( bi.filterGroup !== bj.filterGroup ){
 		return false;
 	    }
 	    
-	    if( !a.shape && !b.shape ){
+	    if( ( bi.type === KINEMATIC || bi.type === STATIC || bi.isSleeping() ) &&
+		( bj.type === KINEMATIC || bj.type === STATIC || bj.isSleeping() )
+	    ){
 		return false;
 	    }
 	    
-	    if( ( a.type === DYNAMIC || a.type === STATIC || a.isSleeping() ) && ( b.type === DYNAMIC || b.type === STATIC || b.isSleeping() ) ){
+	    if( !bi.shape && !bj.shape ){
 		return false;
 	    }
 	    
@@ -44,51 +45,49 @@ define([
 	};
 	
 	
-	PBroadphase2D.prototype.collisionPairs = function(){
-	    var world = this.world,
-		pairsA = world.pairsA, pairsB = world.pairsB,
-		bodies = world.bodies,
-		bodyA, bodyB,
-		i, j, il;
+	PBroadphase2D.prototype.collisionPairs = function( world, pairsi, pairsj ){
+	    var bodies = world.bodies,
+		bi, bj, i, j, il;
 	    
-	    pairsA.length = pairsB.length = 0;
+	    pairsi.length = pairsj.length = 0;
 	    
 	    for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
-		bodyA = bodies[i];
-		bodyB = bodies[j];
+		bi = bodies[i];
+		bj = bodies[j];
 		
-		if( this.needBroadphaseTest( bodyA, bodyB ) ){
+		if( !this.needBroadphaseTest( bi, bj ) ){
 		    continue;
 		}
 		
-		this.intersectionTest( bodyA, bodyB, pairsA, pairsB );
+		this.intersectionTest( bi, bj, pairsi, pairsj );
 	    }
 	};
 	
 	
-	PBroadphase2D.prototype.intersectionTest = function( bodyA, bodyB, pairsA, pairsB ){
+	PBroadphase2D.prototype.intersectionTest = function( bi, bj, pairsi, pairsj ){
 	    
 	    if( this.aabbBroadphase ){
-		this.doAABBBroadphase( bodyA, bodyB, pairsA, pairsB );
+		this.doAABBBroadphase( bi, bj, pairsi, pairsj );
 	    }
 	    else{
-		this.doBoundingRadiusBroadphase( bodyA, bodyB, pairsA, pairsB );
+		this.doBoundingRadiusBroadphase( bi, bj, pairsi, pairsj );
 	    }
 	};
 	
 	
-	PBroadphase2D.prototype.doAABBBroadphase = function( bodyA, bodyB, pairsA, pairsB ){
+	PBroadphase2D.prototype.doAABBBroadphase = function( bi, bj, pairsi, pairsj ){
 	    
-	    if( bodyA.aabbNeedsUpdate ){
-		bodyA.calculateAABB();
+	    if( bi.aabbNeedsUpdate ){
+		bi.calculateAABB();
 	    }
-	    if( bodyB.aabbNeedsUpdate ){
-		bodyB.calculateAABB();
+	    if( bj.aabbNeedsUpdate ){
+		bj.calculateAABB();
 	    }
 	    
-	    if( AABB2.intersects( bodyA.aabb, bodyB.aabb ) ){
-		pairsA.push( bodyA );
-		pairsB.push( bodyB );
+	    if( AABB2.intersects( bi.aabb, bj.aabb ) ){
+		
+		pairsi.push( bi );
+		pairsj.push( bj );
 	    }
 	};
 	
@@ -96,56 +95,54 @@ define([
 	PBroadphase2D.prototype.doBoundingRadiusBroadphase = function(){
 	    var dist = new Vec2;
 	    
-	    return function( bodyA, bodyB, pairsA, pairsB ){
-		var aShape = bodyA.shape, bShape = bodyB.shape,
-		    radius, radiusSq, distSq;
+	    return function( bi, bj, pairsi, pairsj ){
+		var si = bi.shape, sj = bj.shape,
+		    radius, radiusSq;
 		    
-		if( aShape.boundingRadiusNeedsUpdate ){
-		    aShape.calculateBoundingRadius();
+		if( si.boundingRadiusNeedsUpdate ){
+		    si.calculateBoundingRadius();
 		}
-		if( bShape.boundingRadiusNeedsUpdate ){
-		    bShape.calculateBoundingRadius();
+		if( sj.boundingRadiusNeedsUpdate ){
+		    sj.calculateBoundingRadius();
 		}
 		
-		radius = aShape.boundingRadius + bShape.boundingRadius;
+		radius = si.boundingRadius + sj.boundingRadius;
 		radiusSq = radius * radius;
 		
-		distSq = dist.vsub( bodyA.position, bodyB.position ).lenSq();
+		dist.vsub( bi.position, bj.position );
 		
-		if( distSq <= radiusSq ){
-		    pairsA.push( bodyA );
-		    pairsB.push( bodyB );
+		if( dist.lenSq() <= radiusSq ){
+		    pairsi.push( bi );
+		    pairsj.push( bj );
 		}
 	    };
 	}();
 	
 	
 	PBroadphase2D.prototype.makePairsUnique = function(){
-	    var pA = [], pB = [], tmp = [];
+	    var pi = [], pj = [], tmp = [];
 	    
-	    return function(){
-		var world = this.world,
-		    pairsA = world._pairsA, pairsB = world._pairsB,
-		    idx, idA, idB, i, il = pairsA.length;
-		    
+	    return function( world, pairsi, pairsj ){
+		var idx, idi, idj, i, il = pairsi.length;
+		
 		for( i = 0; i < il; i++ ){
-		    pA[i] = pairsA[i];
-		    pB[i] = pairsB[i];
+		    pi[i] = pairsi[i];
+		    pj[i] = pairsj[i];
 		}
 		
 		pairsA.length = pairsB.length = 0;
 		
 		for( i = 0; i < il; i++ ){
-		    idA = pA[i]._id;
-		    idB = pB[i]._id;
-		    idx = idA < idB ? idA +","+ idB : idB +","+ idB;
+		    idi = pi[i]._id;
+		    idj = pj[i]._id;
+		    idx = idi < idj ? idi +","+ idj : idj +","+ idj;
 		    tmp[ idx ] = i;
 		}
 		
 		for( idx in tmp ){
 		    i = tmp[ idx ];
-		    pairsA.push( pA[i] );
-		    pairsB.push( pB[i] );
+		    pairsi.push( pi[i] );
+		    pairsj.push( pj[i] );
 		    delete tmp[ idx ];
 		}
 	    };

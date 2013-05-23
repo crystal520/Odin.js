@@ -19,174 +19,28 @@ define([
 	
 	function PConvex2D( vertices ){
 	    
+	    PShape2D.call( this );
+	    
+	    this.type = PShape2D.CONVEX;
+	    
 	    this.vertices = vertices || [
 		new Vec2( 0, 0.5 ),
 		new Vec2( -0.5, -0.5 ),
 		new Vec2( 0.5, -0.5 )
 	    ];
-	    
-	    PShape2D.call( this );
-	    
-	    this.type = PShape2D.CONVEX;
-	    
 	    this.worldVertices = [];
 	    
 	    this.normals = [];
 	    this.worldNormals = [];
 	    
+	    this.worldVerticesNeedsUpdate = true;
+	    this.worldNormalsNeedsUpdate = true;
+	    
 	    this.calculateNormals();
+	    this.calculateBoundingRadius();
 	}
 	
 	Class.extend( PConvex2D, PShape2D );
-	
-	
-	PConvex2D.prototype.findSeparatingAxis = function(){
-	    var dist = new Vec2;
-	    
-	    return function( other, posA, posB, sepAxis ){
-		var normalsA = this.normals, normalsB = other.normals,
-		    axis, d, dmin = Infinity, i, il;
-		    
-		for( i = 0, il = normalsA.length; i < il; i++ ){
-		    axis = normalsA[i];
-		    
-		    d = this.testSepAxis( axis, other );
-		    
-		    if( d === false ){
-			return false;
-		    }
-		    
-		    if( d < dmin ){
-			dmin = d;
-			sepAxis.copy( axis );
-		    }
-		}
-		
-		for( i = 0, il = normalsB.length; i < il; i++ ){
-		    axis = normalsB[i];
-		    
-		    d = other.testSepAxis( axis, this );
-		    
-		    if( d === false ){
-			return false;
-		    }
-		    
-		    if( d < dmin ){
-			dmin = d;
-			sepAxis.copy( axis );
-		    }
-		}
-		
-		dist.vsub( posB, posA );
-		
-		if( dist.dot( sepAxis ) > 0 ){
-		    sepAxis.negate();
-		}
-		
-		return true;
-	    };
-	}();
-	
-	
-	PConvex2D.prototype.testSepAxis = function(){
-	    var minmaxA = [],
-		minmaxB = [];
-		
-	    function project( axis, shape, minmax ){
-		var vertices = shape.worldVertices,
-		    d = vertices[0].dot( axis ),
-		    tmp, min = d, max = d,
-		    i, il;
-		    
-		for( i = 1, il = vertices.length; i < il; i++ ){
-		    d = vertices[i].dot( axis );
-		    
-		    if( d < min ) min = d;
-		    else if( d > max ) max = d;
-		}
-		
-		if( min > max ){
-		    tmp = min; min = max; max = tmp;
-		}
-		
-		minmax[0] = min;
-		minmax[1] = max;
-	    };
-	    
-	    return function( axis, other ){
-		var aMin, aMax, bMin, bMax,
-		    d1, d2, depth;
-		
-		project( axis, this, minmaxA );
-		project( axis, other, minmaxB );
-		
-		aMin = minmaxA[0]; aMax = minmaxA[1];
-		bMin = minmaxB[0]; bMax = minmaxB[1];
-		
-		if( aMax < bMin || bMax < aMin ){
-		    return false;
-		}
-		
-		d1 = aMax - bMin;
-		d2 = bMax - aMin;
-		depth = d1 < d2 ? d1 : d2;
-		
-		return depth;
-	    };
-	}();
-	
-	
-	PConvex2D.prototype.clipAgainstConvex = function(){
-	    var edge = new Vec2,
-		l = new Vec2,
-		r = new Vec2;
-	    
-	    return function( axis, other, results ){
-		var vertices = this.worldVertices,
-		    d, max = -Infinity, index,
-		    v, v1, v2, i, il;
-		
-		for( i = 0, il = vertices.length; i < il; i++ ){
-		    d = vertices[i].dot( axis );
-		    if( d > max ){
-			max = d;
-			index = i;
-		    }
-		}
-		
-		v = vertices[index];
-		v1 = vertices[index-1] || vertices[0];
-		v2 = vertices[index+1] || vertices[0];
-		
-		l.vsub( v, v2 );
-		r.vsub( v, v1 );
-		
-		if( r.dot( axis ) <= l.dot( axis ) ){
-		    edge.vsub( v1, v );
-		}
-		else{
-		    edge.vsub( v2, v );
-		}
-		
-		this.clipEdgeAgainstConvex( edge, axis, other, results );
-	    };
-	}();
-	
-	
-	PConvex2D.prototype.clipEdgeAgainstConvex = function(){
-	    
-	    function Manifold( point, normal, depth ){
-		this.point = point instanceof Vec2 ? point : new Vec2;
-		this.normal = normal instanceof Vec2 ? normal : new Vec2;
-		this.depth = depth !== undefined ? depth : 0;
-	    }
-	    
-	    return function( edge, axis, other, results ){
-		
-		
-		results.push( edge );
-	    };
-	}();
 	
 	
 	PConvex2D.prototype.calculateNormals = function(){
@@ -242,7 +96,7 @@ define([
 	PConvex2D.prototype.calculateInertia = function( mass ){
 	    var vertices = this.vertices,
 		v1, v2, a, b,
-		denom = 0, numer = 0,
+		d = 0, n = 0,
 		i, il;
 		
 	    for( i = 0, il = vertices.length; i < il; i++ ){
@@ -252,11 +106,11 @@ define([
 		a = abs( vcross( v1, v2 ) );
 		b = vdot( v2, v2 ) + vdot( v2, v1 ) + vdot( v1, v1 );
 		
-		denom += a * b;
-		numer += a;
+		d += a * b;
+		n += a;
 	    }
 	    
-	    return ( mass / 6 ) * ( denom / numer );
+	    return ( mass / 6 ) * ( d / n );
 	};
 	
 	
@@ -276,6 +130,8 @@ define([
 		worldVertex.rotate( rotation );
 		worldVertex.add( position );
 	    }
+	    
+	    this.worldVerticesNeedsUpdate = false;
 	};
 	
 	
@@ -294,6 +150,8 @@ define([
 		worldNormal.copy( normals[i] );
 		worldNormal.rotate( rotation );
 	    }
+	    
+	    this.worldNormalsNeedsUpdate = false;
 	};
 	
 	

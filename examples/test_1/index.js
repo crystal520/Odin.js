@@ -28,6 +28,7 @@ require(
 	    
 	    sprite = new GameObject2D({
 		position: new Vec2( 0, 2 ),
+		rotation: 0,
 		components: [
 		    new Sprite({
 			image: player,
@@ -61,7 +62,6 @@ require(
 	    
 	    sprite2 = new GameObject2D({
 		position: new Vec2( 0, 0 ),
-		rotation: 0,
 		components: [
 		    new Sprite({
 			image: player,
@@ -83,7 +83,7 @@ require(
 		//this.rotation += Math.PI*Time.delta;
 	    });
 	    
-	    scene.add( sprite, sprite2 );
+	    scene.add( sprite2, sprite );
 	    
 	    Keyboard.on("keydown", function( key ){
 		if( key.name === "up" ){

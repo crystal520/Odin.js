@@ -29,6 +29,8 @@ define([
 	    PConvex2D.call( this, vertices );
 	    
 	    this.type = PShape2D.RECT;
+	    
+	    this.calculateBoundingRadius();
 	}
 	
 	Class.extend( PRect, PConvex2D );
