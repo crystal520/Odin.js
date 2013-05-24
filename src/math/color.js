@@ -265,79 +265,6 @@ define([
         };
         
         
-        Color.prototype.cadd = function( a, b ){
-            
-            this.r = a.r + b.r;
-            this.g = a.g + b.g;
-            this.b = a.b + b.b;
-            this.a = a.a + b.a;
-            
-            return this;
-        };
-        
-        
-        Color.prototype.add = function( other ){
-            
-            return this.cadd( this, other );
-        };
-        
-        
-        Color.prototype.sadd = function( s ){
-            
-            this.r += s;
-            this.g += s;
-            this.b += s;
-            this.a += s;
-            
-            return this;
-        };
-        
-        
-        Color.prototype.csub = function( a, b ){
-            
-            this.r = a.r - b.r;
-            this.g = a.g - b.g;
-            this.b = a.b - b.b;
-            this.a = a.a - b.a;
-            
-            return this;
-        };
-        
-        
-        Color.prototype.sub = function( other ){
-            
-            return this.csub( this, other );
-        };
-        
-        
-        Color.prototype.ssub = function( s ){
-            
-            this.r -= s;
-            this.g -= s;
-            this.b -= s;
-            this.a -= s;
-            
-            return this;
-        };
-        
-        
-        Color.prototype.cmul = function( a, b ){
-            
-            this.r = a.r * b.r;
-            this.g = a.g * b.g;
-            this.b = a.b * b.b;
-            this.a = a.a * b.a;
-            
-            return this;
-        };
-        
-        
-        Color.prototype.mul = function( other ){
-            
-            return this.cmul( this, other );
-        };
-        
-        
         Color.prototype.smul = function( s ){
             
             this.r *= s;
@@ -349,62 +276,15 @@ define([
         };
         
         
-        Color.prototype.cdiv = function( a, b ){
-            var x = b.r, y = b.g, z = b.b;
-            
-            if( x !== 0 && y !== 0 ){
-                this.r = a.r / x;
-                this.g = a.g / y;
-                this.b = a.b / z;
-                this.a = a.a / w;
-            }
-            else{
-                this.r = 0;
-                this.g = 0;
-                this.b = 0;
-                this.a = 0;
-            }
-            
-            return this;
-        };
-        
-        
-        Color.prototype.div = function( other ){
-            
-            return this.cdiv( this, other );
-        };
-        
-        
         Color.prototype.sdiv = function( s ){
-            
-            if( s !== 0 ){
-		s = 1 / s;
-		
-                this.r *= s;
-                this.g *= s;
-                this.b *= s;
-                this.a *= s;
-            }
-            else{
-                this.r = 0;
-                this.g = 0;
-                this.b = 0;
-                this.a = 0;
-            }
+            s = s !== 0 ? 1 / s : 0;
+	    
+            this.r *= s;
+            this.g *= s;
+            this.b *= s;
+            this.a *= s;
             
             return this;
-        };
-        
-        
-        Color.cdot = Color.prototype.cdot = function( a, b ){
-            
-            return a.r * b.r + a.g * b.g + a.b * b.b + a.a * b.a;
-        };
-        
-        
-        Color.prototype.dot = function( other ){
-            
-            return this.cdot( this, other );
         };
         
         
@@ -421,25 +301,12 @@ define([
         
         Color.prototype.lerp = function( other, t ){
             
-            return this.clerp( this, other, t );
-        };
-        
-        
-        Color.prototype.lenSq = function(){
+            this.r = lerp( this.r, other.r, t );
+            this.g = lerp( this.g, other.g, t );
+            this.b = lerp( this.b, other.b, t );
+            this.a = lerp( this.a, other.a, t );
             
-            return this.dot( this );
-        };
-        
-        
-        Color.prototype.len = function(){
-            
-            return sqrt( this.lenSq() );
-        };
-        
-        
-        Color.prototype.norm = function(){
-            
-            return this.sdiv( this.len() );
+            return this;
         };
         
         
@@ -482,7 +349,7 @@ define([
 	    
             this.r = clamp( this.r, min.r, max.r );
             this.g = clamp( this.g, min.g, max.g );
-            this.b = clamp( this.b, min.g, max.b );
+            this.b = clamp( this.b, min.b, max.b );
             this.a = clamp( this.a, min.a, max.a );
             
             return this;

@@ -40,15 +40,11 @@ define([
 	    
 	    this.angularDamping = opts.angularDamping !== undefined ? opts.angularDamping : 0;
 	    
-	    this.elasticity = opts.elasticity !== undefined ? opts.elasticity : 0.5;
-	    this.friction = opts.friction !== undefined ? opts.friction : 0.25;
-	    
 	    this.inertia = this.shape.calculateInertia( this.mass );
 	    this.invInertia = this.inertia === 0 ? 0 : 1 / this.inertia;
 	    
 	    this.torque = 0;
-	    
-	    this.wlambda = new Vec2;
+	    this.wlambda = 0;
 	    
 	    this.aabb = new AABB2;
 	    this.aabbNeedsUpdate = true;
@@ -69,7 +65,7 @@ define([
 	    
 	    return function( force, worldPoint, wake ){
 		
-		if( this.type !== DYNAMIC ){
+		if( this.type === STATIC ){
 		    return;
 		}
 		
@@ -85,23 +81,9 @@ define([
 	}();
 	
 	
-	PRigidBody2D.prototype.applyForceToCenter = function( force, wake ){
-	    
-	    if( this.type !== DYNAMIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wake();
-	    }
-	    
-	    this.force.add( force );
-	};
-	
-	
 	PRigidBody2D.prototype.applyTorque = function( torque, wake ){
 	    
-	    if( this.type !== DYNAMIC ){
+	    if( this.type === STATIC ){
 		return;
 	    }
 	    
@@ -119,7 +101,7 @@ define([
 	    
 	    return function( impulse, worldPoint, wake ){
 		
-		if( this.type !== DYNAMIC ){
+		if( this.type === STATIC ){
 		    return;
 		}
 		
@@ -134,82 +116,6 @@ define([
 		this.angularVelocity += this.invInertia * point.cross( impulse );
 	    };
 	}();
-	
-	
-	PRigidBody2D.prototype.applyAngularImpulse = function( impulse, wake ){
-	    
-	    if( this.type !== DYNAMIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wakeUp();
-	    }
-	    
-	    this.angularVelocity += this.invInertia * impulse;
-	};
-	
-	
-	PRigidBody2D.prototype.update = function( dt ){
-	    var world = this.world,
-		gravity = world.gravity,
-		
-		sleepState = this.sleepState,
-		type = this.type,
-		
-		shape = this.shape,
-		shapeType = shape.type,
-		
-		force = this.force,
-		vel = this.velocity,
-		pos = this.position,
-		mass = this.mass, invMass = this.invMass,
-		invInertia = this.invInertia;
-	    
-	    this.trigger("prestep");
-	    
-	    if( type === DYNAMIC ){
-		force.x += gravity.x * mass;
-		force.y += gravity.y * mass;
-	    }
-	    
-	    if( type === DYNAMIC || type === KINEMATIC ){
-		
-		vel.x *= pow( 1 - this.linearDamping.x, dt );
-		vel.y *= pow( 1 - this.linearDamping.y, dt );
-		
-		this.angularVelocity *= pow( 1 - this.angularDamping, dt );
-		
-		vel.x += force.x * invMass * dt;
-		vel.y += force.y * invMass * dt;
-		
-		this.angularVelocity += this.torque * invInertia * dt;
-		
-		if( sleepState !== SLEEPING ){
-		    pos.x += vel.x * dt;
-		    pos.y += vel.y * dt;
-		    
-		    this.rotation += this.angularVelocity * dt;
-		    
-		    this.aabbNeedsUpdate = true;
-		    
-		    if( shapeType === RECT || shapeType === CONVEX ){
-			this.worldVerticesNeedsUpdate = true;
-			this.worldNormalsNeedsUpdate = true;
-		    }
-		}
-	    }
-	    
-	    force.x = 0;
-	    force.y = 0;
-	    this.torque = 0;
-	    
-	    if( world.allowSleep ){
-		this.sleepTick( world.time );
-	    }
-	    
-	    this.trigger("poststep");
-	};
 	
 	
 	return PRigidBody2D;

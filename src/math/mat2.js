@@ -59,11 +59,24 @@ define([
 	
 	
 	Mat2.prototype.identity = function(){
+            var te = this.elements;
+	    
+	    te[0] = 1;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 1;
             
-            this.set(
-                1, 0,
-                0, 1
-            );
+            return this;
+        };
+	
+	
+	Mat2.prototype.zero = function(){
+            var te = this.elements;
+	    
+	    te[0] = 0;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 0;
             
             return this;
         };
@@ -145,19 +158,31 @@ define([
         };
 	
 	
+	Mat2.prototype.setTrace = function( v ){
+            var te = this.elements;
+	    
+	    te[0] = v.x;
+	    te[3] = v.y;
+	    
+	    return this;
+        };
+	
+	
 	Mat2.prototype.minv = function( other ){
 	    var te = this.elements,
 		me = other.elements,
 		
 		m11 = me[0], m12 = me[2],
-		m21 = me[1], m22 = me[3];
+		m21 = me[1], m22 = me[3],
+		
+		det = m11 * m22 - m12 * m21;
             
-	    te[0] = m22;
-	    te[1] = -m12;
-	    te[2] = -m21;
-	    te[3] = m11;
-	    
-	    this.sdiv( m11 * m22 - m12 * m21 );
+	    det = det !== 0 ? 1 / det : 0;
+            
+	    te[0] = m22 * det;
+	    te[1] = -m12 * det;
+	    te[2] = -m21 * det;
+	    te[3] = m11 * det;
 	    
             return this;
 	};
@@ -167,14 +192,16 @@ define([
 	    var te = this.elements,
 		
 		m11 = te[0], m12 = te[2],
-		m21 = te[1], m22 = te[3];
+		m21 = te[1], m22 = te[3],
+		
+		det = m11 * m22 - m12 * m21;
             
-	    te[0] = m22;
-	    te[1] = -m12;
-	    te[2] = -m21;
-	    te[3] = m11;
+	    det = det !== 0 ? 1 / det : 0;
 	    
-	    this.sdiv( m11 * m22 - m12 * m21 );
+	    te[0] = m22 * det;
+	    te[1] = -m12 * det;
+	    te[2] = -m21 * det;
+	    te[3] = m11 * det;
 	    
             return this;
 	};

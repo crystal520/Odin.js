@@ -8,39 +8,36 @@ define([
 	"use strict";
 	
 	
-	function PEquation2D( bi, bj, minForce, maxForce ){
+	function PEquation2D( bi, bj ){
 	    
 	    Class.call( this );
 	    
 	    this.bi = bi;
 	    this.bj = bj;
 	    
-	    this.minForce = minForce !== undefined ? minForce : -1000000;
-	    this.maxForce = maxForce !== undefined ? maxForce : 1000000;
-	    
-	    this.stiffness = 10000000;
-	    this.regularizationTime = 5;
+	    this.stabilize = 5;
+	    this.springConstant = 1e7;
 	    
 	    this.a = 0;
 	    this.b = 0;
 	    this.eps = 0;
-	    
-	    this.spookParamsNeedsUpdate = true;
 	}
 	
 	Class.extend( PEquation2D, Class );
 	
 	
-	PEquation2D.prototype.updateSpookParams = function( dt ){
-	    var d = this.regularizationTime,
-		k = this.stiffness,
-		i = 1 + 4 * d;
+	PEquation2D.prototype.solve = function( dt ){
 	    
-	    this.a = 4 / ( dt * i );
-	    this.b = ( 4 * d ) / i;
-	    this.eps = 4 / ( dt * dt * k * i );
+	};
+	
+	
+	PEquation2D.prototype.updateConstants = function( h ){
+	    var d = this.stabilize,
+		k = this.springConstant;
 	    
-	    this.spookParamsNeedsUpdate = false;
+	    this.a = 4 / ( h * ( 1 + 4 * d ) );
+	    this.b = ( 4 * d ) / ( 1 + 4 * d );
+	    this.eps = 4 / ( h * h * k * ( 1 + 4 * d ) );
 	};
 	
 	

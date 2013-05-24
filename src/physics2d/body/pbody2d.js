@@ -21,6 +21,9 @@ define([
 	    
 	    this.world = undefined;
 	    
+	    this.elasticity = opts.elasticity !== undefined ? opts.elasticity : 0.5;
+	    this.friction = opts.friction !== undefined ? opts.friction : 0.25;
+	    
 	    this.filterGroup = opts.filterGroup !== undefined ? opts.filterGroup : 0;
 	    
 	    this.position = opts.position instanceof Vec2 ? opts.position : new Vec2;
@@ -34,7 +37,6 @@ define([
 	    this.type = opts.type ? opts.type : this.mass <= 0 ? PBody2D.STATIC : PBody2D.DYNAMIC;
 	    
 	    this.force = new Vec2;
-	    
 	    this.vlambda = new Vec2;
 	    
 	    this.allowSleep = true;
@@ -106,51 +108,6 @@ define([
 		    this.sleep();
 		}
 	    }
-	};
-	
-	
-	PBody2D.prototype.update = function( dt ){
-	    var world = this.world,
-		gravity = world.gravity,
-		
-		sleepState = this.sleepState,
-		type = this.type,
-		
-		force = this.force,
-		vel = this.velocity,
-		pos = this.position,
-		mass = this.mass, invMass = this.invMass;
-	    
-	    this.trigger("prestep");
-	    
-	    if( type === DYNAMIC ){
-		force.x += gravity.x * mass;
-		force.y += gravity.y * mass;
-		
-		vel.x *= pow( 1 - this.linearDamping.x, dt );
-		vel.y *= pow( 1 - this.linearDamping.y, dt );
-	    }
-	    
-	    if( type === DYNAMIC || type === KINEMATIC ){
-		vel.x += force.x * invMass * dt;
-		vel.y += force.y * invMass * dt;
-		
-		if( sleepState !== SLEEPING ){
-		    pos.x += vel.x * dt;
-		    pos.y += vel.y * dt;
-		    
-		    this.aabbNeedsUpdate = true;
-		}
-	    }
-	    
-	    force.x = 0;
-	    force.y = 0;
-	    
-	    if( world.allowSleep ){
-		this.sleepTick( world.time );
-	    }
-	    
-	    this.trigger("poststep");
 	};
 	
 	

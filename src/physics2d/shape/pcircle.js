@@ -27,10 +27,15 @@ define([
 	
 	
 	PCircle.prototype.calculateAABB = function(){
-	    var r = this.radius;
+	    var r = this.radius,
+		aabb = this.aabb, min = aabb.min, max = aabb.max;
 	    
-	    this.aabb.min.set( -r, -r );
-	    this.aabb.max.set( r, r );
+	    min.x = -r;
+	    min.y = -r;
+	    
+	    max.x = r;
+	    max.y = r;
+	    
 	    this.aabbNeedsUpdate = false;
 	    
 	    return this;
@@ -38,7 +43,15 @@ define([
 	
 	
 	PCircle.prototype.calculateWorldAABB = function( position, rotation, aabb ){
-	    return this;
+	    
+	    if( this.aabbNeedsUpdate ){
+		this.calculateAABB();
+	    }
+	    
+	    aabb.copy( this.aabb );
+	    aabb.setCenter( position );
+	    
+	    return aabb;
 	};
 	
 	
@@ -51,11 +64,15 @@ define([
 	};
 	
 	
-	PCircle.prototype.calculateInertia = function( mass ){
-	    var r = this.radius;
+	PCircle.prototype.calculateInertia = function(){
+	    var s = 2 / 5;
 	    
-	    return ( mass * r * r ) * 0.5;
-	};
+	    return function( mass ){
+		var r = this.radius;
+		
+		return ( mass * r * r ) * s;
+	    };
+	}();
 	
 	
 	return PCircle;

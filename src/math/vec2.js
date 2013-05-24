@@ -251,24 +251,6 @@ define([
 	    
 	    return this.x * other.y - this.y * other.x;
         };
-        
-        
-        Vec2.prototype.crossVS = function( s ){
-	    
-	    this.x = this.y * -s;
-	    this.y = this.x * s;
-	    
-	    return this;
-        };
-        
-        
-        Vec2.prototype.crossSV = function( s ){
-	    
-	    this.x = this.y * s;
-	    this.y = this.x * -s;
-	    
-	    return this;
-        };
 	
 	
 	Vec2.prototype.vproj = function( a, b ){
@@ -451,20 +433,20 @@ define([
         
         
         Vec2.prototype.len = function(){
-	    var x = this.x, y = this.y,
-		l = x * x + y * y;
+	    var x = this.x, y = this.y;
 	    
-            return l !== 0 ? sqrt( l ) : 0;
+            return sqrt( x * x + y * y );
         };
         
         
         Vec2.prototype.norm = function(){
             var x = this.x, y = this.y,
-		lenSq = x * x + y * y,
-		len = lenSq !== 0 ? 1 / sqrt( lenSq ) : 0;
+		l = x * x + y * y;
 	    
-	    this.x *= len;
-	    this.y *= len;
+	    l = l !== 0 ? 1 / sqrt( l ) : 0;
+	    
+	    this.x *= l;
+	    this.y *= l;
 	    
             return this;
         };

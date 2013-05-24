@@ -23,7 +23,7 @@ define([
 	    
             this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
 	    
-	    this.physicsWorld = new PWorld2D( opts );
+	    this.pworld = new PWorld2D( opts );
         }
         
 	Class.extend( World, Class );
@@ -31,19 +31,19 @@ define([
         
         World.prototype.add = function( rigidbody ){
 	    
-	    this.physicsWorld.add( rigidbody.body );
+	    this.pworld.add( rigidbody.body );
         };
         
         
         World.prototype.remove = function( rigidbody ){
 	    
-	    this.physicsWorld.remove( rigidbody.body );
+	    this.pworld.remove( rigidbody.body );
         };
         
         
         World.prototype.update = function(){
 	    
-	    this.physicsWorld.step( Time.delta );
+	    this.pworld.step( Time.delta );
 	};
         
         

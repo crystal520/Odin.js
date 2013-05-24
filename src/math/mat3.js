@@ -63,12 +63,34 @@ define([
 	
 	
 	Mat3.prototype.identity = function(){
+            var te = this.elements;
+	    
+	    te[0] = 1;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 0;
+	    te[4] = 1;
+	    te[5] = 0;
+	    te[6] = 0;
+	    te[7] = 0;
+	    te[8] = 1;
             
-            this.set(
-                1, 0, 0,
-                0, 1, 0,
-		0, 0, 1
-            );
+            return this;
+        };
+	
+	
+	Mat3.prototype.zero = function(){
+            var te = this.elements;
+	    
+	    te[0] = 0;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 0;
+	    te[4] = 0;
+	    te[5] = 0;
+	    te[6] = 0;
+	    te[7] = 0;
+	    te[8] = 0;
             
             return this;
         };
@@ -173,6 +195,17 @@ define([
 	    tmp = te[1]; te[1] = te[3]; te[3] = tmp;
 	    tmp = te[2]; te[2] = te[6]; te[6] = tmp;
 	    tmp = te[5]; te[5] = te[7]; te[7] = tmp;
+	    
+	    return this;
+        };
+	
+	
+	Mat3.prototype.setTrace = function( v ){
+            var te = this.elements;
+	    
+	    te[0] = v.x;
+	    te[4] = v.y;
+	    te[8] = v.z || 1;
 	    
 	    return this;
         };

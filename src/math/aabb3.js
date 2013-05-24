@@ -29,7 +29,7 @@ define([
 	};
         
         
-        AABB3.prototype.copy = function( other ){;
+        AABB3.prototype.copy = function( other ){
             
             this.min.copy( other.min );
             this.max.copy( other.max );
@@ -39,20 +39,29 @@ define([
         
         
         AABB3.prototype.setFromPoints = function( points ){
-            var point, i = 0, il = points.length,
+            var v, i = 0, il = points.length,
+		minx, miny, minz, maxx, maxy, maxz,
 		min = this.min, max = this.max;
             
             if( il > 0 ){
                 
-                min.set( Infinity, Infinity );
-                max.set( -Infinity, -Infinity );
+		minx = miny = minz = Infinity;
+		maxx = maxy = maxz = -Infinity;
                 
                 for( i; i < il; i++ ){
-                    point = points[i];
+                    v = points[i];
 		    
-		    min.min( point );
-		    max.max( point );
+		    minx = minx > v.x ? v.x : minx;
+		    miny = miny > v.y ? v.y : miny;
+		    minz = minz > v.z ? v.z : minz;
+		    
+		    maxx = maxx < v.x ? v.x : maxx;
+		    maxy = maxy < v.y ? v.y : maxy;
+		    maxz = maxz < v.z ? v.z : maxz;
                 }
+		
+		min.x = minx; min.y = miny; min.x = minz;
+		max.x = maxx; max.y = maxy; max.x = maxz;
             }
             else{
                 this.clear();
@@ -63,9 +72,9 @@ define([
         
         
         AABB3.prototype.clear = function(){
-            
-            this.min.set( 0, 0, 0);
-            this.max.set( 0, 0, 0 );
+            var min = this.min, max = this.max;
+	    
+	    min.x = min.y = min.z = max.x = max.y = max.z = 0;
             
             return this;
         };

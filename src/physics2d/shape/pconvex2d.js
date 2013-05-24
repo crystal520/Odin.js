@@ -74,6 +74,37 @@ define([
 	};
 	
 	
+	PConvex2D.prototype.calculateWorldAABB = function(){
+	    var v = new Vec2;
+	    
+	    return function( position, rotation, aabb ){
+		var vertices = this.vertices,
+		    min = aabb.min, max = aabb.max,
+		    minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity,
+		    i, il;
+		    
+		for( i = 0, il = vertices.length; i < il; i++ ){
+		    v.copy( vertices[i] );
+		    v.rotate( rotation );
+		    v.add( position );
+		    
+		    minx = v.x < minx ? v.x : minx;
+		    miny = v.y < miny ? v.y : miny;
+		    
+		    maxx = v.x > maxx ? v.x : maxx;
+		    maxy = v.y > maxy ? v.y : maxy;
+		}
+		
+		min.x = minx;
+		min.y = miny;
+		max.x = maxx;
+		max.y = maxy;
+		
+		return aabb;
+	    };
+	}();
+	
+	
 	PConvex2D.prototype.calculateBoundingRadius = function(){
 	    var vertices = this.vertices,
 		radiusSq = vertices[0].lenSq(), lenSq, i, il;
@@ -93,25 +124,29 @@ define([
 	};
 	
 	
-	PConvex2D.prototype.calculateInertia = function( mass ){
-	    var vertices = this.vertices,
-		v1, v2, a, b,
-		d = 0, n = 0,
-		i, il;
-		
-	    for( i = 0, il = vertices.length; i < il; i++ ){
-		v1 = vertices[i];
-		v2 = vertices[i+1] || vertices[0];
-		
-		a = abs( vcross( v1, v2 ) );
-		b = vdot( v2, v2 ) + vdot( v2, v1 ) + vdot( v1, v1 );
-		
-		d += a * b;
-		n += a;
-	    }
+	PConvex2D.prototype.calculateInertia = function(){
+	    var s = 1 / 6;
 	    
-	    return ( mass / 6 ) * ( d / n );
-	};
+	    return function( mass ){
+		var vertices = this.vertices,
+		    v1, v2, a, b,
+		    d = 0, n = 0,
+		    i, il;
+		    
+		for( i = 0, il = vertices.length; i < il; i++ ){
+		    v1 = vertices[i];
+		    v2 = vertices[i+1] || vertices[0];
+		    
+		    a = abs( v1.cross( v2 ) );
+		    b = v2.dot( v2 ) + v2.dot( v1 ) + v1.dot( v1 );
+		    
+		    d += a * b;
+		    n += a;
+		}
+		
+		return ( mass * s ) * ( d / n );
+	    };
+	}();
 	
 	
 	PConvex2D.prototype.calculateWorldVertices = function( position, rotation ){

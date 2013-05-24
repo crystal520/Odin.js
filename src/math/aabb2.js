@@ -29,30 +29,42 @@ define([
 	};
         
         
-        AABB2.prototype.copy = function( other ){;
-            
-            this.min.copy( other.min );
-            this.max.copy( other.max );
+        AABB2.prototype.copy = function( other ){
+            var amin = this.min, bmin = other.min,
+		amax = this.max, bmax = other.max;
+	    
+	    amin.x = bmin.x;
+	    amin.y = bmin.y;
+	    
+	    amax.x = bmax.x;
+	    amax.y = bmax.y;
             
             return this;
 	};
         
         
         AABB2.prototype.setFromPoints = function( points ){
-            var point, i = 0, il = points.length,
+            var v, i = 0, il = points.length,
+		minx, miny, maxx, maxy,
 		min = this.min, max = this.max;
             
             if( il > 0 ){
                 
-                min.set( Infinity, Infinity );
-                max.set( -Infinity, -Infinity );
+		minx = miny = Infinity;
+		maxx = maxy = -Infinity;
                 
                 for( i; i < il; i++ ){
-                    point = points[i];
+                    v = points[i];
 		    
-		    min.min( point );
-		    max.max( point );
+		    minx = minx > v.x ? v.x : minx;
+		    miny = miny > v.y ? v.y : miny;
+		    
+		    maxx = maxx < v.x ? v.x : maxx;
+		    maxy = maxy < v.y ? v.y : maxy;
                 }
+		
+		min.x = minx; min.y = miny;
+		max.x = maxx; max.y = maxy;
             }
             else{
                 this.clear();
@@ -63,9 +75,9 @@ define([
         
         
         AABB2.prototype.clear = function(){
-            
-            this.min.set( 0, 0 );
-            this.max.set( 0, 0 );
+            var min = this.min, max = this.max;
+	    
+	    min.x = min.y = max.x = max.y = 0;
             
             return this;
         };
@@ -78,24 +90,6 @@ define([
 	    
 	    return this;
 	};
-        
-        
-        AABB2.prototype.rotate = function(){
-	    var points = [ new Vec2, new Vec2, new Vec2, new Vec2 ];
-	    
-	    return function( a ){
-		var min = this.min, max = this.max;
-		
-		points[0].set( max.x, max.y ).rotate( a );
-		points[1].set( min.x, max.y ).rotate( a );
-		points[2].set( min.x, min.y ).rotate( a );
-		points[3].set( max.x, min.y ).rotate( a );
-		
-		this.setFromPoints( points );
-		
-		return this;
-	    };
-	}();
         
         
         AABB2.prototype.contains = function( point ){

@@ -68,13 +68,48 @@ define([
 	
 	
 	Mat4.prototype.identity = function(){
+            var te = this.elements;
+	    
+	    te[0] = 1;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 0;
+	    te[4] = 0;
+	    te[5] = 1;
+	    te[6] = 0;
+	    te[7] = 0;
+	    te[8] = 0;
+	    te[9] = 0;
+	    te[10] = 1;
+	    te[11] = 0;
+	    te[12] = 0;
+	    te[13] = 0;
+	    te[14] = 0;
+	    te[15] = 1;
             
-            this.set(
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-		0, 0, 1, 0,
-                0, 0, 0, 1
-            );
+            return this;
+        };
+	
+	
+	Mat4.prototype.zero = function(){
+            var te = this.elements;
+	    
+	    te[0] = 0;
+	    te[1] = 0;
+	    te[2] = 0;
+	    te[3] = 0;
+	    te[4] = 0;
+	    te[5] = 0;
+	    te[6] = 0;
+	    te[7] = 0;
+	    te[8] = 0;
+	    te[9] = 0;
+	    te[10] = 0;
+	    te[11] = 0;
+	    te[12] = 0;
+	    te[13] = 0;
+	    te[14] = 0;
+	    te[15] = 0;
             
             return this;
         };
@@ -217,6 +252,18 @@ define([
 	    tmp = te[3]; te[3] = te[12]; te[12] = tmp;
 	    tmp = te[7]; te[7] = te[13]; te[13] = tmp;
 	    tmp = te[11]; te[11] = te[14]; te[14] = tmp;
+	    
+	    return this;
+        };
+	
+	
+	Mat4.prototype.setTrace = function( v ){
+            var te = this.elements;
+	    
+	    te[0] = v.x;
+	    te[5] = v.y;
+	    te[10] = v.z || 1;
+	    te[15] = v.w || 1;
 	    
 	    return this;
         };

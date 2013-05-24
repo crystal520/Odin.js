@@ -313,18 +313,19 @@ define([
             var x = this.x, y = this.y, z = this.z, w = this.w,
 		l = x * x + y * y + z * z + w * w;
 	    
-            return l !== 0 ? sqrt( l ) : 0;
+            return sqrt( x * x + y * y + z * z + w * w );
         };
         
         
         Vec4.prototype.norm = function(){
             var x = this.x, y = this.y, z = this.z, w = this.w,
-		lenSq = x * x + y * y + z * z + w * w,
-		len = lenSq !== 0 ? 1 / sqrt( lenSq ) : 0;
+		l = x * x + y * y + z * z + w * w;
 	    
-	    this.x *= len;
-	    this.y *= len;
-	    this.z *= len;
+	    l = l !== 0 ? 1 / sqrt( l ) : 0;
+	    
+	    this.x *= l;
+	    this.y *= l;
+	    this.z *= l;
 	    
             return this;
         };

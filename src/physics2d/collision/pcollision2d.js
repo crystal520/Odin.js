@@ -147,10 +147,10 @@ define([
 		right.vsub( v, v1 );
 		
 		if( right.dot( n ) <= left.dot( n ) ){
-		    edge.set( v1, v );
+		    edge.set( v, v1 );
 		}
 		else{
-		    edge.set( v, v2 );
+		    edge.set( v2, v );
 		}
 	    };
 	    
@@ -208,24 +208,14 @@ define([
 		
 		if( manifolds.length < 2 ) return;
 		
-		refNorm.copy( ref.v ).crossVS(-1);
+		refNorm.copy( ref.v ).normR();
 		
 		if( flip ) refNorm.negate();
 		
 		max = refNorm.dot( ref.v1 );
 		
-		m1 = manifolds[0];
-		m2 = manifolds[1];
-		
-		m1.depth = refNorm.dot( m1.point ) - max;
-		m2.depth = refNorm.dot( m2.point ) - max;
-		
-		if( m1.depth < 0 ){
-		    manifolds.splice( manifolds.indexOf( m1 ), 1 );
-		}
-		if( m2.depth < 0 ){
-		    manifolds.splice( manifolds.indexOf( m2 ), 1 );
-		}
+		manifolds[0].depth = refNorm.dot( manifolds[0].point ) - max;
+		manifolds[1].depth = refNorm.dot( manifolds[1].point ) - max;
 	    };
 	}();
 	

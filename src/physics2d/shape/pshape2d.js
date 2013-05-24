@@ -30,20 +30,6 @@ define([
 	};
 	
 	
-	PShape2D.prototype.calculateWorldAABB = function( position, rotation, aabb ){
-	    
-	    if( this.aabbNeedsUpdate ){
-		this.calculateAABB();
-	    }
-	    
-	    aabb.copy( this.aabb );
-	    aabb.rotate( rotation );
-	    aabb.setCenter( position );
-	    
-	    return aabb;
-	};
-	
-	
 	PShape2D.prototype.calculateInertia = function( mass ){
 	    return this;
 	};

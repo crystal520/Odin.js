@@ -22,36 +22,11 @@ require(
 	    
 	    scene = new Scene;
 	    camera = new Camera2D({
-		zoom: 2
+		zoom: 3
 	    });
 	    
-	    for( var i = 0; i < 100; i++ ){
-		scene.add(
-		    new GameObject2D({
-			position: new Vec2( Mathf.randFloat( -1, 1 ), Mathf.randFloat( -5, 10 ) ),
-			components: [
-			    new Sprite({
-				image: player,
-				x: 0,
-				y: 0,
-				w: 64,
-				h: 64,
-				width: 1,
-				height: 1
-			    }),
-			    new RigidBody({
-				shape: RigidBody.CIRCLE,
-				linearDamping: new Vec2( 0, 0 ),
-				mass: Math.random(),
-				radius: 0.5
-			    })
-			]
-		    })
-		);
-	    }
-	    
 	    ground = new GameObject2D({
-		position: new Vec2( 0, -1029 ),
+		position: new Vec2( 0, -1030 ),
 		components: [
 		    new RigidBody({
 			shape: RigidBody.CIRCLE,
@@ -63,13 +38,40 @@ require(
 	    
 	    scene.add( ground );
 	    
+	    for( var i = 0; i < 100; i++ ){
+		var r = Mathf.randFloat( 0.5, 1 );
+		scene.add(
+		    new GameObject2D({
+			position: new Vec2( Mathf.randFloat( -5, 5 ), Mathf.randFloat( -5, 10 ) ),
+			components: [
+			    new Sprite({
+				image: player,
+				x: 0,
+				y: 0,
+				w: 64,
+				h: 64,
+				width: r+r,
+				height: r+r
+			    }),
+			    new RigidBody({
+				shape: RigidBody.CIRCLE,
+				linearDamping: new Vec2( 0, 0 ),
+				mass: Math.random(),
+				radius: r,
+				elasticity: Mathf.randFloat( 0.5, 1 )
+			    })
+			]
+		    })
+		);
+	    }
+	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );
 	    });
 	    Mouse.on("move", function(){
 		
 		if( this.left ){
-		    camera.translate( vec2_1.set( this.delta.x, this.delta.y ).smul( -Time.delta*0.5 ) );
+		    camera.translate( vec2_1.set( this.delta.x, this.delta.y ).smul( -0.05 ) );
 		}
 	    });
 	    

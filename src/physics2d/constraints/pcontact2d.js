@@ -3,21 +3,21 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
+	"math/mathf",
 	"math/vec2",
 	"physics2d/constraints/pequation2d"
     ],
-    function( Class, Vec2, PEquation2D ){
+    function( Class, Mathf, Vec2, PEquation2D ){
 	"use strict";
 	
-	var mMin = Math.min,
+	var sqrt = Math.sqrt,
+	    mMin = Math.min,
 	    mMax = Math.max;
 	
 	
 	function PContact2D( bi, bj ){
 	    
-	    PEquation2D.call( this, bi, bj, 0, 1000000 );
-	    
-	    this.elasticity = 0;
+	    PEquation2D.call( this, bi, bj );
 	    
 	    this.ni = new Vec2;
 	    
@@ -30,73 +30,123 @@ define([
 	Class.extend( PContact2D, PEquation2D );
 	
 	
-	PContact2D.prototype.computeB = function(){
-	    var tmp1 = new Vec2,
-		tmp2 = new Vec2;
+	PContact2D.prototype.solve = function(){
+	    var vec = new Vec2,
+		dist = new Vec2,
+		impulse = new Vec2;
 	    
 	    return function( dt ){
-		var n = this.ni,
-		    a = this.a, b = this.b,
+		var ni = this.ni,
+		    penetration = this.penetration,
 		    bi = this.bi, bj = this.bj,
 		    ri = this.ri, rj = this.rj,
 		    
-		    vi = bi.velocity, wi = bi.angularVelocity, fi = bi.force, ti = bi.torque,
-		    vj = bj.velocity, wj = bj.angularVelocity, fj = bj.force, tj = bj.torque,
+		    invMassi = bi.invMass, invMassj = bj.invMass,
+		    vi = bi.velocity, vj = bj.velocity,
+		    fi = bi.force, fj = bj.force,
+		    wi = bi.angularVelocity || 0, wj = bi.angularVelocity || 0,
+		    ti = bi.torque || 0, tj = bj.torque || 0,
 		    
-		    penetration = this.penetration,
-		    invMassi = bi.invMass,
-		    invMassj = bj.invMass,
-		    B, Gq, GW, GiMf, e, ep1;
+		    e = 1 + mMin( bi.elasticity, bj.elasticity );
 		
-		penetration.set( 0, 0 );
+		penetration.x = 0; penetration.y = 0;
+		penetration.add( bj.position ).add( rj );
+		penetration.sub( bi.position ).sub( ri );
+	    };
+	}();
+	
+	
+	PContact2D.prototype.solve = function(){
+	    var vec = new Vec2,
+		dist = new Vec2,
+		impulse = new Vec2;
+	    
+	    return function( dt ){
+		var ni = this.ni,
+		    penetration = this.penetration,
+		    bi = this.bi, bj = this.bj,
+		    ri = this.ri, rj = this.rj,
+		    
+		    invMassi = bi.invMass, invMassj = bj.invMass,
+		    vi = bi.velocity, vj = bj.velocity,
+		    fi = bi.force, fj = bj.force,
+		    wi = bi.angularVelocity || 0, wj = bi.angularVelocity || 0,
+		    ti = bi.torque || 0, tj = bj.torque || 0,
+		    
+		    e = 1 + mMin( bi.elasticity, bj.elasticity ),
+		    GW, GiMf, B
+		
+		penetration.x = 0; penetration.y = 0;
+		penetration.add( bj.position ).add( rj );
+		penetration.sub( bi.position ).sub( ri );
+	    };
+	}();
+	
+	
+	PContact2D.prototype.calculateB = function(){
+	    
+	    return function( dt ){
+		var a = this.a,
+		    b = this.b,
+		    n = this.ni,
+		    penetration = this.penetration,
+		    bi = this.bi, bj = this.bj,
+		    ri = this.ri, rj = this.rj,
+		    
+		    invMassi = bi.invMass, invMassj = bj.invMass,
+		    vi = bi.velocity, vj = bj.velocity,
+		    fi = bi.force, fj = bj.force,
+		    wi = bi.angularVelocity || 0, wj = bi.angularVelocity || 0,
+		    ti = bi.torque || 0, tj = bj.torque || 0,
+		    
+		    e = 1 + mMin( bi.elasticity, bj.elasticity ),
+		    Gq, GW, GiMf, B
+		
+		penetration.x = 0; penetration.y = 0;
 		penetration.add( bj.position ).add( rj );
 		penetration.sub( bi.position ).sub( ri );
 		
-		this.elasticity = e = mMin( bi.elasticity, bj.elasticity );
-		ep1 = e + 1;
-		
 		Gq = n.dot( penetration );
+		GW = e * vj.dot( n ) - e * vi.dot( n );
+		GiMf = fj.dot( n )* invMassj - fi.dot( n ) * invMassi;
 		
-		GW = ep1 * vj.dot(n) - ep1 * vi.dot(n) + wj - wi;
-		GiMf = fj.dot(n) * invMassj - fi.dot(n) * invMassi + tj - ti;
-		
-		B = -Gq * a - GW * b - dt * GiMf;
+		B = -a * Gq - b * GW - dt * GiMf;
 		
 		return B;
 	    };
 	}();
 	
 	
-	PContact2D.prototype.computeC = function(){
-	    var tmp1 = new Vec2,
-		tmp2 = new Vec2;
+	PContact2D.prototype.calculateC = function(){
 	    
 	    return function(){
-		var bi = this.bi, bj = this.bj,
-		    invMassi = bi.invMass,
-		    invMassj = bj.invMass,
-		    C = invMassi + invMassj + this.eps;
+		var eps = this.eps,
+		    bi = this.bi, bj = this.bj,
+		    invMassi = bi.invMass, invMassj = bj.invMass,
+		    C;
+		
+		C = invMassi + invMassj + eps;
 		
 		return C;
 	    };
 	}();
 	
 	
-	PContact2D.prototype.computeGWlambda = function(){
+	PContact2D.prototype.calculateGWlambda = function(){
 	    var ulambda = new Vec2;
 	    
 	    return function(){
 		var bi = this.bi, bj = this.bj,
 		    GWlambda = 0;
-		
+		    
 		ulambda.vsub( bj.vlambda, bi.vlambda );
-		GWlambda += ulambda.dot(this.ni);
+		GWlambda += ulambda.dot( this.ni );
 		
-		if( bi.wlambda ){
-		    GWlambda -= bi.wlambda.cross( this.ri );
+		if( bi.wlambda !== undefined ){
+		    GWlambda -= bi.wlambda;
 		}
-		if( bj.wlambda ){
-		    GWlambda += bi.wlambda.cross( this.rj );
+		if( bj.wlambda !== undefined ){
+		    GWlambda += bj.wlambda;
 		}
 		
 		return GWlambda;
@@ -104,7 +154,7 @@ define([
 	}();
 	
 	
-	PContact2D.prototype.addToWlambda = function(){
+	PContact2D.prototype.addWlambda = function(){
 	    var tmp1 = new Vec2,
 		tmp2 = new Vec2;
 	    
@@ -119,11 +169,11 @@ define([
 		tmp2.copy( n ).smul( invMassj * deltalambda );
 		bj.vlambda.add( tmp2 );
 		
-		if( bi.wlambda ){
-		    bi.wlambda.sub( tmp1 );
+		if( bi.wlambda !== undefined ){
+		    bi.wlambda -= tmp1.cross( n );
 		}
-		if( bj.wlambda ){
-		    bj.wlambda.sub( tmp2 );
+		if( bj.wlambda !== undefined ){
+		    bj.wlambda += tmp2.cross( n );
 		}
 	    };
 	}();

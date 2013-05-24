@@ -441,21 +441,21 @@ define([
         
         
         Vec3.prototype.len = function(){
-            var x = this.x, y = this.y, z = this.z,
-		l = x * x + y * y + z * z;
+            var x = this.x, y = this.y, z = this.z;
 	    
-            return l !== 0 ? sqrt( l ) : 0;
+            return sqrt( x * x + y * y + z * z );
         };
         
         
         Vec3.prototype.norm = function(){
             var x = this.x, y = this.y, z = this.z,
-		lenSq = x * x + y * y + z * z,
-		len = lenSq !== 0 ? 1 / sqrt( lenSq ) : 0;
+		l = x * x + y * y + z * z;
 	    
-	    this.x *= len;
-	    this.y *= len;
-	    this.z *= len;
+	    l = l !== 0 ? 1 / sqrt( l ) : 0;
+	    
+	    this.x *= l;
+	    this.y *= l;
+	    this.z *= l;
 	    
             return this;
         };

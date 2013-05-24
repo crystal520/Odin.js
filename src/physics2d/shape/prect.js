@@ -38,10 +38,14 @@ define([
 	
 	PRect.prototype.calculateAABB = function(){
 	    var extents = this.extents,
-		aabb = this.aabb;
+		aabb = this.aabb, min = aabb.min, max = aabb.max;
 	    
-	    aabb.min.copy( extents ).negate();
-	    aabb.max.copy( extents );
+	    min.x = -extents.x;
+	    min.y = -extents.y;
+	    
+	    max.x = extents.x;
+	    max.y = extents.y;
+	    
 	    this.aabbNeedsUpdate = false;
 	    
 	    return this;
@@ -57,13 +61,17 @@ define([
 	};
 	
 	
-	PRect.prototype.calculateInertia = function( mass ){
-	    var extents = this.extents,
-		w = extents.x * 2,
-		h = extents.y * 2;
+	PRect.prototype.calculateInertia = function(){
+	    var s = 1 / 12;
 	    
-	    return ( mass * ( w * w + h * h ) ) / 12;
-	};
+	    return function( mass ){
+		var extents = this.extents,
+		    w = extents.x * 2,
+		    h = extents.y * 2;
+		
+		return ( mass * ( w * w + h * h ) ) * s;
+	    };
+	}();
 	
 	
 	return PRect;
