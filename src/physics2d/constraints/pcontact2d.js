@@ -85,7 +85,7 @@ define([
 	
 	PContact2D.prototype.calculateB = function(){
 	    
-	    return function( dt ){
+	    return function( h ){
 		var a = this.a,
 		    b = this.b,
 		    n = this.ni,
@@ -110,7 +110,7 @@ define([
 		GW = e * vj.dot( n ) - e * vi.dot( n );
 		GiMf = fj.dot( n )* invMassj - fi.dot( n ) * invMassi;
 		
-		B = -a * Gq - b * GW - dt * GiMf;
+		B = -a * Gq - b * GW - h * GiMf;
 		
 		return B;
 	    };

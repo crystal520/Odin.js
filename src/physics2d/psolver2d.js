@@ -73,7 +73,7 @@ define([
 			    GWlambda = eq.calculateGWlambda();
 			    deltalambda = invC * ( B - GWlambda - eq.eps * lambda );
 			    
-			    lambda[i] += deltalambda;
+			    lambdas[i] += deltalambda;
 			    
 			    deltalambdaTotal += abs( deltalambda );
 			    
