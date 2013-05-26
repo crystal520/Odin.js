@@ -6,9 +6,9 @@ define([
 	"base/utils",
 	"math/mathf",
 	"math/vec2",
-	"math/affine"
+	"math/mat32"
     ],
-    function( Class, Utils, Mathf, Vec2, Affine ){
+    function( Class, Utils, Mathf, Vec2, Mat32 ){
         "use strict";
         
 	var isNumber = Utils.isNumber,
@@ -25,9 +25,9 @@ define([
             
             this.children = [];
             
-	    this.matrix = new Affine;
-            this.matrixWorld = new Affine;
-            this.matrixModelView = new Affine;
+	    this.matrix = new Mat32;
+            this.matrixWorld = new Mat32;
+            this.matrixModelView = new Mat32;
             
 	    this.position = opts.position instanceof Vec2 ? opts.position : new Vec2;
 	    this.rotation = !!opts.rotation ? opts.rotation : 0;
@@ -140,37 +140,37 @@ define([
 	
         Transform2D.prototype.localToWorld = function( v ){
 	    
-	    return v.applyAffine( this.matrixWorld );
+	    return v.applyMat32( this.matrixWorld );
 	};
         
 	
         Transform2D.prototype.worldToLocal = function(){
-	    var mat = new Affine;
+	    var mat = new Mat32;
 	    
 	    return function( v ){
 		
-		return v.applyAffine( mat.getInverse( this.matrixWorld ) );
+		return v.applyMat32( mat.getInverse( this.matrixWorld ) );
 	    };
 	}();
 	
 	
-	Transform2D.prototype.applyAffine = function(){
-	    var mat = new Affine;
+	Transform2D.prototype.applyMat32 = function(){
+	    var mat = new Mat32;
 	    
 	    return function( matrix ){
 		
 		this.matrix.mmul( matrix, this.matrix );
 		
-		this.scale.getScaleAffine( this.matrix );
+		this.scale.getScaleMat32( this.matrix );
 		this.rotation = this.matrix.getRotation();
-		this.position.getPositionAffine( this.matrix );
+		this.position.getPositionMat32( this.matrix );
 	    };
         }();
         
 	
         Transform2D.prototype.translate = function(){
 	    var vec = new Vec2,
-		mat = new Affine;
+		mat = new Mat32;
 	    
 	    return function( translation, relativeTo ){
 		vec.copy( translation );
@@ -183,7 +183,7 @@ define([
 		}
 		
 		if( relativeTo ){
-		    vec.applyAffine( mat );
+		    vec.applyMat32( mat );
 		}
 		
 		this.position.add( vec );
@@ -203,7 +203,7 @@ define([
         
         Transform2D.prototype.scale = function(){
 	    var vec = new Vec2,
-		mat = new Affine;
+		mat = new Mat32;
 	    
 	    return function( scale, relativeTo ){
 		vec.copy( scale );
@@ -216,7 +216,7 @@ define([
 		}
 		
 		if( relativeTo ){
-		    vec.applyAffine( mat );
+		    vec.applyMat32( mat );
 		}
 		
 		this.scale.add( vec );
@@ -240,7 +240,7 @@ define([
         
         Transform2D.prototype.lookAt = function(){
 	    var vec = new Vec2,
-		mat = new Affine;
+		mat = new Mat32;
 	    
 	    return function( target ){
 		

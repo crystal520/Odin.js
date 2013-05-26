@@ -84,7 +84,7 @@ define([
 		bj.calculateAABB();
 	    }
 	    
-	    if( AABB2.intersects( bi.aabb, bj.aabb ) ){
+	    if( bi.aabb.intersects( bj.aabb ) ){
 		
 		pairsi.push( bi );
 		pairsj.push( bj );
@@ -98,7 +98,7 @@ define([
 	    return function( bi, bj, pairsi, pairsj ){
 		var si = bi.shape, sj = bj.shape,
 		    radius, radiusSq;
-		    
+		
 		if( si.boundingRadiusNeedsUpdate ){
 		    si.calculateBoundingRadius();
 		}

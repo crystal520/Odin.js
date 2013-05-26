@@ -3,12 +3,10 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/mathf",
 	"math/vec2",
-	"math/affine",
 	"physics2d/shape/pshape2d"
     ],
-    function( Class, Mathf, Vec2, Affine, PShape2D ){
+    function( Class, Vec2, PShape2D ){
 	"use strict";
 	
 	var abs = Math.abs,

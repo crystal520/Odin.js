@@ -291,6 +291,7 @@ define([
 		this.y = a.y;
 		this.z = a.z;
 		this.w = sqrt( u.lenSq() * v.lenSq() ) + u.dot( v );
+		
 		this.norm();
 		
 		return this;

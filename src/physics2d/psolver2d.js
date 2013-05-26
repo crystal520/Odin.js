@@ -14,107 +14,76 @@ define([
 	    
 	    Class.call( this );
 	    
-	    this.equations = [];
+	    this.contacts = [];
 	    
 	    this.iterations = 10;
-	    this.tolerance = 0.000001;
+	    this.tolerance = 1e-18;
 	}
 	
 	Class.extend( PSolver2D, Class );
 	
 	
-	PSolver2D.prototype.solve = function(){
-	    var Bs = [], lambdas = [], invCs = [];
-	    
-	    return function( dt, world ){
-		var maxIters = this.iterations,
-		    tolerance = this.tolerance,
-		    toleranceSq = tolerance * tolerance,
-		    eqs = this.equations,
-		    eqsLen = eqs.length,
-		    bodies = world.bodies,
-		    bodiesLen = bodies.length,
-		    body, vlambda,
-		    eq, B, invC, lambda, GWlambda,
-		    deltalambda, deltalambdaTotal,
-		    i, iter;
+	PSolver2D.prototype.solve = function( dt, world ){
+	    var maxIters = this.iterations,
+		tolerance = this.tolerance,
+		toleranceSq = tolerance * tolerance,
+		contacts = this.contacts,
+		contactsLen = contacts.length,
+		bodies = world.bodies,
+		bodiesLen = bodies.length,
+		body, vlambda, contact, i, iter;
+		
+	    if( contactsLen ){
+		
+		for( i = 0; i < bodiesLen; i++ ){
+		    body = bodies[i];
+		    vlambda = body.vlambda;
 		    
-		if( eqsLen ){
+		    vlambda.x = 0;
+		    vlambda.y = 0;
 		    
-		    for( i = 0; i < eqsLen; i++ ){
-			eq = eqs[i];
-			eq.updateConstants( dt );
-			
-			lambdas[i] = 0;
-			Bs[i] = eq.calculateB( dt );
-			invCs[i] = 1 / eq.calculateC();
-		    }
+		    if( body.wlambda !== undefined ) body.wlambda = 0;
+		}
+		
+		for( iter = 0; iter < maxIters; iter++ ){
 		    
-		    for( i = 0; i < bodiesLen; i++ ){
-			body = bodies[i];
-			vlambda = body.vlambda;
-			
-			vlambda.x = 0;
-			vlambda.y = 0;
-			
-			if( body.wlambda !== undefined ) body.wlambda = 0;
-		    }
-		    
-		    for( iter = 0; iter < maxIters; iter++ ){
-			
-			deltalambdaTotal = 0;
-			
-			for( i = 0; i < eqsLen; i++ ){
-			    eq = eqs[i];
-			    
-			    B = Bs[i];
-			    invC = invCs[i];
-			    lambda = lambdas[i];
-			    GWlambda = eq.calculateGWlambda();
-			    deltalambda = invC * ( B - GWlambda - eq.eps * lambda );
-			    
-			    lambdas[i] += deltalambda;
-			    
-			    deltalambdaTotal += abs( deltalambda );
-			    
-			    eq.addWlambda( deltalambda );
-			}
-			
-			if( deltalambdaTotal * deltalambdaTotal < toleranceSq ) break;
-		    }
-		    
-		    for( i = 0; i < bodiesLen; i++ ){
-			body = bodies[i];
-			body.velocity.add( body.vlambda );
-			
-			if( body.wlambda !== undefined ) body.angularVelocity += body.wlambda;
+		    for( i = 0; i < contactsLen; i++ ){
+			contact = contacts[i];
+			contact.solve( dt );
 		    }
 		}
 		
-		return iter;
-	    };
-	}();
-	
-	
-	PSolver2D.prototype.add = function( eq ){
+		for( i = 0; i < bodiesLen; i++ ){
+		    body = bodies[i];
+		    body.velocity.add( body.vlambda );
+		    
+		    if( body.wlambda !== undefined ) body.angularVelocity += body.wlambda;
+		}
+	    }
 	    
-	    this.equations.push( eq );
+	    return iter;
 	};
 	
 	
-	PSolver2D.prototype.remove = function( eq ){
-	    var eqs = this.equations,
-		idx = eqs.indexOf( eq );
+	PSolver2D.prototype.add = function( contact ){
+	    
+	    this.contacts.push( contact );
+	};
+	
+	
+	PSolver2D.prototype.remove = function( contact ){
+	    var contacts = this.contacts,
+		idx = contacts.indexOf( contact );
 	    
 	    if( idx !== -1 ){
-		eqs.splice( idx, 1 );
+		contacts.splice( idx, 1 );
 	    }
 	};
 	
 	
 	PSolver2D.prototype.clear = function(){
 	    
-	    this.equations.length = 0;
+	    this.contacts.length = 0;
 	};
 	
 	

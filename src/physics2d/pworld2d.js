@@ -9,8 +9,7 @@ define([
 	"physics2d/collision/pbroadphase2d",
 	"physics2d//collision/pnearphase2d",
 	"physics2d/shape/pshape2d",
-	"physics2d/body/pbody2d",
-	"physics2d/constraints/pfrictionequation2d"
+	"physics2d/body/pbody2d"
     ],
     function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PShape2D, PBody2D, PFrictionEquation2D ){
 	"use strict";
@@ -41,7 +40,6 @@ define([
 	    this.bodies = [];
 	    
 	    this.contacts = [];
-	    this.frictionEquations = [];
 	    
 	    this.pairsi = [];
 	    this.pairsj = [];
@@ -51,6 +49,15 @@ define([
 	    this.broadphase = new PBroadphase2D( opts.aabbBroadphase );
 	    this.nearphase = new PNearphase2D();
 	    this.solver = new PSolver2D();
+	    
+	    this.debug = opts.debug !== undefined ? opts.debug : true;
+	    
+	    this.profile = {
+		solve: 0,
+		integration: 0,
+		broadphase:0,
+		nearphase:0
+	    };
 	    
 	    this.removeList = [];
 	}
@@ -95,18 +102,35 @@ define([
 	
 	PWorld2D.prototype.step = function(){
 	    var accumulator = 0,
-		frictionPool = [],
 		max = 0.25,
 		lastTime = 0,
-		mindt = 1 / 60,
-		time = 0;
+		ddt = 1 / 60,
+		time = 0,
+		now, startTime = Date.now(),
+		performance = performance || {};
+		
+		now = performance.now = function(){
+		    return (
+			performance.now ||
+			performance.mozNow ||
+			performance.msNow ||
+			performance.oNow ||
+			performance.webkitNow ||
+			function(){
+			    return Date.now() - startTime; 
+			}
+		    );
+		}();
 	    
 	    return function( dt ){
-		var gravity = this.gravity,
+		var debug = this.debug,
+		    profile = this.profile, profileStart,
+		    
+		    gravity = this.gravity,
 		    bodies = this.bodies,
 		    solver = this.solver,
 		    pairsi = this.pairsi, pairsj = this.pairsj,
-		    c, contacts = this.contacts, frictionEquations = this.frictionEquations,
+		    c, contacts = this.contacts,
 		    
 		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, mass, invMass, invInertia,
 		    i, il;
@@ -115,30 +139,32 @@ define([
 		
 		accumulator += time - lastTime;
 		accumulator = accumulator > max ? max : accumulator;
-		dt = dt !== 0 ? dt : mindt;
-		
-		if( this.removeList.length ){
-		    this._remove();
-		}
+		dt = dt !== 0 ? dt : ddt;
 		
 		while( accumulator >= dt ){
 		    
-		    for( i = 0, il = frictionEquations.length; i < il; i++ ){
-			frictionPool.push( frictionEquations[i] );
-		    }
-		    frictionEquations.length = 0;
-		    
+		    if( debug ) profileStart = now();
 		    this.broadphase.collisionPairs( this, pairsi, pairsj );
+		    if( debug ) profile.broadphase = now() - profileStart;
+		    
+		    
+		    if( debug ) profileStart = now();
+		    
 		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
 		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
 			c = contacts[i];
 			solver.add( c );
 		    }
+		    if( debug ) profile.nearphase = now() - profileStart;
 		    
+		    
+		    if( debug ) profileStart = now();
 		    solver.solve( dt, this );
 		    solver.clear();
+		    if( debug ) profile.solve = now() - profileStart;
 		    
+		    if( debug ) profileStart = now();
 		    for( i = 0, il = bodies.length; i < il; i++ ){
 			body = bodies[i];
 			
@@ -196,8 +222,13 @@ define([
 			
 			body.trigger("poststep");
 		    }
+		    if( debug ) profile.integration = now() - profileStart;
 		    
 		    accumulator -= dt;
+		}
+		
+		if( this.removeList.length ){
+		    this._remove();
 		}
 		
 		lastTime = time;

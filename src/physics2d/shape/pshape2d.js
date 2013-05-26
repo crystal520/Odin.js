@@ -3,11 +3,9 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/aabb2",
-	"math/vec2",
-	"math/affine"
+	"math/aabb2"
     ],
-    function( Class, AABB2, Vec2, Affine ){
+    function( Class, AABB2 ){
 	"use strict";
 	
 	

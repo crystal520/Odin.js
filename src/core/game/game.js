@@ -23,6 +23,8 @@ define([
 	    
 	    Class.call( this, opts );
 	    
+	    this.debug = opts.debug !== undefined ? opts.debug : false;
+	    
 	    this.camera = undefined;
             this.scene = undefined;
 	    
@@ -211,7 +213,7 @@ define([
 	    return function(){
 		
 		if( last + 0.5 <= Time.sinceStart ){
-		    fpsDisplay.innerHTML = ( floor( Time.ms * 100 ) * 0.01 ) + "ms";
+		    fpsDisplay.innerHTML = ( Time.fps ).toFixed(2) + "fps";
 		    last = Time.sinceStart;
 		}
 		

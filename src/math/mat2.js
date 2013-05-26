@@ -18,11 +18,10 @@ define([
 	function Mat2( m11, m12, m21, m22 ){
 	    
 	    this.elements = new Float32Array(4);
+	    var te = this.elements;
 	    
-	    this.set(
-		m11 !== undefined ? m11 : 1, m12 || 0,
-		m21 || 0, m22 !== undefined ? m22 : 1
-	    );
+            te[0] = m11 !== undefined ? m11 : 1; te[2] = m12 || 1;
+            te[1] = m21 || 1; te[3] = m22 !== undefined ? m22 : 1;
 	}
         
         
@@ -37,12 +36,13 @@ define([
         
         
         Mat2.prototype.copy = function( other ){
-            var me = other.elements;
+            var te = this.elements,
+		me = other.elements;
 	    
-            this.set(
-		me[0], me[2],
-		me[1], me[3]
-	    );
+	    te[0] = me[0];
+	    te[1] = me[1];
+	    te[2] = me[2];
+	    te[3] = me[3];
             
             return this;
         };

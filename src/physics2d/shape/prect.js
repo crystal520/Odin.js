@@ -3,13 +3,12 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/mathf",
 	"math/vec2",
 	"math/aabb2",
 	"physics2d/shape/pshape2d",
 	"physics2d/shape/pconvex2d"
     ],
-    function( Class, Mathf, Vec2, AABB2, PShape2D, PConvex2D ){
+    function( Class, Vec2, AABB2, PShape2D, PConvex2D ){
 	"use strict";
 	
 	

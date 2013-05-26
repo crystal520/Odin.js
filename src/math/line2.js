@@ -2,13 +2,14 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
+	"math/mathf",
 	"math/vec2"
     ],
-    function( Vec2 ){
+    function( Mathf, Vec2 ){
         "use strict";
         
 	var sqrt = Math.sqrt,
-	    vEquals = Vec2.equals;
+	    equals = Mathf.equals;
 	
         
         function Line2( start, end ){
@@ -28,9 +29,27 @@ define([
         
         
         Line2.prototype.copy = function( other ){
+	    var ts = this.start, te = this.end,
+		os = other.start, os = other.end;
 	    
-            this.start.copy( other.start );
-            this.end.copy( other.end );
+            ts.x = os.x;
+            ts.y = os.y;
+	    
+            te.x = oe.x;
+            te.y = oe.y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.set = function( start, end ){
+	    var ts = this.start, te = this.end;
+	    
+            ts.x = start.x;
+            ts.y = start.y;
+	    
+            te.x = end.x;
+            te.y = end.y;
             
             return this;
 	};
@@ -45,7 +64,7 @@ define([
 	};
         
         
-        Line2.prototype.dotv = function( v ){
+        Line2.prototype.dot = function( v ){
 	    var start = this.start, end = this.end,
 		x = end.x - start.x,
 		y = end.y - start.y;
@@ -72,6 +91,62 @@ define([
 	};
         
         
+        Line2.prototype.vec = function( target ){
+	    target = target || new Vec2;
+	    
+	    var start = this.start, end = this.end;
+	    
+	    target.x = end.x - start.x;
+	    target.y = end.y - start.y;
+	    
+	    return target;
+	};
+        
+        
+        Line2.prototype.norm = function(){
+	    var start = this.start, end = this.end,
+		sx = start.x, sy = start.y,
+		sl = sx * sx + sy * sy,
+		
+		ex = end.x, ey = end.y,
+		el = ex * ex + ey * ey;
+	    
+	    sl = sl !== 0 ? 1 / sl : 0;
+	    start.x *= sl;
+	    start.y *= sl;
+	    
+	    el = el !== 0 ? 1 / el : 0;
+	    end.x *= el;
+	    end.y *= el;
+	    
+	    return this;
+	};
+        
+        
+        Line2.prototype.intersect = function( other, target ){
+	    target = target || new Vec2;
+	    
+	    var as = this.start, ae = this.end,
+		asx = as.x, asy = as.y, aex = ae.x, aey = ae.y,
+		
+		bs = other.start, be = other.end,
+		bsx = bs.x, bsy = bs.y, bex = be.x, bey = be.y,
+		
+		d = ( asx - aex ) * ( bsy - bey ) - ( asy - aey ) * ( bsx - bex ),
+		pre, post;
+	    
+	    if( d === 0 ) return target;
+	    
+	    pre = ( asx * aey - asy * aex );
+	    post = ( bsx * bey - bsy * bex );
+	    
+	    target.x = ( pre * ( bsx - bey ) - ( asx - aex ) * post ) / d;
+	    target.y = ( pre * ( bsy - bey ) - ( asy - aey ) * post ) / d;
+	    
+	    return target;
+	};
+        
+        
         Line2.prototype.toString = function(){
             var start = this.start, end = this.end;
 	    
@@ -80,20 +155,52 @@ define([
         
         
         Line2.prototype.equals = function( other ){
-            
+            var astart = this.start, aend = this.end,
+		bstart = other.start, bend = other.end;
+	    
             return !(
-                !vEquals( this.start, other.start ) ||
-                !vEquals( this.end, other.end )
+                !equals( astart.x, bstart.x ) ||
+                !equals( astart.y, bstart.y ) ||
+                !equals( aend.x, bend.x ) ||
+                !equals( aend.y, bend.y )
             );
 	};
         
         
         Line2.equals = function( a, b ){
-            
+            var astart = a.start, aend = a.end,
+		bstart = b.start, bend = b.end;
+	    
             return !(
-                !vEquals( a.start, b.start ) ||
-                !vEquals( a.end, b.end )
+                !equals( astart.x, bstart.x ) ||
+                !equals( astart.y, bstart.y ) ||
+                !equals( aend.x, bend.x ) ||
+                !equals( aend.y, bend.y )
             );
+	};
+        
+        
+        Line2.intersect = function( a, b, target ){
+	    target = target || new Vec2;
+	    
+	    var as = a.start, ae = a.end,
+		asx = as.x, asy = as.y, aex = ae.x, aey = ae.y,
+		
+		bs = b.start, be = b.end,
+		bsx = bs.x, bsy = bs.y, bex = be.x, bey = be.y,
+		
+		d = ( asx - aex ) * ( bsy - bey ) - ( asy - aey ) * ( bsx - bex ),
+		pre, post;
+	    
+	    if( d === 0 ) return target;
+	    
+	    pre = ( asx * aey - asy * aex );
+	    post = ( bsx * bey - bsy * bex );
+	    
+	    target.x = ( pre * ( bsx - bey ) - ( asx - aex ) * post ) / d;
+	    target.y = ( pre * ( bsy - bey ) - ( asy - aey ) * post ) / d;
+	    
+	    return target;
 	};
         
         return Line2;

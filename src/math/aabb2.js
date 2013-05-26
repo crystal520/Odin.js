@@ -67,9 +67,22 @@ define([
 		max.x = maxx; max.y = maxy;
             }
             else{
-                this.clear();
+                min.x = min.y = max.x = max.y = 0;
             }
             
+            return this;
+        };
+        
+        
+        AABB2.prototype.expandByPoint = function( point ){
+            var min = this.min, max = this.max;
+            
+	    min.x = min.x > point.x ? point.x : min.x;
+	    min.y = min.y > point.y ? point.y : min.y;
+            
+	    max.x = max.x < point.x ? point.x : max.x;
+	    max.y = max.y < point.y ? point.y : max.y;
+	    
             return this;
         };
         
@@ -84,9 +97,13 @@ define([
         
         
         AABB2.prototype.setCenter = function( center ){
+	    var min = this.min, max = this.max;
 	    
-	    this.min.add( center );
-	    this.max.add( center );
+	    min.x += center.x;
+	    min.y += center.y;
+	    
+	    max.x += center.x;
+	    max.y += center.y;
 	    
 	    return this;
 	};
@@ -120,10 +137,14 @@ define([
         
         
         AABB2.prototype.equals = function( other ){
-            
+            var amin = this.min, amax = this.max,
+		bmin = other.min, bmax = other.max;
+	    
             return !(
-                !vEquals( this.min, other.min ) ||
-                !vEquals( this.max, other.max )
+                !equals( amin.x, bmin.x ) ||
+                !equals( amin.y, bmin.y ) ||
+                !equals( amax.x, bmax.x ) ||
+                !equals( amax.y, bmax.y )
             );
 	};
         
@@ -140,10 +161,14 @@ define([
         
         
         AABB2.equals = function( a, b ){
-            
+            var amin = a.min, amax = a.max,
+		bmin = b.min, bmax = b.max;
+	    
             return !(
-                !vEquals( a.min, b.min ) ||
-                !vEquals( a.max, b.max )
+                !equals( amin.x, bmin.x ) ||
+                !equals( amin.y, bmin.y ) ||
+                !equals( amax.x, bmax.x ) ||
+                !equals( amax.y, bmax.y )
             );
 	};
         

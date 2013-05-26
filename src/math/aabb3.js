@@ -64,9 +64,24 @@ define([
 		max.x = maxx; max.y = maxy; max.x = maxz;
             }
             else{
-                this.clear();
+                min.x = min.y = min.z = max.x = max.y = max.z = 0;
             }
             
+            return this;
+        };
+        
+        
+        AABB3.prototype.expandByPoint = function( point ){
+            var min = this.min, max = this.max;
+            
+	    min.x = min.x > point.x ? point.x : min.x;
+	    min.y = min.y > point.y ? point.y : min.y;
+	    min.z = min.z > point.z ? point.z : min.z;
+            
+	    max.x = max.x < point.x ? point.x : max.x;
+	    max.y = max.y < point.y ? point.y : max.y;
+	    max.z = max.z < point.z ? point.z : max.z;
+	    
             return this;
         };
         
@@ -81,9 +96,15 @@ define([
         
         
         AABB3.prototype.setCenter = function( center ){
+	    var min = this.min, max = this.max;
 	    
-	    this.min.add( center );
-	    this.max.add( center );
+	    min.x += center.x;
+	    min.y += center.y;
+	    min.z += center.z;
+	    
+	    max.x += center.x;
+	    max.y += center.y;
+	    max.z += center.z;
 	    
 	    return this;
 	};

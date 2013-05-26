@@ -49,15 +49,6 @@ define([
 	    
             return target.copy( this.direction ).smul( length ).add( this.origin );
         };
-        
-        
-        Ray2.prototype.clear = function(){
-            
-            this.origin.set( 0, 0 );
-            this.direction.set( 0, 0 );
-            
-            return this;
-        };
 	
 	
 	Ray2.prototype.applyAffine = function( m ){

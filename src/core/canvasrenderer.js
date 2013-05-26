@@ -7,9 +7,9 @@ define([
 	"base/device",
 	"core/canvas",
 	"math/color",
-	"math/affine"
+	"math/mat32"
     ],
-    function( Class, Dom, Device, Canvas, Color, Affine ){
+    function( Class, Dom, Device, Canvas, Color, Mat32 ){
 	"use strict";
 	
 	var PI = Math.PI,
@@ -137,7 +137,8 @@ define([
         
         
         CanvasRenderer.prototype.renderRigidBody = function(){
-	    var mvp = new Affine;
+	    var modelViewProj = new Mat32,
+		mvp = modelViewProj.elements;
 	    
 	    return function( rigidbody, camera ){
 		var ctx = this.context,
@@ -150,11 +151,11 @@ define([
 		    vertex, i, il;
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
-		mvp.mmul( gameObject.matrixModelView, camera.matrixProjection );
+		modelViewProj.mmul( gameObject.matrixModelView, camera.matrixProjection );
 		
 		ctx.save();
 		
-		ctx.transform( mvp.a, mvp.b, mvp.c, mvp.d, mvp.x, mvp.y );
+		ctx.transform( mvp[0], mvp[2], mvp[1], mvp[3], mvp[4], mvp[5] );
 		ctx.scale( 1, -1 );
 		
 		ctx.strokeStyle = "#ff0000";
@@ -181,7 +182,8 @@ define([
         
         
         CanvasRenderer.prototype.renderSprite = function(){
-	    var mvp = new Affine;
+	    var modelViewProj = new Mat32,
+		mvp = modelViewProj.elements;
 	    
 	    return function( sprite, camera ){
 		var ctx = this.context,
@@ -190,13 +192,12 @@ define([
 		    image = sprite.image || defaultImg;
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
-		mvp.mmul( gameObject.matrixModelView, camera.matrixProjection );
+		modelViewProj.mmul( gameObject.matrixModelView, camera.matrixProjection );
 		
 		ctx.save();
 		
-		ctx.transform( mvp.a, mvp.b, mvp.c, mvp.d, mvp.x, mvp.y );
+		ctx.transform( mvp[0], mvp[1], mvp[2], mvp[3], mvp[4], mvp[5] );
 		ctx.scale( 1, -1 );
-		
 		ctx.drawImage(
 		    image,
 		    sprite.x, sprite.y,

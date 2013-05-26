@@ -31,12 +31,14 @@ define([
         
         World.prototype.add = function( rigidbody ){
 	    
+	    rigidbody.body.userData = rigidbody;
 	    this.pworld.add( rigidbody.body );
         };
         
         
         World.prototype.remove = function( rigidbody ){
 	    
+	    rigidbody.body.userData = undefined;
 	    this.pworld.remove( rigidbody.body );
         };
         

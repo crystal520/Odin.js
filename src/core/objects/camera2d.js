@@ -5,10 +5,10 @@ define([
 	"base/class",
 	"math/mathf",
 	"math/vec2",
-	"math/affine",
+	"math/mat32",
 	"core/objects/gameobject2d"
     ],
-    function( Class, Mathf, Vec2, Affine, GameObject2D ){
+    function( Class, Mathf, Vec2, Mat32, GameObject2D ){
         "use strict";
 	
 	var clampBottom = Mathf.clampBottom;
@@ -26,10 +26,10 @@ define([
             
             this.zoom = opts.zoom !== undefined ? opts.zoom : 1;
             
-            this.matrixProjection = new Affine;
-            this.matrixProjectionInverse = new Affine;
+            this.matrixProjection = new Mat32;
+            this.matrixProjectionInverse = new Mat32;
             
-            this.matrixWorldInverse = new Affine;
+            this.matrixWorldInverse = new Mat32;
             
             this.needsUpdate = true;
         }

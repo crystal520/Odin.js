@@ -49,15 +49,6 @@ define([
 	    
             return target.copy( this.direction ).smul( length ).add( this.origin );
         };
-        
-        
-        Ray3.prototype.clear = function(){
-            
-            this.origin.set( 0, 0, 0 );
-            this.direction.set( 0, 0, 0 );
-            
-            return this;
-        };
 	
 	
 	Ray3.prototype.applyMat3 = function( m ){

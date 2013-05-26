@@ -38,7 +38,7 @@ define([
 	    this.rotation = opts.rotation !== undefined ? opts.rotation : 0;
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
 	    
-	    this.angularDamping = opts.angularDamping !== undefined ? opts.angularDamping : 0;
+	    this.angularDamping = opts.angularDamping !== undefined ? opts.angularDamping : 0.01;
 	    
 	    this.inertia = this.shape.calculateInertia( this.mass );
 	    this.invInertia = this.inertia === 0 ? 0 : 1 / this.inertia;
@@ -48,6 +48,8 @@ define([
 	    
 	    this.aabb = new AABB2;
 	    this.aabbNeedsUpdate = true;
+	    
+	    this._sleepAngularVelocityLimit = 0.05;
 	}
 	
 	Class.extend( PRigidBody2D, PBody2D );
@@ -57,6 +59,33 @@ define([
 	    
 	    this.shape.calculateWorldAABB( this.position, this.rotation, this.aabb );
 	    this.aabbNeedsUpdate = false;
+	};
+	
+	
+	PRigidBody2D.prototype.sleepTick = function( time ){
+	    
+	    if( this.allowSleep ){
+		var sleepState = this.sleepState,
+		    velSq = this.velocity.lenSq(),
+		    aVelSq = this.angularVelocity * this.angularVelocity,
+		    
+		    sleepVelLimitSq = this._sleepVelocityLimit * this._sleepVelocityLimit,
+		    sleepAVelLimitSq = this._sleepAngularVelocityLimit * this._sleepAngularVelocityLimit;
+		
+		if( sleepState === AWAKE && velSq < sleepVelLimitSq && aVelSq < sleepAVelLimitSq ){
+		    
+		    this.sleepy();
+		    this._timeLastSleepy = time;
+		}
+		else if( sleepState === SLEEPY && ( velSq > sleepVelLimitSq || aVelSq > sleepAVelLimitSq ) ){
+		    
+		    this.wake();
+		}
+		else if( sleepState === SLEEPY && ( time - this._timeLastSleepy ) > this._timeLastSleepy ){
+		    
+		    this.sleep();
+		}
+	    }
 	};
 	
 	
@@ -79,20 +108,6 @@ define([
 		this.torque += point.cross( force );
 	    };
 	}();
-	
-	
-	PRigidBody2D.prototype.applyTorque = function( torque, wake ){
-	    
-	    if( this.type === STATIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wake();
-	    }
-	    
-	    this.torque += torque;
-	};
 	
 	
 	PRigidBody2D.prototype.applyImpulse = function(){

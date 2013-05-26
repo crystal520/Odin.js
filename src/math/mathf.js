@@ -153,13 +153,13 @@ define(
         };
         
         
-        Mathf.prototype.toRadians = function( x ){
+        Mathf.prototype.degsToRads = function( x ){
 	    
 	    return standardRadian( x * TO_RADS );
         };
         
         
-        Mathf.prototype.toDegrees = function( x ){
+        Mathf.prototype.radstoDegs = function( x ){
 	    
 	    return standardAngle( x * TO_DEGS );
         };

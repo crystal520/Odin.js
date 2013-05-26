@@ -12,7 +12,8 @@ define(
 	    
 	    this.time = 0;
 	    
-	    this.ms = 1/60;
+	    this.fps = 60;
+	    
 	    this.delta = 1/60;
 	    
 	    this.scale = 1;
@@ -20,25 +21,37 @@ define(
 	
 	var last = 0;
 	
-	
 	Time.prototype.start = function(){
-	    this.time = this.now();
+	    var frames = 0, time = 0, ms = 0, msLast = 0;
 	    
-	    this.ms = 1000 * ( this.time - last );
-	    this.delta = ( this.time - last ) * this.scale;
-	};
+	    return function(){
+		
+		this.time = time = this.now();
+		this.delta = ( time - last ) * this.scale;
+		
+		frames++;
+		ms = time * 1000;
+		
+		if( msLast + 1000 < ms ){
+		    this.fps = ( frames * 1000 ) / ( ms - msLast );
+		    msLast = ms;
+		    frames = 0;
+		}
+	    };
+	}();
 	
 	
 	Time.prototype.end = function(){
+	    
 	    last = this.time;
 	};
 	
 	
 	Time.prototype.now = function(){
-	    var startTime = Date.now(),
+	    var now, startTime = Date.now(),
 		performance = performance || {};
 		
-	    performance.now = function(){
+	    now = performance.now = function(){
 		return (
 		    performance.now ||
 		    performance.mozNow ||
@@ -53,7 +66,7 @@ define(
 	    
 	    return function(){
 		
-		return performance.now() * 0.001;
+		return now() * 0.001;
 	    }
 	}();
 	

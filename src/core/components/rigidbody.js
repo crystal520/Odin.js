@@ -5,13 +5,12 @@ define([
 	"base/class",
 	"base/time",
 	"core/components/component",
-	"math/vec2",
 	"physics2d/shape/pcircle",
 	"physics2d/shape/pconvex2d",
 	"physics2d/shape/prect",
 	"physics2d/body/prigidbody2d"
     ],
-    function( Class, Time, Component, Vec2, PCircle, PConvex2D, PRect, PRigidBody2D ){
+    function( Class, Time, Component, PCircle, PConvex2D, PRect, PRigidBody2D ){
         "use strict";
 	
         
@@ -43,6 +42,10 @@ define([
 	    
 	    opts.shape = shape;
 	    this.body = new PRigidBody2D( opts );
+	    
+	    this.listenTo( this.body, "collide", function( pbody2d ){
+		this.trigger("collide", pbody2d.userData, Time.time );
+	    }, this );
         }
         
 	Class.extend( RigidBody, Component );
@@ -72,15 +75,21 @@ define([
 	};
 	
 	
-	RigidBody.prototype.applyForce = function( force, worldPoint ){
+	RigidBody.prototype.applyForce = function( force, worldPoint, wake ){
 	    
-	    this.body.applyForce( force, worldPoint );
+	    this.body.applyForce( force, worldPoint, wake );
 	};
 	
 	
-	RigidBody.prototype.applyImpulse = function( impulse, worldPoint ){
+	RigidBody.prototype.applyTorque = function( torque, wake ){
 	    
-	    this.body.applyImpulse( impulse, worldPoint );
+	    this.body.applyTorque( torque, wake );
+	};
+	
+	
+	RigidBody.prototype.applyImpulse = function( impulse, worldPoint, wake ){
+	    
+	    this.body.applyImpulse( impulse, worldPoint, wake );
 	};
 	
 	

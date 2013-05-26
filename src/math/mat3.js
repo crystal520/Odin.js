@@ -18,12 +18,11 @@ define([
 	function Mat3( m11, m12, m13, m21, m22, m23, m31, m32, m33 ){
 	    
 	    this.elements = new Float32Array(8);
+	    var te = this.elements;
 	    
-	    this.set(
-		m11 !== undefined ? m11 : 1, m12 || 0, m13 || 0,
-		m21 || 0, m22 !== undefined ? m22 : 1, m23 || 0,
-		m31 || 0, m32 || 0, m33 !== undefined ? m33 : 1
-	    );
+            te[0] = m11 !== undefined ? m11 : 1; te[3] = m12 || 0; te[6] = m13 || 0;
+            te[1] = m21 || 0; te[4] = m22 !== undefined ? m22 : 1; te[7] = m23 || 0;
+            te[2] = m31 || 0; te[5] = m32 || 0; te[8] = m33 !== undefined ? m33 : 1;
 	}
         
         
@@ -39,13 +38,18 @@ define([
         
         
         Mat3.prototype.copy = function( other ){
-            var me = other.elements;
+            var te = this.elements,
+		me = other.elements;
 	    
-            this.set(
-		me[0], me[3], me[6],
-		me[1], me[4], me[7],
-		me[2], me[5], me[8]
-	    );
+	    te[0] = me[0];
+	    te[1] = me[1];
+	    te[2] = me[2];
+	    te[3] = me[3];
+	    te[4] = me[4];
+	    te[5] = me[5];
+	    te[6] = me[6];
+	    te[7] = me[7];
+	    te[8] = me[8];
             
             return this;
         };
@@ -335,6 +339,56 @@ define([
 	    te[8] = abs( te[8] );
 	    
             return this;
+        };
+	
+	
+	Mat3.prototype.setRotationQuat = function( q ){
+	    var te = this.elements,
+		x = q.x, y = q.y, z = q.z, w = q.w,
+		x2 = x + x, y2 = y + y, z2 = z + z,
+		xx = x * x2, xy = x * y2, xz = x * z2,
+		yy = y * y2, yz = y * z2, zz = z * z2,
+		wx = w * x2, wy = w * y2, wz = w * z2;
+		
+	    te[0] = 1 - ( yy + zz );
+	    te[3] = xy - wz;
+	    te[6] = xz + wy;
+	    
+	    te[1] = xy + wz;
+	    te[4] = 1 - ( xx + zz );
+	    te[7] = yz - wx;
+	    
+	    te[2] = xz - wy;
+	    te[5] = yz + wx;
+	    te[8] = 1 - ( xx + yy );
+	    
+	    return this;
+	};
+	
+	
+	Mat3.prototype.rotateAxis = function( v ){
+	    var te = this.elements,
+		vx = v.x, vy = v.y, vz = v.z;
+		
+	    v.x = vx * te[0] + vy * te[3] + vz * te[6];
+	    v.y = vx * te[1] + vy * te[4] + vz * te[7];
+	    v.z = vx * te[2] + vy * te[5] + vz * te[8];
+	    
+	    v.norm();
+	    
+	    return v;
+	};
+	
+	
+	Mat3.prototype.scale = function( v ){
+	    var te = this.elements,
+		x = v.x, y = v.y, z = v.z;
+	    
+	    te[0] *= x; te[3] *= y; te[6] *= z;
+	    te[1] *= x; te[4] *= y; te[7] *= z;
+	    te[2] *= x; te[5] *= y; te[8] *= z;
+	    
+	    return this;
         };
 	
         

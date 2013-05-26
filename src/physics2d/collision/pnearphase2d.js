@@ -7,8 +7,7 @@ define([
 	"math/vec2",
 	"physics2d/shape/pshape2d",
 	"physics2d/collision/pcollision2d",
-	"physics2d/constraints/pcontact2d"
-	
+	"physics2d/collision/pcontact2d"
     ],
     function( Class, Mathf, Vec2, PShape2D, PCollision2D, PContact2D ){
 	"use strict";
@@ -73,20 +72,20 @@ define([
 	    return function( contacts, bi, bj, si, sj, pi, pj, ri, rj ){
 		dist.vsub( pj, pi );
 		
-		var r = sj.radius + si.radius,
-		    rsq = r * r,
-		    dsq = dist.lenSq(),
-		    c;
+		var r = sj.radius + si.radius, c;
 		
-		if( dsq < rsq ){
+		if( dist.lenSq() < r * r ){
 		    c = this.createContact( bi, bj );
 		    
-		    c.ni.copy( dist ).norm();
+		    c.n.copy( dist ).norm();
 		    
-		    c.ri.copy( c.ni ).smul( si.radius );
-		    c.rj.copy( c.ni ).smul( -sj.radius );
+		    c.ri.copy( c.n ).smul( si.radius );
+		    c.rj.copy( c.n ).smul( -sj.radius );
 		    
 		    contacts.push( c );
+		    
+		    bi.trigger("collide", bj );
+		    bj.trigger("collide", bi );
 		}
 	    };
 	}();
@@ -124,15 +123,18 @@ define([
 			c = this.createContact( bi, bj );
 			m = manifolds[i];
 			
-			c.ni.copy( axis ).negate();
+			c.n.copy( axis ).negate();
 			
-			vec.copy( m.normal ).negate().smul( m.depth );
+			vec.copy( m.normal ).smul( -m.depth );
 			
 			c.ri.vsub( m.point, vec ).sub( pi );
 			c.rj.copy( m.point ).sub( pj );
 			
 			contacts.push( c );
 		    }
+		    
+		    bi.trigger("collide", bj );
+		    bj.trigger("collide", bi );
 		}
 	    };
 	}();

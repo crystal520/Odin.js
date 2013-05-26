@@ -19,6 +19,7 @@ define([
 	    
 	    this.type = PBody2D.DYNAMIC;
 	    
+	    this.userData = undefined;
 	    this.world = undefined;
 	    
 	    this.elasticity = opts.elasticity !== undefined ? opts.elasticity : 0.5;
@@ -29,7 +30,7 @@ define([
 	    this.position = opts.position instanceof Vec2 ? opts.position : new Vec2;
 	    this.velocity = opts.velocity instanceof Vec2 ? opts.velocity : new Vec2;
 	    
-	    this.linearDamping = opts.linearDamping instanceof Vec2 ? opts.linearDamping : new Vec2;
+	    this.linearDamping = opts.linearDamping instanceof Vec2 ? opts.linearDamping : new Vec2( 0.01, 0.01 );
 	    
 	    this.mass = opts.mass !== undefined ? opts.mass : 1;
 	    this.invMass = this.mass <= 0 ? 0 : 1 / this.mass;
@@ -39,11 +40,12 @@ define([
 	    this.force = new Vec2;
 	    this.vlambda = new Vec2;
 	    
-	    this.allowSleep = true;
+	    this.allowSleep = opts.allowSleep !== undefined ? opts.allowSleep : true;
 	    this.sleepState = AWAKE;
-	    this.sleepSpeedLimit = 0.1;
-	    this.sleepTimeLimit = 1;
-	    this.timeLastSleepy = 0;
+	    
+	    this._sleepVelocityLimit = 0.1;
+	    this._sleepyTimeLimit = 1;
+	    this._timeLastSleepy = 0;
 	}
 	
 	Class.extend( PBody2D, Class );
@@ -76,6 +78,15 @@ define([
 	};
 	
 	
+	PBody2D.prototype.sleepy = function(){
+	    
+	    if( this.sleepState !== SLEEPY ){
+		this.trigger("sleepy");
+	    }
+	    this.sleepState = SLEEPY;
+	};
+	
+	
 	PBody2D.prototype.sleep = function(){
 	    
 	    if( this.sleepState !== SLEEPING ){
@@ -89,21 +100,19 @@ define([
 	    
 	    if( this.allowSleep ){
 		var sleepState = this.sleepState,
-		    speedSq = this.velocity.lenSq(),
-		    sleepSpeedLimit = this.sleepSpeedLimit,
-		    speedLimitSq = sleepSpeedLimit * sleepSpeedLimit;
+		    velSq = this.velocity.lenSq(),
+		    sleepVelLimitSq = this._sleepVelocityLimit * this._sleepVelocityLimit;
 		
-		if( sleepState === AWAKE && speedSq < speedLimitSq ){
+		if( sleepState === AWAKE && velSq < sleepVelLimitSq ){
 		    
-		    this.sleepState = SLEEPY;
-		    this.timeLastSleepy = time;
-		    this.trigger("sleepy");
+		    this.sleepy();
+		    this._timeLastSleepy = time;
 		}
-		else if( sleepState === SLEEPY && speedSq > speedLimitSq ){
+		else if( sleepState === SLEEPY && velSq > sleepVelLimitSq ){
 		    
 		    this.wake();
 		}
-		else if( sleepState === SLEEPY && ( time - this.timeLastSleepy ) > this.timeLastSleepy ){
+		else if( sleepState === SLEEPY && ( time - this._timeLastSleepy ) > this._timeLastSleepy ){
 		    
 		    this.sleep();
 		}

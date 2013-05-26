@@ -25,7 +25,7 @@ define([
             this._rigidbodies = [];
             this._cameras = [];
 	    
-            this.world = opts.world instanceof World ? opts.world : new World;
+            this.world = opts.world instanceof World ? opts.world : new World( opts );
             
             this.add.apply( this, opts.children );
         }

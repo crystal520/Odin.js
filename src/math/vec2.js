@@ -320,6 +320,17 @@ define([
         };
         
         
+        Vec2.prototype.applyMat32 = function( m ){
+            var me = m.elements,
+		x = this.x, y = this.y;
+            
+            this.x = x * me[0] + y * me[2] + me[4];
+            this.y = x * me[1] + y * me[3] + me[5];
+            
+            return this;
+        };
+        
+        
         Vec2.prototype.applyMat3 = function( m ){
             var me = m.elements,
 		x = this.x, y = this.y;
@@ -380,6 +391,16 @@ define([
         };
         
         
+        Vec2.prototype.getPositionMat32 = function( m ){
+            var me = m.elements
+	    
+            this.x = me[4];
+            this.y = me[5];
+            
+            return this;
+        };
+        
+        
         Vec2.prototype.getPositionMat4 = function( m ){
             var me = m.elements;
 	    
@@ -393,6 +414,18 @@ define([
         Vec2.prototype.getScaleAffine = function( m ){
             var sx = this.set( m.a, m.c ).len(),
                 sy = this.set( m.b, m.d ).len();
+            
+            this.x = sx;
+            this.y = sy;
+            
+            return this;
+        };
+        
+        
+        Vec2.prototype.getScaleMat32 = function( m ){
+            var me = m.elements,
+		sx = this.set( m[0], m[1] ).len(),
+                sy = this.set( m[2], m[3] ).len();
             
             this.x = sx;
             this.y = sy;

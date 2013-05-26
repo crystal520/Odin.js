@@ -13,19 +13,19 @@ define([
 	    sin = Math.sin,
 	    cos = Math.cos,
 	    lerp = Mathf.lerp,
-	    equals= Mathf.equals;
+	    equals= Mathf.equals,
+	    degsToRads = Mathf.degsToRads;
 	
 	
 	function Mat4( m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44 ){
 	    
 	    this.elements = new Float32Array(16);
+	    var te = this.elements;
 	    
-	    this.set(
-		m11 !== undefined ? m11 : 1, m12 || 0, m13 || 0, m14 || 0,
-		m21 || 0, m22 !== undefined ? m22 : 1, m23 || 0, m34 || 0,
-		m31 || 0, m32 || 0, m33 !== undefined ? m33 : 1, m34 || 0,
-		m41 || 0, m42 || 0, m43 || 0, m44 !== undefined ? m44 : 1
-	    );
+            te[0] = m11 !== undefined ? m11 : 1; te[4] = m12 || 0; te[8] = m13 || 0; te[12] = m14 || 0;
+	    te[1] = m21 || 0; te[5] = m22 !== undefined ? m22 : 1; te[9] = m23 || 0; te[13] = m24 || 0;
+	    te[2] = m31 || 0; te[6] = m32 || 0; te[10] = m33 !== undefined ? m33 : 1; te[14] = m34 || 0;
+	    te[3] = m41 || 0; te[7] = m42 || 0; te[11] = m43 || 0; te[15] = m44 !== undefined ? m44 : 1;
 	}
         
         
@@ -42,14 +42,25 @@ define([
         
         
         Mat4.prototype.copy = function( other ){
-            var me = other.elements;
+            var te = this.elements,
+		me = other.elements;
 	    
-            this.set(
-		me[0], me[4], me[8], me[12],
-		me[1], me[5], me[9], me[13],
-		me[2], me[6], me[10], me[14],
-		me[3], me[7], me[11], me[15]
-	    );
+	    te[0] = me[0];
+	    te[1] = me[1];
+	    te[2] = me[2];
+	    te[3] = me[3];
+	    te[4] = me[4];
+	    te[5] = me[5];
+	    te[6] = me[6];
+	    te[7] = me[7];
+	    te[8] = me[8];
+	    te[9] = me[9];
+	    te[10] = me[10];
+	    te[11] = me[11];
+	    te[12] = me[12];
+	    te[13] = me[13];
+	    te[14] = me[14];
+	    te[15] = me[15];
             
             return this;
         };
@@ -650,19 +661,17 @@ define([
                 c = -( far + near ) / ( far - near ),
                 d = - 2 * far * near / ( far - near );
 	    
-	    this.set(
-		x, 0, a, 0,
-		0, y, b, 0,
-		0, 0, c, d,
-                0, 0, -1, 0
-            );
+	    te[0] = x; te[4] = 0; te[8] = a; te[12] = 0;
+	    te[1] = 0; te[5] = y; te[9] = b; te[13] = 0;
+	    te[2] = 0; te[6] = 0; te[10] = c; te[14] = d;
+	    te[3] = 0; te[7] = 0; te[11] = -1; te[15] = 0;
             
             return this;
         };
         
         
         Mat4.prototype.perspective = function( fov, aspect, near, far ){
-	    var ymax = near * tan( fov * 0.008726646259971648 ),
+	    var ymax = near * tan( degsToRads( fov * 0.5 ) ),
 		ymin = -ymax,
 		xmin = ymin * aspect,
 		xmax = ymax * aspect;
@@ -681,12 +690,10 @@ define([
 		y = ( top + bottom ) * h,
                 z = ( far + near ) * p;
 	    
-	    this.set(
-		2 * w, 0, 0, -x,
-		0, 2 * h, 0, -y,
-		0, 0, -2 * p, -z,
-                0, 0, 0, 1
-	    );
+	    te[0] = 2 * w; te[4] = 0; te[8] = 0; te[12] = -x;
+	    te[1] = 0; te[5] = 2 * h; te[9] = 0; te[13] = -y;
+	    te[2] = 0; te[6] = 0; te[10] = -2 * p; te[14] = -z;
+	    te[3] = 0; te[7] = 0; te[11] = 0; te[15] = 1;
             
             return this;
         };

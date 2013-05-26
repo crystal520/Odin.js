@@ -5,39 +5,14 @@ define([
 	"base/class",
 	"math/mathf",
 	"math/vec2",
+	"math/line2",
 	"physics2d/shape/pshape2d",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Mathf, Vec2, PShape2D, PBody2D ){
+    function( Class, Mathf, Vec2, Line2, PShape2D, PBody2D ){
 	"use strict";
 	
 	var abs = Math.abs;
-	
-	
-	function Edge(){
-	    this.v = new Vec2;
-	    this.v1 = new Vec2;
-	    this.v2 = new Vec2;
-	}
-	
-	Edge.prototype.set = function( v1, v2 ){
-	    this.v.vsub( v2, v1 );
-	    this.v1.copy( v1 );
-	    this.v2.copy( v2 );
-	};
-	
-	Edge.prototype.dot = function( other ){
-	    var v = this.v;
-	    
-	    return v.x * other.x + v.y * other.y;
-	};
-	
-	
-	function Manifold(){
-	    this.point = new Vec2;
-	    this.normal = new Vec2;
-	    this.depth = 0;
-	}
 	
 	
 	function PCollision2D(){}
@@ -106,10 +81,10 @@ define([
 	
 	
 	PCollision2D.prototype.findManifolds = function(){
-	    var oldManifolds = [],
+	    var oldManifolds = [], manifoldsToRemove = [],
 		vec = new Vec2, e = new Vec2, refNorm = new Vec2,
 		left = new Vec2, right = new Vec2,
-		ei = new Edge, ej = new Edge;
+		ei = new Line2, ej = new Line2;
 	    
 	    
 	    function createManifold( v, manifolds ){
@@ -147,10 +122,10 @@ define([
 		right.vsub( v, v1 );
 		
 		if( right.dot( n ) <= left.dot( n ) ){
-		    edge.set( v, v1 );
+		    edge.set( v1, v );
 		}
 		else{
-		    edge.set( v2, v );
+		    edge.set( v, v2 );
 		}
 	    };
 	    
@@ -160,8 +135,8 @@ define([
 		    d2 = n.dot( v2 ) - o,
 		    u;
 		
-		if( d1 <= 0 ) createManifold( v1, manifolds );
-		if( d2 <= 0 ) createManifold( v2, manifolds );
+		if( d1 >= 0 ) createManifold( v1, manifolds );
+		if( d2 >= 0 ) createManifold( v2, manifolds );
 		
 		if( d1 * d2 < 0 ){
 		    u = d1 / ( d1 - d2 );
@@ -172,16 +147,24 @@ define([
 	    }
 	    
 	    
+	    function Manifold(){
+		this.point = new Vec2;
+		this.normal = new Vec2;
+		this.depth = 0;
+	    }
+	    
+	    
 	    return function( si, sj, axis, depth, manifolds ){
-		var flip = false, ref, inc, tmp, o1, o2, max,
-		    i, il, m1, m2;
+		var flip = false, ref, inc, tmp, d, idx, o1, o2, max,
+		    i, il, manifold;
 		
 		for( i = 0, il = manifolds.length; i < il; i++ ){
-		    manifolds[i].depth = depth;
-		    manifolds[i].normal.copy( axis );
+		    manifold = manifolds[i];
+		    manifold.normal.copy( axis );
+		    manifold.depth = depth;
 		    oldManifolds.push( manifolds[i] );
 		}
-		manifolds.length = 0;
+		manifolds.length = manifoldsToRemove.length = 0;
 		
 		getEdge( si.worldVertices, axis, ei );
 		getEdge( sj.worldVertices, vec.copy( axis ).negate(), ej );
@@ -196,26 +179,28 @@ define([
 		    flip = true;
 		}
 		
-		ref.v.norm();
+		ref.norm();
 		
-		o1 = ref.dot( ref.v1 );
-		clipPoints( inc.v1, inc.v2, ref.v, o1, manifolds );
-		
-		if( manifolds.length < 2 ) return;
-		
-		o2 = ref.dot( ref.v2 );
-		clipPoints( manifolds[0].point, manifolds[1].point, vec.copy( ref.v ).negate(), o2, manifolds );
+		o1 = ref.dot( ref.start );
+		clipPoints( inc.start, inc.end, ref.vec( vec ), o1, manifolds );
 		
 		if( manifolds.length < 2 ) return;
 		
-		refNorm.copy( ref.v ).normR();
+		o2 = ref.dot( ref.end );
+		clipPoints( manifolds[0].point, manifolds[1].point, ref.vec( vec ).negate(), o2, manifolds );
+		
+		if( manifolds.length < 2 ) return;
+		
+		refNorm.copy( ref.vec( vec ) ).normR();
 		
 		if( flip ) refNorm.negate();
 		
-		max = refNorm.dot( ref.v1 );
+		max = refNorm.dot( ref.vec( vec ) );
 		
 		manifolds[0].depth = refNorm.dot( manifolds[0].point ) - max;
 		manifolds[1].depth = refNorm.dot( manifolds[1].point ) - max;
+		
+		console.log() ;
 	    };
 	}();
 	
