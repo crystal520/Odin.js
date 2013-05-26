@@ -51,10 +51,20 @@ define([
         };
 	
 	
-	Ray2.prototype.applyAffine = function( m ){
+	Ray2.prototype.applyMat2 = function( m ){
 	    
-	    this.direction.add( this.origin ).applyAffine( m );
-	    this.origin.applyAffine( m );
+	    this.direction.add( this.origin ).applyMat2( m );
+	    this.origin.applyMat2( m );
+	    this.direction.sub( this.origin );
+	    
+	    return this;
+	};
+	
+	
+	Ray2.prototype.applyMat32 = function( m ){
+	    
+	    this.direction.add( this.origin ).applyMat32( m );
+	    this.origin.applyMat32( m );
 	    this.direction.sub( this.origin );
 	    
 	    return this;

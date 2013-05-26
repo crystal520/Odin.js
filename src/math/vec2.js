@@ -299,16 +299,6 @@ define([
         };
         
         
-        Vec2.prototype.applyAffine = function( m ){
-            var x = this.x, y = this.y;
-            
-            this.x = m.a * x + m.c * y + m.x;
-            this.y = m.b * x + m.d * y + m.y;
-            
-            return this;
-        };
-        
-        
         Vec2.prototype.applyMat2 = function( m ){
             var me = m.elements,
 		x = this.x, y = this.y;

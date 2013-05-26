@@ -33,7 +33,7 @@ define([
 	    
 	    PBody2D.call( this, opts );
 	    
-	    this.shape = opts.shape !== undefined ? opts.shape : new PRect;
+	    this.shape = opts.shape instanceof PShape2D ? opts.shape : new PRect;
 	    
 	    this.rotation = opts.rotation !== undefined ? opts.rotation : 0;
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
