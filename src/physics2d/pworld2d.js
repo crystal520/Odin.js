@@ -18,7 +18,7 @@ define([
 	var pow = Math.pow,
 	    
 	    CIRCLE = PShape2D.CIRCLE,
-	    RECT = PShape2D.RECT,
+	    BOX = PShape2D.BOX,
 	    CONVEX = PShape2D.CONVEX,
 	    
 	    AWAKE = PParticle2D.AWAKE,
@@ -215,7 +215,7 @@ define([
 				
 				body.aabbNeedsUpdate = true;
 				
-				if( shapeType === RECT || shapeType === CONVEX ){
+				if( shapeType === BOX || shapeType === CONVEX ){
 				    body.worldVerticesNeedsUpdate = true;
 				    body.worldNormalsNeedsUpdate = true;
 				}
