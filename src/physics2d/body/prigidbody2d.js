@@ -92,7 +92,7 @@ define([
 	    
 	    return function( force, worldPoint, wake ){
 		var position = this.position;
-		    
+		
 		worldPoint = worldPoint || position;
 		
 		if( this.type === STATIC ){
@@ -120,7 +120,7 @@ define([
 		var position = this.position,
 		    velocity = this.velocity,
 		    invMass = this.invMass;
-		    
+		
 		worldPoint = worldPoint || position;
 		
 		if( this.type === STATIC ){

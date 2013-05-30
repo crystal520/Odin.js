@@ -26,23 +26,23 @@ require(
 	    });
 	    
 	    ground = new GameObject2D({
-		position: new Vec2( 0, -8 ),
+		position: new Vec2( 0, -2 ),
 		components: [
 		    new RigidBody({
 			shape: RigidBody.BOX,
 			mass: 0,
-			extents: new Vec2( 128, 1 )
+			extents: new Vec2( 16, 1 )
 		    })
 		]
 	    });
 	    
 	    scene.add( ground );
 	    
-	    for( var i = 0; i < 1; i++ ){
-		var r = Mathf.randFloat( 0.5, 1 );
+	    for( var i = 0; i < 100; i++ ){
+		r = Mathf.randFloat( 0.5, 1 );
 		scene.add(
 		    new GameObject2D({
-			position: new Vec2( Mathf.randFloat( -5, 5 ), Mathf.randFloat( -5, 10 ) ),
+			position: new Vec2( Mathf.randFloat( -4, 4 ), Mathf.randFloat( 0, 32 ) ),
 			components: [
 			    new Sprite({
 				image: player,

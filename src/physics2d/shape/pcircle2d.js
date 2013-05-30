@@ -38,15 +38,14 @@ define([
 	
 	
 	PCircle2D.prototype.calculateWorldAABB = function( position, rotation, aabb ){
-	    var min = aabb.min, max = aabb.max,
+	    var r = this.radius,
+		min = aabb.min, max = aabb.max,
 		x = position.x, y = position.y;
 	    
-	    aabb.copy( this.aabb );
-	    
-	    min.x += x;
-	    min.y += y;
-	    max.x += x;
-	    max.y += y;
+	    min.x = x - r;
+	    min.y = y - r;
+	    max.x = x + r;
+	    max.y = r + y;
 	};
 	
 	

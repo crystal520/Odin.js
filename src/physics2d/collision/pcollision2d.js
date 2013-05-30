@@ -3,14 +3,16 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
+	"math/mathf",
 	"math/vec2",
 	"math/line2"
     ],
-    function( Class, Vec2, Line2 ){
+    function( Class, Mathf, Vec2, Line2 ){
         "use strict";
 	
 	var sqrt = Math.sqrt,
-	
+	    equals = Mathf.equals,
+	    
 	    MIN_VALUE = Number.MIN_VALUE,
 	    MAX_VALUE = Number.MAX_VALUE,
 	    
@@ -77,7 +79,7 @@ define([
 		    if( d < dmin ){
 			dmin = d;
 			
-			if( ( dx * testAxisX + dy * testAxisY ) < 0 ){
+			if( dx * testAxisX + dy * testAxisY < 0 ){
 			    axis.x = -testAxisX;
 			    axis.y = -testAxisY;
 			}
@@ -214,14 +216,15 @@ define([
 		    worldNormals = sj.worldNormals,
 		    radius = si.radius,
 		    
-		    dx = xj.x - xi.x,
-		    dy = sj.y - xi.y,
+		    dist, invDist, u, px, py, dx, dy,
 		    
-		    normalIndex, s, separation = -MAX_VALUE,
+		    v1, v2, ex, ey, length, invLength,
+		    
+		    normalIndex = 0, s, separation = -MAX_VALUE,
 		    i, il;
 		
 		for( i = 0, il = worldVertices.length; i < il; i++ ){
-		    s = worldNormals[i].x * ( dx - worldVertices[i].x ) + worldNormals[i].y * ( dy - worldVertices[i].y );
+		    s = worldNormals[i].x * ( xi.x - worldVertices[i].x ) + worldNormals[i].y * ( xi.y - worldVertices[i].y );
 		    
 		    if( s > radius ) return false;
 		    if( s > separation ){
@@ -236,8 +239,72 @@ define([
 		    point.x = xi.x - radius * normal.x;
 		    point.y = xi.y - radius * normal.y;
 		    
-		    return separation - radius;
+		    return separation;
 		}
+		
+		v1 = worldVertices[ normalIndex ];
+		v2 = worldVertices[ normalIndex + 1 ] || worldVertices[0];
+		
+		ex = v2.x - v1.x;
+		ey = v2.y - v1.y;
+		
+		length = sqrt( ex * ex + ey * ey );
+		invLength = 1 / length;
+		
+		ex *= invLength;
+		ey *= invLength;
+		
+		if( equals( length, 0 ) ){
+		    dx = v1.x - xi.x;
+		    dy = v1.y - xi.y;
+		    
+		    dist = sqrt( dx * dx + dy * dy );
+		    
+		    if( dist > radius ) return false;
+		    
+		    invDist = 1 / dist;
+		    
+		    normal.x = dx * invDist;
+		    normal.y = dy * invDist;
+		    
+		    point.x = xi.x - radius * normal.x;
+		    point.y = xi.y - radius * normal.y;
+		    
+		    return dist;
+		}
+		
+		u = ( xi.x - v1.x ) * ex + ( xi.y - v1.y ) * ey;
+		
+		if( u <= 0 ){
+		    px = v1.x;
+		    py = v1.y;
+		}
+		else if( u >= length ){
+		    px = v2.x;
+		    py = v2.y;
+		}
+		else{
+		    px = ex * u + v1.x;
+		    py = ey * u + v1.y;
+		}
+		
+		dx = px - xi.x;
+		dy = py - xi.y;
+		dist = sqrt( dx * dx + dy * dy );
+		
+		if( dist > radius ) return false;
+		
+		invDist = 1 / dist;
+		dx *= invDist;
+		dy *= invDist;
+		
+		normal.x = dx;
+		normal.y = dy;
+		
+		point.x = xi.x - radius * normal.x;
+		point.y = xi.y - radius * normal.y;
+		
+		return dist;
 	    };
 	}();
 	

@@ -29,7 +29,7 @@ define([
 	Class.extend( PConstraint2D, Class );
 	
 	
-	PConstraint2D.prototype.updateSpookParams = function( h ){
+	PConstraint2D.prototype.updateSpook = function( h ){
 	    var d = this.stabilizeSteps,
 		k = this.stiffness;
 	    

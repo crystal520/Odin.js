@@ -92,17 +92,20 @@ define([
 	
 	
 	PNearphase2D.prototype.circleConvex = function(){
-	    var normal = new Vec2, point = new Vec2;
+	    var normal = new Vec2, point = new Vec2, vec = new Vec2;
 	    
 	    return function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
+		var depth = collideCircleConvex( si, sj, xi, xj, normal, point );
 		
-		if( collideCircleConvex( si, sj, xi, xj, normal, point ) ){
+		if( depth ){
 		    var c = createContact( bi, bj );
 		    
 		    c.n.copy( normal );
 		    
+		    vec.copy( normal ).smul( si.radius + depth );
+		    
 		    c.ri.copy( normal ).smul( si.radius );
-		    c.rj.copy( point ).sub( xj );
+		    c.rj.vadd( point, vec ).sub( xj );
 		    
 		    contacts.push( c );
 		    
@@ -130,7 +133,7 @@ define([
 			
 			c.n.copy( m.normal );
 			
-			vec.copy( m.normal ).smul( -m.depth );
+			vec.copy( m.normal ).smul( m.depth );
 			
 			c.ri.vadd( m.point, vec ).sub( xi );
 			c.rj.copy( m.point ).sub( xj );

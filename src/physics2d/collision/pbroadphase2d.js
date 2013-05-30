@@ -4,14 +4,17 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
+	"math/aabb2",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Vec2, PBody2D ){
+    function( Class, Vec2, AABB2, PBody2D ){
         "use strict";
 	
 	var DYNAMIC = PBody2D.DYNAMIC,
 	    STATIC = PBody2D.STATIC,
-	    KINEMATIC = PBody2D.KINEMATIC;
+	    KINEMATIC = PBody2D.KINEMATIC,
+	    
+	    intersects = AABB2.intersects;
 	
         
 	function PBroadphase2D( opts ){
@@ -28,10 +31,10 @@ define([
 	PBroadphase2D.prototype.needBroadphaseTest = function( bi, bj ){
 	    
 	    return !(
-		( bi.filterGroup !== bj.filterGroup ) ||
+		bi.filterGroup !== bj.filterGroup ||
 		( bi.type === KINEMATIC || bi.type === STATIC || bi.isSleeping() ) &&
 		( bj.type === KINEMATIC || bj.type === STATIC || bj.isSleeping() ) ||
-		( !bi.shape && !bj.shape )
+		!bi.shape && !bj.shape
 	    );
 	};
 	
@@ -75,29 +78,30 @@ define([
 		bj.calculateAABB();
 	    }
 	    
-	    if( bi.aabb.intersects( bj.aabb ) ){
+	    if( intersects( bi.aabb, bj.aabb ) ){
 		pairsi.push( bi );
 		pairsj.push( bj );
 	    }
 	};
 	
 	
-	PBroadphase2D.prototype.boundingRadiusBroadphase = function(){
-	    var dist = new Vec2;
+	PBroadphase2D.prototype.boundingRadiusBroadphase = function( bi, bj, pairsi, pairsj ){
+	    var si = bi.shape, sj = bj.shape,
+		
+		r = si.boundingRadius + sj.boundingRadius,
+		
+		xi = bi.position, xj = bj.position,
+		
+		dx = xj.x - xi.x,
+		dy = xj.y - xi.y,
+		
+		d = dx * dx + dy * dy;
 	    
-	    return function( bi, bj, pairsi, pairsj ){
-		var si = bi.shape, sj = bj.shape,
-		    radius;
-		
-		radius = si.boundingRadius + sj.boundingRadius;
-		dist.vsub( bi.position, bj.position );
-		
-		if( dist.lenSq() <= radius * radius ){
-		    pairsi.push( bi );
-		    pairsj.push( bj );
-		}
-	    };
-	}();
+	    if( d <= r * r ){
+		pairsi.push( bi );
+		pairsj.push( bj );
+	    }
+	};
 	
         
         return PBroadphase2D;

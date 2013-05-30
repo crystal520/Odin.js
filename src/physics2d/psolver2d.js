@@ -60,7 +60,7 @@ define([
 		    for( i = 0; i < constraintsLen; i++ ){
 			c = constraints[i];
 			
-			c.updateSpookParams( h );
+			c.updateSpook( h );
 			
 			lambdas[i] = 0
 			Bs[i] = c.calculateB( h );

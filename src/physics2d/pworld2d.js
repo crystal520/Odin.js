@@ -138,7 +138,7 @@ define([
 		    
 		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, mass, invMass, invInertia,
 		    i, il;
-		    
+		
 		this.time = time += dt;
 		
 		accumulator += time - lastTime;
@@ -159,26 +159,33 @@ define([
 		    }
 		    
 		    if( debug ) profileStart = now();
+		    
 		    this.broadphase.collisionPairs( this, pairsi, pairsj );
+		    
 		    if( debug ) profile.broadphase = now() - profileStart;
 		    
 		    
 		    if( debug ) profileStart = now();
+		    
 		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
 		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
 			solverConstraints.push( contacts[i] );
 		    }
+		    
 		    if( debug ) profile.nearphase = now() - profileStart;
 		    
 		    
 		    if( debug ) profileStart = now();
+		    
 		    solver.solve( this, dt );
 		    solverConstraints.length = 0;
+		    
 		    if( debug ) profile.solve = now() - profileStart;
 		    
 		    
 		    if( debug ) profileStart = now();
+		    
 		    for( i = 0, il = bodies.length; i < il; i++ ){
 			body = bodies[i];
 			
@@ -234,6 +241,7 @@ define([
 			
 			body.trigger("poststep");
 		    }
+		    
 		    if( debug ) profile.integration = now() - profileStart;
 		    
 		    accumulator -= dt;
