@@ -26,19 +26,19 @@ require(
 	    });
 	    
 	    ground = new GameObject2D({
-		position: new Vec2( 0, -1030 ),
+		position: new Vec2( 0, -8 ),
 		components: [
 		    new RigidBody({
-			shape: RigidBody.CIRCLE,
+			shape: RigidBody.BOX,
 			mass: 0,
-			radius: 1024
+			extents: new Vec2( 128, 1 )
 		    })
 		]
 	    });
 	    
 	    scene.add( ground );
 	    
-	    for( var i = 0; i < 100; i++ ){
+	    for( var i = 0; i < 1; i++ ){
 		var r = Mathf.randFloat( 0.5, 1 );
 		scene.add(
 		    new GameObject2D({
@@ -56,9 +56,8 @@ require(
 			    new RigidBody({
 				shape: RigidBody.CIRCLE,
 				linearDamping: new Vec2( 0, 0 ),
-				mass: Math.random(),
-				radius: r,
-				elasticity: Mathf.randFloat( 0.5, 1 )
+				mass: 1,
+				radius: r
 			    })
 			]
 		    })

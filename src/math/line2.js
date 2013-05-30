@@ -111,11 +111,11 @@ define([
 		ex = end.x, ey = end.y,
 		el = ex * ex + ey * ey;
 	    
-	    sl = sl !== 0 ? 1 / sl : 0;
+	    sl = sl !== 0 ? 1 / sqrt( sl ) : 0;
 	    start.x *= sl;
 	    start.y *= sl;
 	    
-	    el = el !== 0 ? 1 / el : 0;
+	    el = el !== 0 ? 1 / sqrt( el ) : 0;
 	    end.x *= el;
 	    end.y *= el;
 	    

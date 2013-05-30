@@ -3,49 +3,31 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/mathf",
 	"math/vec2",
-	"physics2d/shape/pshape2d",
 	"physics2d/collision/pcollision2d",
-	"physics2d/collision/pcontact2d"
+	"physics2d/collision/pmanifold2d",
+	"physics2d/constraints/pcontact2d",
+	"physics2d/shape/pshape2d"
     ],
-    function( Class, Mathf, Vec2, PShape2D, PCollision2D, PContact2D ){
-	"use strict";
+    function( Class, Vec2, PCollision2D, PManifold2D, PContact2D, PShape2D ){
+        "use strict";
 	
-	var CIRCLE = PShape2D.CIRCLE,
-	    RECT = PShape2D.RECT,
-	    CONVEX = PShape2D.CONVEX;
-	
-	
-	function PNearphase2D(){
+	var sqrt = Math.sqrt,
 	    
-	    Class.call( this );
+	    BOX = PShape2D.BOX,
+	    CIRCLE = PShape2D.CIRCLE,
+	    CONVEX = PShape2D.CONVEX,
 	    
-	    this.contactPool = [];
-	}
-	
-	Class.extend( PNearphase2D, Class );
-	
-	
-	PNearphase2D.prototype.collisions = function( world, pairsi, pairsj, contacts ){
-	    var bi, bj, i, il;
+	    collideCircleConvex = PCollision2D.collideCircleConvex,
+	    collideConvexConvex = PCollision2D.collideConvexConvex,
 	    
-	    this.clearContacts( contacts );
-	    
-	    for( i = 0, il = pairsi.length; i < il; i++ ){
-		bi = pairsi[i];
-		bj = pairsj[i];
-		
-		this.doNearPhase( contacts, bi, bj, bi.shape, bj.shape, bi.position, bj.position, bi.rotation, bj.rotation );
-	    }
-	};
+	    contactPool = [];
 	
 	
-	PNearphase2D.prototype.createContact = function( bi, bj ){
-	    var contactPool = this.contactPool, c;
+	function createContact( bi, bj ){
 	    
 	    if( contactPool.length ){
-		c = contactPool.pop();
+		var c = contactPool.pop();
 		c.bi = bi;
 		c.bj = bj;
 		return c;
@@ -54,93 +36,118 @@ define([
 	    return new PContact2D( bi, bj );
 	};
 	
+        
+	function PNearphase2D(){
+	    
+	    Class.call( this );
+	}
 	
-	PNearphase2D.prototype.clearContacts = function( contacts ){
-	    var contactPool = this.contactPool, i, il;
+	Class.extend( PNearphase2D, Class );
+	
+	
+	PNearphase2D.prototype.collisions = function( world, pairsi, pairsj, contacts ){
+	    var bi, bj, i, il;
 	    
 	    for( i = 0, il = contacts.length; i < il; i++ ){
 		contactPool.push( contacts[i] );
 	    }
-	    
 	    contacts.length = 0;
+	    
+	    for( i = 0, il = pairsi.length; i < il; i++ ){
+		bi = pairsi[i];
+		bj = pairsj[i];
+		
+		this.nearphase( contacts, bi, bj, bi.shape, bj.shape, bi.position, bj.position, bi.rotation, bj.rotation );
+	    }
 	};
 	
 	
-	PNearphase2D.prototype.circleCircle = function(){
-	    var dist = new Vec2;
+	PNearphase2D.prototype.circleCircle = function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
+	    var dx = xj.x - xi.x,
+		dy = xj.y - xi.y,
+		d = dx * dx + dy * dy,
+		r = si.radius + sj.radius,
+		c, n;
 	    
-	    return function( contacts, bi, bj, si, sj, pi, pj, ri, rj ){
-		dist.vsub( pj, pi );
+	    if( d < r * r ){
+		c = createContact( bi, bj );
+		n = c.n;
 		
-		var r = sj.radius + si.radius, c;
+		d = d !== 0 ? 1 / sqrt( d ) : 0;
 		
-		if( dist.lenSq() < r * r ){
-		    c = this.createContact( bi, bj );
+		n.x = dx * d;
+		n.y = dy * d;
+		
+		c.ri.copy( n ).smul( si.radius );
+		c.rj.copy( n ).smul( -sj.radius );
+		
+		contacts.push( c );
+		
+		bi.trigger("collide", bj );
+		bj.trigger("collide", bi );
+		bi.wake();
+		bj.wake();
+	    }
+	};
+	
+	
+	PNearphase2D.prototype.circleConvex = function(){
+	    var normal = new Vec2, point = new Vec2;
+	    
+	    return function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
+		
+		if( collideCircleConvex( si, sj, xi, xj, normal, point ) ){
+		    var c = createContact( bi, bj );
 		    
-		    c.n.copy( dist ).norm();
+		    c.n.copy( normal );
 		    
-		    c.ri.copy( c.n ).smul( si.radius );
-		    c.rj.copy( c.n ).smul( -sj.radius );
+		    c.ri.copy( normal ).smul( si.radius );
+		    c.rj.copy( point ).sub( xj );
 		    
 		    contacts.push( c );
 		    
 		    bi.trigger("collide", bj );
 		    bj.trigger("collide", bi );
+		    bi.wake();
+		    bj.wake();
 		}
 	    };
 	}();
-	
-	
-	PNearphase2D.prototype.circleConvex = function( contacts, bi, bj, si, sj, pi, pj, ri, rj ){
-	    if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( pj, rj );
-	    if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( rj );
-	    
-	    var c = this.createContact( bi, bj );
-	    
-	    contacts.push( c );
-	};
 	
 	
 	PNearphase2D.prototype.convexConvex = function(){
-	    var axis = new Vec2,
-		vec = new Vec2,
-		manifolds = [];
+	    var manifold = new PManifold2D,
+		vec = new Vec2;
 	    
-	    return function( contacts, bi, bj, si, sj, pi, pj, ri, rj ){
-		if( si.worldVerticesNeedsUpdate ) si.calculateWorldVertices( pi, ri );
-		if( si.worldNormalsNeedsUpdate ) si.calculateWorldNormals( ri );
+	    return function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
+		var m, c, i, il;
 		
-		if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( pj, rj );
-		if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( rj );
-		
-		var depth = PCollision2D.findMSA( si, sj, pi, pj, axis ),
-		    c, m, i, il;
-		
-		if( depth ){
-		    PCollision2D.findManifolds( si, sj, axis, depth, manifolds );
+		if( collideConvexConvex( si, sj, xi, xj, manifold ) ){
 		    
-		    for( i = 0, il = manifolds.length; i < il; i++ ){
-			c = this.createContact( bi, bj );
-			m = manifolds[i];
+		    for( i = 0, il = manifold.length; i < il; i++ ){
+			m = manifold[i];
+			c = createContact( bi, bj );
 			
-			c.n.copy( axis ).negate();
+			c.n.copy( m.normal );
 			
 			vec.copy( m.normal ).smul( -m.depth );
 			
-			c.ri.vsub( m.point, vec ).sub( pi );
-			c.rj.copy( m.point ).sub( pj );
+			c.ri.vadd( m.point, vec ).sub( xi );
+			c.rj.copy( m.point ).sub( xj );
 			
 			contacts.push( c );
+			
+			bi.trigger("collide", bj );
+			bj.trigger("collide", bi );
+			bi.wake();
+			bj.wake();
 		    }
-		    
-		    bi.trigger("collide", bj );
-		    bj.trigger("collide", bi );
 		}
 	    };
 	}();
 	
 	
-	PNearphase2D.prototype.doNearPhase = function( contacts, bi, bj, si, sj, pi, pj, ri, rj ){
+	PNearphase2D.prototype.nearphase = function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
 	    
 	    if( si && sj ){
 		
@@ -149,33 +156,44 @@ define([
 		    switch( sj.type ){
 			
 			case CIRCLE:
-			    this.circleCircle( contacts, bi, bj, si, sj, pi, pj, ri, rj );
+			    this.circleCircle( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;
 			
-			case RECT:
+			case BOX:
 			case CONVEX:
-			    this.circleConvex( contacts, bi, bj, si, sj, pi, pj, ri, rj );
+			    
+			    if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( xj, wj );
+			    if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( wj );
+			    
+			    this.circleConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;
 		    }
 		}
-		else if( si.type === RECT || si.type === CONVEX ){
+		else if( si.type === BOX || si.type === CONVEX ){
+		    
+		    if( si.worldVerticesNeedsUpdate ) si.calculateWorldVertices( xi, wi );
+		    if( si.worldNormalsNeedsUpdate ) si.calculateWorldNormals( wi );
 		    
 		    switch( sj.type ){
 			
 			case CIRCLE:
-			    this.circleConvex( contacts, bj, bi, sj, si, pj, pi, rj, ri );
+			    this.circleConvex( contacts, bj, bi, sj, si, xj, xi, wj, wi );
 			    break;
 			
-			case RECT:
+			case BOX:
 			case CONVEX:
-			    this.convexConvex( contacts, bi, bj, si, sj, pi, pj, ri, rj );
+			    
+			    if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( xj, wj );
+			    if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( wj );
+			    
+			    this.convexConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;
 		    }
 		}
 	    }
 	};
 	
-	
-	return PNearphase2D;
+        
+        return PNearphase2D;
     }
 );

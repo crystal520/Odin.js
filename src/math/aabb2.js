@@ -46,7 +46,8 @@ define([
         AABB2.prototype.setFromPoints = function( points ){
             var v, i = 0, il = points.length,
 		minx, miny, maxx, maxy,
-		min = this.min, max = this.max;
+		min = this.min, max = this.max,
+		x, y;
             
             if( il > 0 ){
                 
@@ -55,12 +56,13 @@ define([
                 
                 for( i; i < il; i++ ){
                     v = points[i];
+		    x = v.x; y = v.y;
 		    
-		    minx = minx > v.x ? v.x : minx;
-		    miny = miny > v.y ? v.y : miny;
+		    minx = minx > x ? x : minx;
+		    miny = miny > y ? y : miny;
 		    
-		    maxx = maxx < v.x ? v.x : maxx;
-		    maxy = maxy < v.y ? v.y : maxy;
+		    maxx = maxx < x ? x : maxx;
+		    maxy = maxy < y ? y : maxy;
                 }
 		
 		min.x = minx; min.y = miny;
@@ -72,41 +74,6 @@ define([
             
             return this;
         };
-        
-        
-        AABB2.prototype.expandByPoint = function( point ){
-            var min = this.min, max = this.max;
-            
-	    min.x = min.x > point.x ? point.x : min.x;
-	    min.y = min.y > point.y ? point.y : min.y;
-            
-	    max.x = max.x < point.x ? point.x : max.x;
-	    max.y = max.y < point.y ? point.y : max.y;
-	    
-            return this;
-        };
-        
-        
-        AABB2.prototype.clear = function(){
-            var min = this.min, max = this.max;
-	    
-	    min.x = min.y = max.x = max.y = 0;
-            
-            return this;
-        };
-        
-        
-        AABB2.prototype.setCenter = function( center ){
-	    var min = this.min, max = this.max;
-	    
-	    min.x += center.x;
-	    min.y += center.y;
-	    
-	    max.x += center.x;
-	    max.y += center.y;
-	    
-	    return this;
-	};
         
         
         AABB2.prototype.contains = function( point ){

@@ -3,64 +3,72 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/mathf",
 	"math/vec2",
-	"math/line2",
-	"physics2d/shape/pshape2d",
-	"physics2d/body/pbody2d"
+	"math/line2"
     ],
-    function( Class, Mathf, Vec2, Line2, PShape2D, PBody2D ){
-	"use strict";
+    function( Class, Vec2, Line2 ){
+        "use strict";
 	
-	var abs = Math.abs;
+	var sqrt = Math.sqrt,
 	
-	
-	function PCollision2D(){}
-	
-	
-	PCollision2D.prototype.findMSA = function(){
-	    var dist = new Vec2,
-		minmaxA = [], minmaxB = [];
+	    MIN_VALUE = Number.MIN_VALUE,
+	    MAX_VALUE = Number.MAX_VALUE,
 	    
-	    function project( verts, n, minmax ){
-		var d = verts[0].dot(n), min = d, max = d, tmp, i, il;
-		
-		for( i = 1, il = verts.length; i < il; i++ ){
-		    d = verts[i].dot( n );
+	    findMinSeparation,
+	    findMaxSeparatingEdge,
+	    findManifolds;
+	
+        
+	function PCollision2D(){
+	    
+	    Class.call( this );
+	}
+	
+	Class.extend( PCollision2D, Class );
+	
+	
+	PCollision2D.prototype.findMinSeparation = findMinSeparation = function(){
+	    var dist = new Vec2;
+	    
+	    return function( si, sj, xi, xj, axis ){
+		var axisi = si.worldNormals, axisj = sj.worldNormals,
+		    axisNumi = axisi.length, axisNumj = axisj.length,
 		    
-		    min = d < min ? d : min;
-		    max = d > max ? d : max;
-		}
-		
-		if( min > max ){
-		    tmp = min; min = max; max = tmp;
-		}
-		
-		minmax[0] = min;
-		minmax[1] = max;
-	    }
-	    
-	    
-	    return function( si, sj, pi, pj, axis ){
-		var normsi = si.worldNormals, normsj = sj.worldNormals,
-		    normsNumi = normsi.length, normsNumj = normsj.length,
+		    vertsi = si.worldVertices, vertsj = sj.worldVertices,
+		    vertsNumi = vertsi.length, vertsNumj = vertsj.length,
 		    
-		    aMin, aMax, bMin, bMax,
+		    dx = xj.x - xi.x,
+		    dy = xj.y - xi.y,
+		    
+		    dot, j, jl, aMin = Infinity, aMax = -Infinity, bMin = Infinity, bMax = -Infinity,
 		    d, d1, d2, dmin = Infinity,
-		    normal, i, il, j, jl;
+		    testAxis, testAxisX, testAxisY, tmp, i, il, j, jl;
 		
-		dist.vsub( pj, pi );
-		
-		for( i = 0, il = normsNumi + normsNumj; i < il; i++ ){
-		    normal = normsi[i] || normsj[ i - normsNumi ];
+		for( i = 0, il = axisNumi + axisNumj; i < il; i++ ){
+		    testAxis = axisi[i] || axisj[ i - axisNumi ];
 		    
-		    project( si.worldVertices, normal, minmaxA );
-		    project( sj.worldVertices, normal, minmaxB );
+		    for( j = 0; j < vertsNumi; j++ ){
+			dot = testAxis.dot( vertsi[j] );
+			aMin = dot < aMin ? dot : aMin;
+			aMax = dot > aMax ? dot : aMax;
+		    }
+		    if( aMin > aMax ){
+			tmp = aMin; aMin = aMax; aMax = tmp;
+		    }
 		    
-		    aMin = minmaxA[0]; aMax = minmaxA[1];
-		    bMin = minmaxB[0]; bMax = minmaxB[1];
+		    for( j = 0; j < vertsNumj; j++ ){
+			dot = testAxis.dot( vertsj[j] );
+			bMin = dot < bMin ? dot : bMin;
+			bMax = dot > bMax ? dot : bMax;
+		    }
+		    if( bMin > bMax ){
+			tmp = bMin; bMin = bMax; bMax = tmp;
+		    }
 		    
 		    if( aMax < bMin || bMax < aMin ) return false;
+		    
+		    testAxisX = testAxis.x;
+		    testAxisY = testAxis.y;
 		    
 		    d1 = aMax - bMin;
 		    d2 = bMax - aMin;
@@ -68,10 +76,15 @@ define([
 		    
 		    if( d < dmin ){
 			dmin = d;
-			axis.x = normal.x;
-			axis.y = normal.y;
 			
-			if( dist.dot( normal ) > 0 ) axis.negate();
+			if( ( dx * testAxisX + dy * testAxisY ) < 0 ){
+			    axis.x = -testAxisX;
+			    axis.y = -testAxisY;
+			}
+			else{
+			    axis.x = testAxisX;
+			    axis.y = testAxisY;
+			}
 		    }
 		}
 		
@@ -80,131 +93,155 @@ define([
 	}();
 	
 	
-	PCollision2D.prototype.findManifolds = function(){
-	    var oldManifolds = [], manifoldsToRemove = [],
-		vec = new Vec2, e = new Vec2, refNorm = new Vec2,
-		left = new Vec2, right = new Vec2,
-		ei = new Line2, ej = new Line2;
+	PCollision2D.prototype.findMaxSeparatingEdge = findMaxSeparatingEdge = function(){
+	    var left = new Vec2, right = new Vec2;
 	    
-	    
-	    function createManifold( v, manifolds ){
-		var m;
-		
-		if( oldManifolds.length ){
-		    m = oldManifolds.pop();
-		}
-		else{
-		    m = new Manifold;
-		}
-		
-		m.point.copy( v );
-		manifolds.push(m);
-	    }
-	    
-	    
-	    function getEdge( verts, n, edge ){
-		var d, max = -Infinity, idx = -1, v, v1, v2,
-		    i, il;
-		
-		for( i = 0, il = verts.length; i < il; i++ ){
-		    d = verts[i].dot( n );
-		    if( d > max ){
-			max = d;
+	    return function( shape, axis, edge, max ){
+		var worldVertices = shape.worldVertices,
+		    d, dmax = -Infinity, v, v1, v2,
+		    idx, i, il;
+		    
+		for( i = 0, il = worldVertices.length; i < il; i++ ){
+		    d = axis.dot( worldVertices[i] );
+		    
+		    if( d > dmax ){
+			dmax = d;
 			idx = i;
 		    }
 		}
 		
-		v = verts[ idx ];
-		v1 = verts[ idx-1 ] || verts[ il-1 ];
-		v2 = verts[ idx+1 ] || verts[0];
+		v = worldVertices[ idx ];
+		v1 = worldVertices[ idx - 1 ] || worldVertices[ il - 1 ];
+		v2 = worldVertices[ idx + 1 ] || worldVertices[ 0 ];
 		
-		left.vsub( v, v2 );
 		right.vsub( v, v1 );
+		left.vsub( v, v2 );
 		
-		if( right.dot( n ) <= left.dot( n ) ){
+		max.x = v.x;
+		max.y = v.y;
+		
+		if( right.dot( axis ) <= left.dot( axis ) ){
 		    edge.set( v1, v );
 		}
 		else{
 		    edge.set( v, v2 );
 		}
 	    };
+	}();
+	
+	
+	PCollision2D.prototype.collideConvexConvex = function(){
+	    var axis = new Vec2,
+		e1 = new Line2, e2 = new Line2,
+		max1 = new Vec2, max2 = new Vec2,
+		vec = new Vec2, e = new Vec2, refNorm = new Vec2;
 	    
-	    
-	    function clipPoints( v1, v2, n, o, manifolds ){
-		var d1 = n.dot( v1 ) - o,
-		    d2 = n.dot( v2 ) - o,
-		    u;
+	    function clipPoints( v1, v2, axis, offset, manifold ){
+		var d1 = axis.dot( v1 ) - offset,
+		    d2 = axis.dot( v2 ) - offset,
+		    interp;
 		
-		if( d1 >= 0 ) createManifold( v1, manifolds );
-		if( d2 >= 0 ) createManifold( v2, manifolds );
+		if( d1 >= 0 ) manifold.add( v1 );
+		if( d2 >= 0 ) manifold.add( v2 );
 		
 		if( d1 * d2 < 0 ){
-		    u = d1 / ( d1 - d2 );
-		    e.vsub( v2, v1 );
-		    e.smul( u ).add( v1 );
-		    createManifold( e, manifolds );
+		    interp = d1 / ( d1 - d2 );
+		    e.x = v1.x + interp * ( v2.x - v1.x );
+		    e.y = v1.y + interp * ( v2.y - v1.y );
+		    manifold.add( e );
 		}
 	    }
 	    
-	    
-	    function Manifold(){
-		this.point = new Vec2;
-		this.normal = new Vec2;
-		this.depth = 0;
-	    }
-	    
-	    
-	    return function( si, sj, axis, depth, manifolds ){
-		var flip = false, ref, inc, tmp, d, idx, o1, o2, max,
-		    i, il, manifold;
+	    return function( si, sj, xi, xj, manifold ){
+		var depth = findMinSeparation( si, sj, xi, xj, axis ),
+		    flip = false, offset1, offset2, maxVertex,
+		    ref, inc, tmp, max, m1, m2;
 		
-		for( i = 0, il = manifolds.length; i < il; i++ ){
-		    manifold = manifolds[i];
-		    manifold.normal.copy( axis );
-		    manifold.depth = depth;
-		    oldManifolds.push( manifolds[i] );
-		}
-		manifolds.length = manifoldsToRemove.length = 0;
+		if( !depth ) return depth;
 		
-		getEdge( si.worldVertices, axis, ei );
-		getEdge( sj.worldVertices, vec.copy( axis ).negate(), ej );
+		findMaxSeparatingEdge( si, axis, e1, max1 );
+		findMaxSeparatingEdge( sj, vec.copy( axis ).negate(), e2, max2 );
 		
-		if( ei.dot( axis ) <= ej.dot( axis ) ){
-		    ref = ei;
-		    inc = ej;
+		manifold.clear();
+		manifold.normal.copy( axis );
+		
+		if( e1.dot( axis ) <= e2.dot( axis ) ){
+		    ref = e1;
+		    inc = e2;
+		    maxVertex = max1;
 		}
 		else{
-		    ref = ej;
-		    inc = ei;
+		    ref = e2;
+		    inc = e1;
+		    maxVertex = max2;
 		    flip = true;
 		}
 		
 		ref.norm();
 		
-		o1 = ref.dot( ref.start );
-		clipPoints( inc.start, inc.end, ref.vec( vec ), o1, manifolds );
+		offset1 = ref.dot( ref.start );
 		
-		if( manifolds.length < 2 ) return;
+		clipPoints( inc.start, inc.end, ref.vec( vec ).negate(), offset1, manifold );
 		
-		o2 = ref.dot( ref.end );
-		clipPoints( manifolds[0].point, manifolds[1].point, ref.vec( vec ).negate(), o2, manifolds );
+		if( manifold.length < 2 ) return depth;
 		
-		if( manifolds.length < 2 ) return;
+		offset2 = ref.dot( ref.end );
+		clipPoints( manifold[0].point, manifold[1].point, ref.vec( vec ), offset2, manifold );
 		
-		refNorm.copy( ref.vec( vec ) ).normR();
+		if( manifold.length < 2 ) return depth;
 		
-		if( flip ) refNorm.negate();
+		ref.vec( refNorm );
 		
-		max = refNorm.dot( ref.vec( vec ) );
+		tmp = refNorm.x; refNorm.x = -refNorm.y; refNorm.y = tmp;
 		
-		manifolds[0].depth = refNorm.dot( manifolds[0].point ) - max;
-		manifolds[1].depth = refNorm.dot( manifolds[1].point ) - max;
+		if( flip ){
+		    refNorm.negate();
+		}
 		
-		console.log() ;
+		max = refNorm.dot( maxVertex );
+		manifold.filter( refNorm, max );
+		
+		return depth;
 	    };
 	}();
 	
 	
-	return new PCollision2D;
+	PCollision2D.prototype.collideCircleConvex = function(){
+	    var vec = new Vec2;
+	    
+	    return function( si, sj, xi, xj, normal, point ){
+		var worldVertices = sj.worldVertices,
+		    worldNormals = sj.worldNormals,
+		    radius = si.radius,
+		    
+		    dx = xj.x - xi.x,
+		    dy = sj.y - xi.y,
+		    
+		    normalIndex, s, separation = -MAX_VALUE,
+		    i, il;
+		
+		for( i = 0, il = worldVertices.length; i < il; i++ ){
+		    s = worldNormals[i].x * ( dx - worldVertices[i].x ) + worldNormals[i].y * ( dy - worldVertices[i].y );
+		    
+		    if( s > radius ) return false;
+		    if( s > separation ){
+			separation = s;
+			normalIndex = i;
+		    }
+		}
+		
+		if( separation < MIN_VALUE ){
+		    normal.copy( worldNormals[ normalIndex ] );
+		    
+		    point.x = xi.x - radius * normal.x;
+		    point.y = xi.y - radius * normal.y;
+		    
+		    return separation - radius;
+		}
+	    };
+	}();
+	
+        
+        return new PCollision2D;
     }
 );

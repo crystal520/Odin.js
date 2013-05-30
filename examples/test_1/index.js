@@ -49,7 +49,7 @@ require(
 			}
 		    }),
 		    new RigidBody({
-			shape: RigidBody.RECT,
+			shape: RigidBody.BOX,
 			mass: 1,
 			velocity: new Vec2( 0, 1 ),
 			angularVelocity: 0,
@@ -73,7 +73,7 @@ require(
 			height: 1
 		    }),
 		    new RigidBody({
-			shape: RigidBody.RECT,
+			shape: RigidBody.BOX,
 			mass: 0,
 			extents: new Vec2( 0.5, 0.5 )
 		    })

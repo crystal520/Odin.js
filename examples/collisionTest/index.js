@@ -22,7 +22,7 @@ require(
 	    
 	    scene = new Scene;
 	    camera = new Camera2D({
-		zoom: 2
+		zoom: 1
 	    });
 	    camera.on("update", function(){
 		this.follow( ball, 16 );
@@ -69,6 +69,12 @@ require(
 	    });
 	    
 	    scene.add( ball, ball2 );
+	    
+	    Keyboard.on("keydown", function( key ){
+		if( key.name === "up" ){
+		    ball.components.RigidBody.applyForce( new Vec2( 0, 10000 ) );
+		}
+	    });
 	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );

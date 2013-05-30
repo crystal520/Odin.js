@@ -155,7 +155,7 @@ define([
 		
 		ctx.save();
 		
-		ctx.transform( mvp[0], mvp[2], mvp[1], mvp[3], mvp[4], mvp[5] );
+		ctx.transform( mvp[0], -mvp[2], -mvp[1], mvp[3], mvp[4], mvp[5] );
 		ctx.scale( 1, -1 );
 		
 		ctx.strokeStyle = "#ff0000";
@@ -196,7 +196,7 @@ define([
 		
 		ctx.save();
 		
-		ctx.transform( mvp[0], mvp[1], mvp[2], mvp[3], mvp[4], mvp[5] );
+		ctx.transform( mvp[0], -mvp[2], -mvp[1], mvp[3], mvp[4], mvp[5] );
 		ctx.scale( 1, -1 );
 		ctx.drawImage(
 		    image,

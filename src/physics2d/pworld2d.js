@@ -7,12 +7,13 @@ define([
 	"math/vec2",
 	"physics2d/psolver2d",
 	"physics2d/collision/pbroadphase2d",
-	"physics2d//collision/pnearphase2d",
+	"physics2d/collision/pnearphase2d",
 	"physics2d/shape/pshape2d",
+	"physics2d/body/pparticle2d",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PShape2D, PBody2D, PFrictionEquation2D ){
-	"use strict";
+    function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D ){
+        "use strict";
 	
 	var pow = Math.pow,
 	    
@@ -20,22 +21,23 @@ define([
 	    RECT = PShape2D.RECT,
 	    CONVEX = PShape2D.CONVEX,
 	    
-	    AWAKE = PBody2D.AWAKE,
-	    SLEEPY = PBody2D.SLEEPY,
-	    SLEEPING = PBody2D.SLEEPING,
+	    AWAKE = PParticle2D.AWAKE,
+	    SLEEPY = PParticle2D.SLEEPY,
+	    SLEEPING = PParticle2D.SLEEPING,
 	    
 	    DYNAMIC = PBody2D.DYNAMIC,
 	    STATIC = PBody2D.STATIC,
 	    KINEMATIC = PBody2D.KINEMATIC;
 	
-	
+        
 	function PWorld2D( opts ){
 	    opts || ( opts = {} );
 	    
 	    Class.call( this );
 	    
-	    this.time = 0;
-	    this.allowSleep = true;
+	    this.allowSleep = opts.allowSleep !== undefined ? opts.allowSleep : true;
+	    
+	    this.dt = 1 / 60;
 	    
 	    this.bodies = [];
 	    
@@ -46,9 +48,10 @@ define([
 	    
 	    this.gravity = opts.gravity instanceof Vec2 ? opts.gravity : new Vec2( 0, -9.801 );
 	    
-	    this.broadphase = new PBroadphase2D( opts.aabbBroadphase );
-	    this.nearphase = new PNearphase2D();
 	    this.solver = new PSolver2D();
+	    
+	    this.broadphase = new PBroadphase2D( opts.useBoundingRadius );
+	    this.nearphase = new PNearphase2D;
 	    
 	    this.debug = opts.debug !== undefined ? opts.debug : true;
 	    
@@ -59,7 +62,7 @@ define([
 		nearphase:0
 	    };
 	    
-	    this.removeList = [];
+	    this._removeList = [];
 	}
 	
 	Class.extend( PWorld2D, Class );
@@ -68,7 +71,7 @@ define([
 	PWorld2D.prototype.add = function( body ){
 	    var bodies = this.bodies,
 		index = bodies.indexOf( body );
-	    
+		
 	    if( index === -1 ){
 		body.world = this;
 		bodies.push( body );
@@ -121,7 +124,7 @@ define([
 			}
 		    );
 		}();
-	    
+		
 	    return function( dt ){
 		var debug = this.debug,
 		    profile = this.profile, profileStart,
@@ -129,17 +132,18 @@ define([
 		    gravity = this.gravity,
 		    bodies = this.bodies,
 		    solver = this.solver,
+		    solverConstraints = solver.constraints,
 		    pairsi = this.pairsi, pairsj = this.pairsj,
 		    c, contacts = this.contacts,
 		    
 		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, mass, invMass, invInertia,
 		    i, il;
-		
+		    
 		this.time = time += dt;
 		
 		accumulator += time - lastTime;
 		accumulator = accumulator > max ? max : accumulator;
-		dt = dt !== 0 ? dt : ddt;
+		this.dt = dt = dt !== 0 ? dt : ddt;
 		
 		while( accumulator >= dt ){
 		    
@@ -149,20 +153,19 @@ define([
 		    
 		    
 		    if( debug ) profileStart = now();
-		    
 		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
 		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
-			c = contacts[i];
-			solver.add( c );
+			solverConstraints.push( contacts[i] );
 		    }
 		    if( debug ) profile.nearphase = now() - profileStart;
 		    
 		    
 		    if( debug ) profileStart = now();
-		    solver.solve( dt, this );
-		    solver.clear();
+		    solver.solve( this, dt );
+		    solverConstraints.length = 0;
 		    if( debug ) profile.solve = now() - profileStart;
+		    
 		    
 		    if( debug ) profileStart = now();
 		    for( i = 0, il = bodies.length; i < il; i++ ){
@@ -181,6 +184,11 @@ define([
 			invInertia = body.invInertia;
 			
 			body.trigger("prestep");
+			
+			force.x = 0;
+			force.y = 0;
+			
+			if( body.torque ) body.torque = 0;
 			
 			if( type === DYNAMIC ){
 			    force.x += gravity.x * mass;
@@ -214,10 +222,6 @@ define([
 			    }
 			}
 			
-			force.x = 0;
-			force.y = 0;
-			body.torque = 0;
-			
 			if( this.allowSleep ) body.sleepTick( time );
 			
 			body.trigger("poststep");
@@ -227,7 +231,7 @@ define([
 		    accumulator -= dt;
 		}
 		
-		if( this.removeList.length ){
+		if( this._removeList.length ){
 		    this._remove();
 		}
 		
@@ -235,7 +239,7 @@ define([
 	    };
 	}();
 	
-	
-	return PWorld2D;
+        
+        return PWorld2D;
     }
 );

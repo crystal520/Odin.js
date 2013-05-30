@@ -484,7 +484,7 @@ define([
         };
         
         
-        Vec2.prototype.normL = function(){
+        Vec2.prototype.perpL = function(){
             var x = this.x, y = this.y;
 	    
 	    this.x = -y;
@@ -494,7 +494,7 @@ define([
         };
         
         
-        Vec2.prototype.normR = function(){
+        Vec2.prototype.perpR = function(){
             var x = this.x, y = this.y;
 	    
 	    this.x = y;

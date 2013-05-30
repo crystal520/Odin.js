@@ -53,20 +53,17 @@ define(
 	Odin.Vec3 = require("math/vec3");
 	Odin.Vec4 = require("math/vec4");
 	
-	Odin.PBody2D = require("physics2d/body/pbody2d");
+	Odin.PRigidBody2D = require("physics2d/body/pbody2d");
+	Odin.PRigidBody2D = require("physics2d/body/pparticle2d");
 	Odin.PRigidBody2D = require("physics2d/body/prigidbody2d");
 	
 	Odin.PBroadphase2D = require("physics2d/collision/pbroadphase2d");
-	Odin.PCollision2D = require("physics2d/collision/pcollision2d");
-	Odin.PContact2D = require("physics2d/collision/pcontact2d");
-	Odin.PNearphase2D = require("physics2d/collision/pnearphase2d");
 	
-	Odin.PCircle = require("physics2d/shape/pcircle");
+	Odin.PBox2D = require("physics2d/shape/pbox2d");
+	Odin.PCircle2D = require("physics2d/shape/pcircle2d");
 	Odin.PConvex2D = require("physics2d/shape/pconvex2d");
-	Odin.PRect = require("physics2d/shape/prect");
 	Odin.PShape2D = require("physics2d/shape/pshape2d");
 	
-	Odin.PSolver2D = require("physics2d/psolver2d");
 	Odin.PWorld2D = require("physics2d/pworld2d");
 	
 	Odin.Component = require("core/components/component");
@@ -94,7 +91,6 @@ define(
 	Odin.Scene = require("core/scene");
 	Odin.WebGLRenderer = require("core/webglrenderer");
 	Odin.World = require("core/world");
-	
 	
 	return Odin;
     }

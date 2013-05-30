@@ -2,91 +2,132 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
-	"base/class"
+	"base/class",
+	"math/mathf",
+	"math/vec2"
     ],
-    function( Class ){
-	"use strict";
+    function( Class, Mathf, Vec2 ){
+        "use strict";
 	
-	var abs = Math.abs;
+	var abs = Math.abs,
+	    clamp = Mathf.clamp;
 	
-	
+        
 	function PSolver2D(){
 	    
 	    Class.call( this );
 	    
-	    this.contacts = [];
+	    this.constraints = [];
 	    
 	    this.iterations = 10;
-	    this.tolerance = 1e-18;
+	    this.tolerance = 1e-6;
 	}
 	
 	Class.extend( PSolver2D, Class );
 	
 	
-	PSolver2D.prototype.solve = function( dt, world ){
-	    var maxIters = this.iterations,
-		tolerance = this.tolerance,
-		toleranceSq = tolerance * tolerance,
-		contacts = this.contacts,
-		contactsLen = contacts.length,
-		bodies = world.bodies,
-		bodiesLen = bodies.length,
-		body, vlambda, contact, i, iter;
+	PSolver2D.prototype.solve = function(){
+	    var lambdas = [], invCs = [], Bs = [];
+	    
+	    return function( world, h ){
+		var iterations = this.iterations,
 		
-	    if( contactsLen ){
-		
-		for( i = 0; i < bodiesLen; i++ ){
-		    body = bodies[i];
-		    vlambda = body.vlambda;
+		    tolerance = this.tolerance,
+		    toleranceSq = tolerance * tolerance,
 		    
-		    vlambda.x = 0;
-		    vlambda.y = 0;
+		    constraints = this.constraints,
+		    constraintsLen = constraints.length,
 		    
-		    if( body.wlambda !== undefined ) body.wlambda = 0;
-		}
-		
-		for( iter = 0; iter < maxIters; iter++ ){
+		    bodies = world.bodies,
+		    bodiesLen = bodies.length,
 		    
-		    for( i = 0; i < contactsLen; i++ ){
-			contact = contacts[i];
-			contact.solve( dt );
+		    B, invC, deltaLambda, deltaLambdaTotal, relativeLambda, lambda,
+		    
+		    body, force, c, i, iter;
+		    
+		if( constraintsLen ){
+		    
+		    for( i = 0; i < bodiesLen; i++ ){
+			body = bodies[i];
+			
+			body.vlambda.x = 0;
+			body.vlambda.y = 0;
+			
+			if( body.wlambda !== undefined ) body.wlambda = 0;
+		    }
+		    
+		    
+		    for( i = 0; i < constraintsLen; i++ ){
+			c = constraints[i];
+			
+			c.updateSpookParams( h );
+			
+			lambdas[i] = 0
+			Bs[i] = c.calculateB( h );
+			invCs[i] = 1 / c.calculateC();
+		    }
+		    
+		    
+		    for( iter = 0; iter < iterations; iter++ ){
+			
+			deltaLambdaTotal = 0;
+			
+			for( i = 0; i < constraintsLen; i++ ){
+			    c = constraints[i];
+			    
+			    B = Bs[i];
+			    invC = invCs[i];
+			    lambda = lambdas[i];
+			    relativeLambda = c.calculateRelativeLambda();
+			    
+			    deltaLambda = invC * ( B - relativeLambda - c.eps * lambda );
+			    deltaLambda = clamp( deltaLambda, c.minForce, c.maxForce );
+			    
+			    lambda[i] += deltaLambda;
+			    deltaLambdaTotal += abs( deltaLambda );
+			    
+			    c.addToLambda( deltaLambda );
+			}
+			
+			if( deltaLambdaTotal * deltaLambdaTotal < toleranceSq ) break;
+		    }
+		    
+		    
+		    for( i = 0; i < bodiesLen; i++ ){
+			body = bodies[i];
+			body.velocity.add( body.vlambda );
+			
+			if( body.wlambda !== undefined ) body.angularVelocity += body.wlambda;
 		    }
 		}
 		
-		for( i = 0; i < bodiesLen; i++ ){
-		    body = bodies[i];
-		    body.velocity.add( body.vlambda );
-		    
-		    if( body.wlambda !== undefined ) body.angularVelocity += body.wlambda;
-		}
-	    }
+		return iter;
+	    };
+	}();
+	
+	
+	PSolver2D.prototype.add = function( constraint ){
 	    
-	    return iter;
+	    this.constraints.push( constraint );
 	};
 	
 	
-	PSolver2D.prototype.add = function( contact ){
-	    
-	    this.contacts.push( contact );
-	};
-	
-	
-	PSolver2D.prototype.remove = function( contact ){
-	    var contacts = this.contacts,
-		idx = contacts.indexOf( contact );
+	PSolver2D.prototype.remove = function( constraint ){
+	    var constraints = this.constraints,
+		idx = constraints.indexOf( constraint );
 	    
 	    if( idx !== -1 ){
-		contacts.splice( idx, 1 );
+		constraints.splice( idx, constraint );
 	    }
 	};
 	
 	
 	PSolver2D.prototype.clear = function(){
 	    
-	    this.contacts.length = 0;
+	    this.constraints.length = 0;
 	};
 	
-	
-	return PSolver2D;
+        
+        return PSolver2D;
     }
 );

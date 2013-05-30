@@ -5,12 +5,13 @@ define([
 	"base/class",
 	"base/time",
 	"core/components/component",
-	"physics2d/shape/pcircle",
-	"physics2d/shape/pconvex2d",
-	"physics2d/shape/prect",
-	"physics2d/body/prigidbody2d"
+	"physics2d/body/prigidbody2d",
+	"physics2d/shape/pshape2d",
+	"physics2d/shape/pcircle2d",
+	"physics2d/shape/pbox2d",
+	"physics2d/shape/pconvex2d"
     ],
-    function( Class, Time, Component, PCircle, PConvex2D, PRect, PRigidBody2D ){
+    function( Class, Time, Component, PRigidBody2D, PShape2D, PCircle2D, PBox2D, PConvex2D ){
         "use strict";
 	
         
@@ -25,7 +26,7 @@ define([
 		
 		case RigidBody.CIRCLE:
 		    
-		    shape = new PCircle( opts.radius );
+		    shape = new PCircle2D( opts.radius );
 		    break;
 		    
 		case RigidBody.CONVEX:
@@ -33,10 +34,10 @@ define([
 		    shape = new PConvex2D( opts.vertices );
 		    break;
 		    
-		case RigidBody.RECT:
+		case RigidBody.BOX:
 		default:
 		    
-		    shape = new PRect( opts.extents );
+		    shape = new PBox2D( opts.extents );
 		    break;
 	    }
 	    
@@ -93,9 +94,9 @@ define([
 	};
 	
 	
-	RigidBody.CIRCLE = 0;
-	RigidBody.RECT = 1;
-	RigidBody.CONVEX = 2;
+	RigidBody.BOX = 1;
+	RigidBody.CIRCLE = 2;
+	RigidBody.CONVEX = 3;
 	
         
         return RigidBody;

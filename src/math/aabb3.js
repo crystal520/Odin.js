@@ -41,7 +41,8 @@ define([
         AABB3.prototype.setFromPoints = function( points ){
             var v, i = 0, il = points.length,
 		minx, miny, minz, maxx, maxy, maxz,
-		min = this.min, max = this.max;
+		min = this.min, max = this.max,
+		x, y, z;
             
             if( il > 0 ){
                 
@@ -50,14 +51,15 @@ define([
                 
                 for( i; i < il; i++ ){
                     v = points[i];
+		    x = v.x; y = v.y; z = v.z;
 		    
-		    minx = minx > v.x ? v.x : minx;
-		    miny = miny > v.y ? v.y : miny;
-		    minz = minz > v.z ? v.z : minz;
+		    minx = minx > x ? x : minx;
+		    miny = miny > y ? y : miny;
+		    minz = minz > z ? z : minz;
 		    
-		    maxx = maxx < v.x ? v.x : maxx;
-		    maxy = maxy < v.y ? v.y : maxy;
-		    maxz = maxz < v.z ? v.z : maxz;
+		    maxx = maxx < x ? x : maxx;
+		    maxy = maxy < y ? y : maxy;
+		    maxz = maxz < z ? z : maxz;
                 }
 		
 		min.x = minx; min.y = miny; min.x = minz;
@@ -69,45 +71,6 @@ define([
             
             return this;
         };
-        
-        
-        AABB3.prototype.expandByPoint = function( point ){
-            var min = this.min, max = this.max;
-            
-	    min.x = min.x > point.x ? point.x : min.x;
-	    min.y = min.y > point.y ? point.y : min.y;
-	    min.z = min.z > point.z ? point.z : min.z;
-            
-	    max.x = max.x < point.x ? point.x : max.x;
-	    max.y = max.y < point.y ? point.y : max.y;
-	    max.z = max.z < point.z ? point.z : max.z;
-	    
-            return this;
-        };
-        
-        
-        AABB3.prototype.clear = function(){
-            var min = this.min, max = this.max;
-	    
-	    min.x = min.y = min.z = max.x = max.y = max.z = 0;
-            
-            return this;
-        };
-        
-        
-        AABB3.prototype.setCenter = function( center ){
-	    var min = this.min, max = this.max;
-	    
-	    min.x += center.x;
-	    min.y += center.y;
-	    min.z += center.z;
-	    
-	    max.x += center.x;
-	    max.y += center.y;
-	    max.z += center.z;
-	    
-	    return this;
-	};
         
         
         AABB3.prototype.contains = function( point ){
