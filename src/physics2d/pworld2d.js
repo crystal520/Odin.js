@@ -149,11 +149,10 @@ define([
 		    
 		    for( i = 0, il = bodies.length; i < il; i++ ){
 			body = bodies[i];
-			type = body.type;
 			force = body.force;
 			mass = body.mass;
 			
-			if( type === DYNAMIC ){
+			if( body.type === DYNAMIC ){
 			    force.x += gravity.x * mass;
 			    force.y += gravity.y * mass;
 			}
