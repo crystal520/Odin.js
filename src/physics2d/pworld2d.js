@@ -147,6 +147,18 @@ define([
 		
 		while( accumulator >= dt ){
 		    
+		    for( i = 0, il = bodies.length; i < il; i++ ){
+			body = bodies[i];
+			type = body.type;
+			force = body.force;
+			mass = body.mass;
+			
+			if( type === DYNAMIC ){
+			    force.x += gravity.x * mass;
+			    force.y += gravity.y * mass;
+			}
+		    }
+		    
 		    if( debug ) profileStart = now();
 		    this.broadphase.collisionPairs( this, pairsi, pairsj );
 		    if( debug ) profile.broadphase = now() - profileStart;
@@ -185,15 +197,7 @@ define([
 			
 			body.trigger("prestep");
 			
-			force.x = 0;
-			force.y = 0;
-			
-			if( body.torque ) body.torque = 0;
-			
 			if( type === DYNAMIC ){
-			    force.x += gravity.x * mass;
-			    force.y += gravity.y * mass;
-			    
 			    vel.x *= pow( 1 - linearDamping.x, dt );
 			    vel.y *= pow( 1 - linearDamping.y, dt );
 			    
@@ -221,6 +225,11 @@ define([
 				}
 			    }
 			}
+			
+			force.x = 0;
+			force.y = 0;
+			
+			if( body.torque ) body.torque = 0;
 			
 			if( this.allowSleep ) body.sleepTick( time );
 			
