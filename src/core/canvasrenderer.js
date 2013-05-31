@@ -159,6 +159,14 @@ define([
 		ctx.scale( 1, -1 );
 		
 		ctx.strokeStyle = "#ff0000";
+		
+		if( body.isSleepy() ){
+		    ctx.strokeStyle = "#0000ff";
+		}
+		if( body.isSleeping() ){
+		    ctx.strokeStyle = "#000000";
+		}
+		
 		ctx.lineWidth = this.invPixelRatio;
 		
 		ctx.beginPath();

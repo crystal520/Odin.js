@@ -45,39 +45,9 @@ define([
 	    this.invInertia = this.inertia > 0 ? 1 / this.inertia : 0;
 	    
 	    this.wlambda = 0;
-	    
-	    this._sleepMinAngularVelocity = 0.1;
 	}
 	
 	Class.extend( PRigidBody2D, PParticle2D );
-	
-	
-	PRigidBody2D.prototype.sleepTick = function( time ){
-	    
-	    if( this.allowSleep ){
-		var sleepState = this.sleepState,
-		    velSq = this.velocity.lenSq(),
-		    angularVelSq = this.angularVelocity * this.angularVelocity,
-		    
-		    sleepMinVel = this._sleepMinVelocity,
-		    sleepMinVelSq = sleepMinVel * sleepMinVel,
-		    
-		    sleepMinAngularVel = this._sleepMinAngularVelocity,
-		    sleepMinAngularVelSq = sleepMinAngularVel * sleepMinAngularVel;
-		
-		if( sleepState === AWAKE && velSq < sleepMinVelSq && angularVelSq < sleepMinAngularVelSq ){
-		    this.sleepState = SLEEPY;
-		    this._sleepLastSleepy = time;
-		    this.trigger("sleepy");
-		}
-		else if( sleepState === SLEEPY && velSq > sleepMinVelSq && angularVelSq > sleepMinAngularVelSq ){
-		    this.wake();
-		}
-		else if( sleepState === SLEEPY && ( time - this.timeLastSleepy ) > this._sleepTimeLimit ){
-		    this.sleep();
-		}
-	    }
-	};
 	
 	
 	PRigidBody2D.prototype.calculateAABB = function(){

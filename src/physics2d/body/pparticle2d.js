@@ -42,7 +42,7 @@ define([
 	    
 	    this.sleepState = AWAKE;
 	    
-	    this._sleepMinVelocity = 0.1;
+	    this._sleepMinVelocity = 1e-4;
 	    this._sleepTimeLimit = 1;
 	    this._sleepLastSleepy = 0;
 	}
@@ -73,7 +73,17 @@ define([
 	    if( this.sleepState === SLEEPING ){
 		this.trigger("wake");
 	    }
-	    this.sleepState === AWAKE;
+	    this.sleepState = AWAKE;
+	};
+	
+	
+	PParticle2D.prototype.sleepy = function( time ){
+	    
+	    if( this.sleepState === AWAKE ){
+		this.trigger("sleepy");
+		this._sleepLastSleepy = time;
+	    }
+	    this.sleepState = SLEEPY;
 	};
 	
 	
@@ -82,7 +92,7 @@ define([
 	    if( this.sleepState === AWAKE || this.sleepState === SLEEPY ){
 		this.trigger("sleep");
 	    }
-	    this.sleepState === SLEEPING;
+	    this.sleepState = SLEEPING;
 	};
 	
 	
@@ -90,19 +100,17 @@ define([
 	    
 	    if( this.allowSleep ){
 		var sleepState = this.sleepState,
-		    velocitySq = this.velocity.lenSq(),
+		    velSq = this.velocity.lenSq(),
 		    sleepMinVelocity = this._sleepMinVelocity,
 		    sleepMinVelocitySq = sleepMinVelocity * sleepMinVelocity;
 		
-		if( sleepState === AWAKE && velocitySq < sleepMinVelocitySq ){
-		    this.sleepState = SLEEPY;
-		    this._sleepLastSleepy = time;
-		    this.trigger("sleepy");
+		if( sleepState === AWAKE && velSq < sleepMinVelocitySq ){
+		    this.sleepy( time )
 		}
-		else if( sleepState === SLEEPY && velocitySq > sleepMinVelocitySq ){
+		else if( sleepState === SLEEPY && velSq > sleepMinVelocitySq ){
 		    this.wake();
 		}
-		else if( sleepState === SLEEPY && ( time - this.timeLastSleepy ) > this._sleepTimeLimit ){
+		else if( sleepState === SLEEPY && ( time - this._sleepLastSleepy ) > this._sleepTimeLimit ){
 		    this.sleep();
 		}
 	    }

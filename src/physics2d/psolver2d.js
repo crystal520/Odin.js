@@ -9,8 +9,7 @@ define([
     function( Class, Mathf, Vec2 ){
         "use strict";
 	
-	var abs = Math.abs,
-	    clamp = Mathf.clamp;
+	var clamp = Mathf.clamp;
 	
         
 	function PSolver2D(){
@@ -19,7 +18,7 @@ define([
 	    
 	    this.constraints = [];
 	    
-	    this.iterations = 10;
+	    this.iterations = 25;
 	    this.tolerance = 1e-6;
 	}
 	
@@ -82,12 +81,11 @@ define([
 			    
 			    deltaLambda = invC * ( B - relativeLambda - c.eps * lambda );
 			    
-			    c.addToLambda( deltaLambda );
+			    deltaLambdaTotal += deltaLambda;
 			    
 			    deltaLambda = clamp( deltaLambda, c.min, c.max );
+			    c.addToLambda( deltaLambda );
 			    lambda[i] += deltaLambda;
-			    
-			    deltaLambdaTotal += abs( deltaLambda );
 			}
 			
 			if( deltaLambdaTotal * deltaLambdaTotal < toleranceSq ) break;
