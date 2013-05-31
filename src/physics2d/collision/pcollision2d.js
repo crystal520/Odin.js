@@ -194,7 +194,9 @@ define([
 		
 		ref.vec( refNorm );
 		
-		tmp = refNorm.x; refNorm.x = -refNorm.y; refNorm.y = tmp;
+		tmp = refNorm.x;
+		refNorm.x = -refNorm.y;
+		refNorm.y = tmp;
 		
 		if( flip ){
 		    refNorm.negate();

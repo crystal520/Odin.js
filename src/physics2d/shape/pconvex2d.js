@@ -43,9 +43,6 @@ define([
 		worldNormals[i] = normal.clone();
 	    }
 	    
-	    this.worldVerticesNeedsUpdate = true;
-	    this.worldNormalsNeedsUpdate = true;
-	    
 	    this.calculateAABB();
 	    this.calculateBoundingRadius();
 	    this.calculateVolume();
@@ -169,8 +166,6 @@ define([
 		worldVertex.rotate( rotation );
 		worldVertex.add( position );
 	    }
-	    
-	    this.worldVerticesNeedsUpdate = false;
 	};
 
 
@@ -185,8 +180,6 @@ define([
 		worldNormal.copy( normals[i] );
 		worldNormal.rotate( rotation );
 	    }
-	    
-	    this.worldNormalsNeedsUpdate = false;
 	};
 	
         

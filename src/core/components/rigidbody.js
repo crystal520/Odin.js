@@ -5,13 +5,14 @@ define([
 	"base/class",
 	"base/time",
 	"core/components/component",
+	"physics2d/body/pbody2d",
 	"physics2d/body/prigidbody2d",
 	"physics2d/shape/pshape2d",
 	"physics2d/shape/pcircle2d",
 	"physics2d/shape/pbox2d",
 	"physics2d/shape/pconvex2d"
     ],
-    function( Class, Time, Component, PRigidBody2D, PShape2D, PCircle2D, PBox2D, PConvex2D ){
+    function( Class, Time, Component, PBody2D, PRigidBody2D, PShape2D, PCircle2D, PBox2D, PConvex2D ){
         "use strict";
 	
         
@@ -22,26 +23,17 @@ define([
 	    
 	    var shape;
 	    
-	    switch( opts.shape ){
-		
-		case RigidBody.CIRCLE:
-		    
-		    shape = new PCircle2D( opts.radius );
-		    break;
-		    
-		case RigidBody.CONVEX:
-		    
-		    shape = new PConvex2D( opts.vertices );
-		    break;
-		    
-		case RigidBody.BOX:
-		default:
-		    
-		    shape = new PBox2D( opts.extents );
-		    break;
+	    if( opts.radius ){
+		shape = new PCircle2D( opts.radius );
+	    }
+	    if( opts.extents ){
+		shape = new PBox2D( opts.extents );
+	    }
+	    if( opts.vertices ){
+		shape = new PConvex2D( opts.vertices );
 	    }
 	    
-	    opts.shape = shape;
+	    opts.shape = shape instanceof PShape2D ? shape : undefined;
 	    this.body = new PRigidBody2D( opts );
 	    
 	    this.listenTo( this.body, "collide", function( pbody2d ){
@@ -94,9 +86,9 @@ define([
 	};
 	
 	
-	RigidBody.BOX = 1;
-	RigidBody.CIRCLE = 2;
-	RigidBody.CONVEX = 3;
+	RigidBody.DYNAMIC = PBody2D.DYNAMIC;
+	RigidBody.STATIC = PBody2D.STATIC;
+	RigidBody.KINEMATIC = PBody2D.KINEMATIC;
 	
         
         return RigidBody;

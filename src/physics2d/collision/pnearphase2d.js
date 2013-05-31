@@ -140,6 +140,8 @@ define([
 			
 			contacts.push( c );
 			
+			console.log( vec+"",c.ri+"", c.rj+"");
+			
 			bi.trigger("collide", bj );
 			bj.trigger("collide", bi );
 			bi.wake();
@@ -165,8 +167,8 @@ define([
 			case BOX:
 			case CONVEX:
 			    
-			    if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( xj, wj );
-			    if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( wj );
+			    sj.calculateWorldVertices( xj, wj );
+			    sj.calculateWorldNormals( wj );
 			    
 			    this.circleConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;
@@ -174,8 +176,8 @@ define([
 		}
 		else if( si.type === BOX || si.type === CONVEX ){
 		    
-		    if( si.worldVerticesNeedsUpdate ) si.calculateWorldVertices( xi, wi );
-		    if( si.worldNormalsNeedsUpdate ) si.calculateWorldNormals( wi );
+		    si.calculateWorldVertices( xi, wi );
+		    si.calculateWorldNormals( wi );
 		    
 		    switch( sj.type ){
 			
@@ -186,8 +188,8 @@ define([
 			case BOX:
 			case CONVEX:
 			    
-			    if( sj.worldVerticesNeedsUpdate ) sj.calculateWorldVertices( xj, wj );
-			    if( sj.worldNormalsNeedsUpdate ) sj.calculateWorldNormals( wj );
+			    sj.calculateWorldVertices( xj, wj );
+			    sj.calculateWorldNormals( wj );
 			    
 			    this.convexConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;

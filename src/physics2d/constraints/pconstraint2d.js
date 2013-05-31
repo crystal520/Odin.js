@@ -8,15 +8,15 @@ define([
         "use strict";
 	
         
-	function PConstraint2D( bi, bj, minForce, maxForce ){
+	function PConstraint2D( bi, bj, min, max ){
 	    
 	    Class.call( this );
 	    
 	    this.bi = bi;
 	    this.bj = bj;
 	    
-	    this.minForce = minForce !== undefined ? minForce : -1e6;
-	    this.maxForce = maxForce !== undefined ? maxForce : 1e6;
+	    this.min = min !== undefined ? min : -1e6;
+	    this.max = max !== undefined ? max : 1e6;
 	    
 	    this.stiffness = 1e7;
 	    this.stabilizeSteps = 5;

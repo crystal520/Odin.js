@@ -53,8 +53,8 @@ define(
 	Odin.Vec3 = require("math/vec3");
 	Odin.Vec4 = require("math/vec4");
 	
-	Odin.PRigidBody2D = require("physics2d/body/pbody2d");
-	Odin.PRigidBody2D = require("physics2d/body/pparticle2d");
+	Odin.PBody2D = require("physics2d/body/pbody2d");
+	Odin.PParticle2D = require("physics2d/body/pparticle2d");
 	Odin.PRigidBody2D = require("physics2d/body/prigidbody2d");
 	
 	Odin.PBroadphase2D = require("physics2d/collision/pbroadphase2d");

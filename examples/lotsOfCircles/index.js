@@ -22,27 +22,61 @@ require(
 	    
 	    scene = new Scene;
 	    camera = new Camera2D({
-		zoom: 3
+		position: new Vec2( 0, 8 ),
+		zoom: 4
 	    });
 	    
 	    ground = new GameObject2D({
-		position: new Vec2( 0, -2 ),
+		position: new Vec2( 0, -1 ),
 		components: [
 		    new RigidBody({
-			shape: RigidBody.BOX,
 			mass: 0,
 			extents: new Vec2( 16, 1 )
 		    })
 		]
 	    });
 	    
-	    scene.add( ground );
+	    wallLeft = new GameObject2D({
+		position: new Vec2( -17, 14 ),
+		components: [
+		    new RigidBody({
+			mass: 0,
+			extents: new Vec2( 1, 16 )
+		    })
+		]
+	    });
 	    
-	    for( var i = 0; i < 100; i++ ){
+	    wallRight = new GameObject2D({
+		position: new Vec2( 17, 14 ),
+		components: [
+		    new RigidBody({
+			mass: 0,
+			extents: new Vec2( 1, 16 )
+		    })
+		]
+	    });
+	    
+	    spinner = new GameObject2D({
+		position: new Vec2( 0, 4 ),
+		components: [
+		    new RigidBody({
+			mass: 0,
+			type: RigidBody.KINEMATIC,
+			extents: new Vec2( 4, 0.25 )
+		    })
+		]
+	    });
+	    spinner.on("update", function(){
+		this.rotate( Math.PI*0.5*Time.delta );
+	    });
+	    
+	    scene.add( ground, wallLeft, wallRight, spinner );
+	    
+	    for( var i = 0; i < 256; i++ ){
 		r = Mathf.randFloat( 0.5, 1 );
 		scene.add(
 		    new GameObject2D({
-			position: new Vec2( Mathf.randFloat( -4, 4 ), Mathf.randFloat( 0, 32 ) ),
+			position: new Vec2( Mathf.randFloat( -2, 2 ), Mathf.randFloat( 0, 64 ) ),
 			components: [
 			    new Sprite({
 				image: player,
@@ -54,7 +88,6 @@ require(
 				height: r+r
 			    }),
 			    new RigidBody({
-				shape: RigidBody.CIRCLE,
 				linearDamping: new Vec2( 0, 0 ),
 				mass: 1,
 				radius: r

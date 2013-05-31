@@ -136,7 +136,7 @@ define([
 		    pairsi = this.pairsi, pairsj = this.pairsj,
 		    c, contacts = this.contacts,
 		    
-		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, mass, invMass, invInertia,
+		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, pos0, mass, invMass, invInertia,
 		    i, il;
 		
 		this.time = time += dt;
@@ -197,6 +197,7 @@ define([
 			vel = body.velocity;
 			linearDamping = body.linearDamping;
 			pos = body.position;
+			pos0 = body._position0;
 			mass = body.mass;
 			invMass = body.invMass;
 			invInertia = body.invInertia;
@@ -204,6 +205,7 @@ define([
 			body.trigger("prestep");
 			
 			if( type === DYNAMIC ){
+			    
 			    vel.x *= pow( 1 - linearDamping.x, dt );
 			    vel.y *= pow( 1 - linearDamping.y, dt );
 			    
@@ -223,12 +225,7 @@ define([
 				
 				if( body.angularVelocity !== undefined ) body.rotation += body.angularVelocity * dt;
 				
-				body.aabbNeedsUpdate = true;
-				
-				if( shapeType === BOX || shapeType === CONVEX ){
-				    body.worldVerticesNeedsUpdate = true;
-				    body.worldNormalsNeedsUpdate = true;
-				}
+				if( body.aabb ) body.aabbNeedsUpdate = true;
 			    }
 			}
 			
