@@ -29,7 +29,7 @@ require(
 	    });
 	    
 	    ball = new GameObject2D({
-		position: new Vec2( 0, 2 ),
+		position: new Vec2( 0.5, 2 ),
 		components: [
 		    new Sprite({
 			image: player,

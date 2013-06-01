@@ -95,7 +95,7 @@ define([
 	    var normal = new Vec2, point = new Vec2, vec = new Vec2;
 	    
 	    return function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
-		var depth = collideCircleConvex( si, sj, xi, xj, normal, point );
+		var depth = collideCircleConvex( si, sj, xi, xj, wi, wj, normal, point );
 		
 		if( depth ){
 		    var c = createContact( bi, bj );
@@ -125,7 +125,7 @@ define([
 	    return function( contacts, bi, bj, si, sj, xi, xj, wi, wj ){
 		var m, c, i, il;
 		
-		if( collideConvexConvex( si, sj, xi, xj, manifold ) ){
+		if( collideConvexConvex( si, sj, xi, xj, wi, wj, manifold ) ){
 		    
 		    for( i = 0, il = manifold.length; i < il; i++ ){
 			m = manifold[i];
@@ -139,8 +139,6 @@ define([
 			c.rj.copy( m.point ).sub( xj );
 			
 			contacts.push( c );
-			
-			console.log( vec+"",c.ri+"", c.rj+"");
 			
 			bi.trigger("collide", bj );
 			bj.trigger("collide", bi );
@@ -167,17 +165,11 @@ define([
 			case BOX:
 			case CONVEX:
 			    
-			    sj.calculateWorldVertices( xj, wj );
-			    sj.calculateWorldNormals( wj );
-			    
 			    this.circleConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;
 		    }
 		}
 		else if( si.type === BOX || si.type === CONVEX ){
-		    
-		    si.calculateWorldVertices( xi, wi );
-		    si.calculateWorldNormals( wi );
 		    
 		    switch( sj.type ){
 			
@@ -187,9 +179,6 @@ define([
 			
 			case BOX:
 			case CONVEX:
-			    
-			    sj.calculateWorldVertices( xj, wj );
-			    sj.calculateWorldNormals( wj );
 			    
 			    this.convexConvex( contacts, bi, bj, si, sj, xi, xj, wi, wj );
 			    break;

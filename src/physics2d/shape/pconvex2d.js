@@ -14,7 +14,8 @@ define([
 	
         
 	function PConvex2D( vertices ){
-	    var i, il, v1, v2, worldVertices, worldNormals, verts, normal, normals;
+	    var v1, v2, verts, normals,
+		i, il;
 	    
 	    PShape2D.call( this );
 	    
@@ -29,18 +30,11 @@ define([
 	    
 	    this.normals = normals = [];
 	    
-	    this.worldVertices = worldVertices = [];
-	    this.worldNormals = worldNormals = [];
-	    
 	    for( i = 0, il = verts.length; i < il; i++ ){
 		v1 = verts[i];
 		v2 = verts[i+1] || verts[0];
 		
-		worldVertices[i] = v1.clone();
-		
-		normals[i] = normal = new Vec2().vsub( v2, v1 ).perpR();
-		
-		worldNormals[i] = normal.clone();
+		normals[i] = new Vec2().vsub( v2, v1 ).perpR(); 
 	    }
 	    
 	    this.calculateAABB();
@@ -151,35 +145,6 @@ define([
 	    }
 	    
 	    this.volume = volume;
-	};
-
-
-	PConvex2D.prototype.calculateWorldVertices = function( position, rotation ){
-	    var vertices = this.vertices,
-		worldVertices = this.worldVertices,
-		worldVertex, i, il;
-	    
-	    for( i = 0, il = vertices.length; i < il; i++ ){
-		worldVertex = worldVertices[i];
-		
-		worldVertex.copy( vertices[i] );
-		worldVertex.rotate( rotation );
-		worldVertex.add( position );
-	    }
-	};
-
-
-	PConvex2D.prototype.calculateWorldNormals = function( rotation ){
-	    var normals = this.normals,
-		worldNormals = this.worldNormals,
-		worldNormal, i, il;
-	    
-	    for( i = 0, il = normals.length; i < il; i++ ){
-		worldNormal = worldNormals[i];
-		
-		worldNormal.copy( normals[i] );
-		worldNormal.rotate( rotation );
-	    }
 	};
 	
         

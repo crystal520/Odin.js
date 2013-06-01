@@ -8,14 +8,16 @@ define([
 	"physics2d/psolver2d",
 	"physics2d/collision/pbroadphase2d",
 	"physics2d/collision/pnearphase2d",
+	"physics2d/constraints/pfriction2d",
 	"physics2d/shape/pshape2d",
 	"physics2d/body/pparticle2d",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D ){
+    function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PFriction2D, PShape2D, PParticle2D, PBody2D ){
         "use strict";
 	
 	var pow = Math.pow,
+	    mMax = Math.max,
 	    
 	    CIRCLE = PShape2D.CIRCLE,
 	    BOX = PShape2D.BOX,
@@ -42,6 +44,7 @@ define([
 	    this.bodies = [];
 	    
 	    this.contacts = [];
+	    this.frictions = [];
 	    
 	    this.pairsi = [];
 	    this.pairsj = [];
@@ -109,6 +112,7 @@ define([
 		lastTime = 0,
 		ddt = 1 / 60,
 		time = 0,
+		frictionsPool = [],
 		now, startTime = Date.now(),
 		performance = performance || {};
 		
@@ -130,13 +134,15 @@ define([
 		    profile = this.profile, profileStart,
 		    
 		    gravity = this.gravity,
+		    gn = gravity.len(),
 		    bodies = this.bodies,
 		    solver = this.solver,
 		    solverConstraints = solver.constraints,
 		    pairsi = this.pairsi, pairsj = this.pairsj,
-		    c, contacts = this.contacts,
+		    c, c1, c2, bi, bj, mu, mug,
+		    frictions = this.frictions, contacts = this.contacts,
 		    
-		    body, sleepState, type, shape, shapeType, force, vel, linearDamping, pos, pos0, mass, invMass, invInertia,
+		    body, type, force, vel, linearDamping, pos, mass, invMass,
 		    i, il;
 		
 		this.time = time += dt;
@@ -167,11 +173,47 @@ define([
 		    
 		    if( debug ) profileStart = now();
 		    
+		    for( i = 0, il = frictions.length; i < il; i++ ){
+			frictionsPool.push( frictions[i] );
+		    }
+		    frictions.length = 0;
+		    
 		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
 		    
+		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
-			solverConstraints.push( contacts[i] );
+			c = contacts[i];
+			solverConstraints.push( c );
+			
+			bi = c.bi; bj = c.bj;
+			mu = mMax( bi.friction, bj.friction );
+			
+			if( mu > 0 ){
+			    mug = mu * gn;
+			    mass = bi.invMass + bj.invMass;
+			    mass = mass > 0 ? 1 / mass : mass;
+			    
+			    c1 = frictionsPool.length ? frictionsPool.pop() : new PFriction2D( bi, bj, mug * mass );
+			    c2 = frictionsPool.length ? frictionsPool.pop() : new PFriction2D( bi, bj, mug * mass );
+			    frictions.push( c1, c2 );
+			    
+			    c1.bi = c2.bi = bi;
+			    c1.bj = c2.bj = bj;
+			    c1.min = c2.min = -mug * mass;
+			    c1.max = c2.max = mug * mass;
+			    
+			    c1.ri.copy( c.ri );
+			    c1.rj.copy( c.rj );
+			    c2.ri.copy( c.ri );
+			    c2.rj.copy( c.rj );
+			    
+			    c1.t.copy( c.n ).perpL();
+			    c2.t.copy( c.n ).perpR();
+			    
+			    solverConstraints.push( c1, c2 );
+			}
 		    }
+		    
 		    
 		    if( debug ) profile.nearphase = now() - profileStart;
 		    
@@ -189,18 +231,13 @@ define([
 		    for( i = 0, il = bodies.length; i < il; i++ ){
 			body = bodies[i];
 			
-			sleepState = body.sleepState;
 			type = body.type;
-			shape = body.shape;
-			shapeType = shape.type
 			force = body.force;
 			vel = body.velocity;
 			linearDamping = body.linearDamping;
 			pos = body.position;
-			pos0 = body._position0;
 			mass = body.mass;
 			invMass = body.invMass;
-			invInertia = body.invInertia;
 			
 			body.trigger("prestep");
 			
@@ -217,9 +254,9 @@ define([
 			    vel.x += force.x * invMass * dt;
 			    vel.y += force.y * invMass * dt;
 			    
-			    if( body.angularVelocity !== undefined ) body.angularVelocity += body.torque * invInertia * dt;
+			    if( body.angularVelocity !== undefined ) body.angularVelocity += body.torque * body.invInertia * dt;
 			    
-			    if( sleepState !== SLEEPING ){
+			    if( body.sleepState !== SLEEPING ){
 				pos.x += vel.x * dt;
 				pos.y += vel.y * dt;
 				

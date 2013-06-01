@@ -81,11 +81,12 @@ define([
 			    
 			    deltaLambda = invC * ( B - relativeLambda - c.eps * lambda );
 			    
+			    deltaLambda = clamp( deltaLambda, c.min, c.max );
+			    lambda[i] += deltaLambda;
+			    
 			    deltaLambdaTotal += deltaLambda;
 			    
-			    deltaLambda = clamp( deltaLambda, c.min, c.max );
 			    c.addToLambda( deltaLambda );
-			    lambda[i] += deltaLambda;
 			}
 			
 			if( deltaLambdaTotal * deltaLambdaTotal < toleranceSq ) break;

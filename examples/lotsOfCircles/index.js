@@ -70,7 +70,7 @@ require(
 		this.rotate( Math.PI*0.5*Time.delta );
 	    });
 	    
-	    scene.add( ground, wallLeft, wallRight, spinner );
+	    scene.add( ground, wallLeft, wallRight );
 	    
 	    for( var i = 0; i < 256; i++ ){
 		r = Mathf.randFloat( 0.5, 1 );
