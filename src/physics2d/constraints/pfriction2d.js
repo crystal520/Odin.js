@@ -21,6 +21,9 @@ define([
 	    
 	    this.ri = new Vec2;
 	    this.rj = new Vec2;
+	    
+	    this.rixt = 0;
+	    this.rjxt = 0;
 	}
 	
 	Class.extend( PFriction2D, PConstraint2D );
@@ -60,6 +63,9 @@ define([
 		
 		B = -a * Gq - b * GW - h * GiMf;
 	    
+	    this.rixt = rix * ty - riy * tx;
+	    this.rjxt = rjx * ty - rjy * tx;
+	    
 	    return B;
 	};
 	
@@ -71,16 +77,22 @@ define([
 		bi = this.bi,
 		bj = this.bj,
 		
+		invInertiai = bi.invInertia,
+		invInertiaj = bj.invInertia,
+		
 		ri = this.ri,
 		rj = this.rj,
+		
+		rixt = this.rixt,
+		rjxt = this.rjxt,
 		
 		wi = bi.angularVelocity,
 		wj = bj.angularVelocity,
 		
 		C = bi.invMass + bj.invMass + this.eps;
 		
-	    C += bi.invInertia * ( ri.x * ty - ri.y * tx );
-	    C += bj.invInertia * ( rj.x * ty - rj.y * tx );
+	    C += invInertiai * rixt;
+	    C += invInertiaj * rjxt;
 	    
 	    return C;
 	};
@@ -96,19 +108,24 @@ define([
 		ri = this.ri,
 		rj = this.rj,
 		
+		rixt = this.rixt,
+		rjxt = this.rjxt,
+		
 		vlambdai = bi.vlambda,
 		vlambdaj = bj.vlambda,
+		wlambdai = bi.wlambda,
+		wlambdaj = bj.wlambda,
 		
 		lambdax = vlambdaj.x - vlambdai.x,
 		lambday = vlambdaj.y - vlambdai.y,
 		
 		relativeLambda = lambdax * tx + lambday * ty;
 	    
-	    if( bi.wlambda !== undefined ){
-		relativeLambda -= bi.wlambda * ( ri.x * ty - ri.y * tx );
+	    if( wlambdai !== undefined ){
+		relativeLambda -= wlambdai * rixt;
 	    }
-	    if( bj.wlambda !== undefined ){
-		relativeLambda += bj.wlambda * ( rj.x * ty - rj.y * tx );
+	    if( wlambdaj !== undefined ){
+		relativeLambda += wlambdaj * rjxt;
 	    }
 	    
 	    return relativeLambda;
@@ -122,11 +139,18 @@ define([
 		bi = this.bi,
 		bj = this.bj,
 		
+		invInertiai = bi.invInertia,
+		invInertiaj = bj.invInertia,
+		
 		ri = this.ri,
 		rj = this.rj,
 		
+		rixt = this.rixt,
+		rjxt = this.rjxt,
+		
 		vlambdai = bi.vlambda,
 		vlambdaj = bj.vlambda,
+		
 		invMassi = bi.invMass,
 		invMassj = bj.invMass;
 		
@@ -137,10 +161,10 @@ define([
 	    vlambdaj.y += deltaLambda * invMassj * ty;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= deltaLambda * bi.invInertia * ( ri.x * ty - ri.y * tx );
+		bi.wlambda -= deltaLambda * invInertiai * rixt;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += deltaLambda * bj.invInertia * ( rj.x * ty - rj.y * tx );
+		bj.wlambda += deltaLambda * invInertiaj * rjxt;
 	    }
 	};
 	

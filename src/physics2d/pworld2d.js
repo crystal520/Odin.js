@@ -180,7 +180,6 @@ define([
 		    
 		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
 		    
-		    
 		    for( i = 0, il = contacts.length; i < il; i++ ){
 			c = contacts[i];
 			solverConstraints.push( c );
@@ -189,7 +188,7 @@ define([
 			mu = mMax( bi.friction, bj.friction );
 			
 			if( mu > 0 ){
-			    mug = mu * gn;
+			    mug = mu / gn;
 			    mass = bi.invMass + bj.invMass;
 			    mass = mass > 0 ? 1 / mass : mass;
 			    
@@ -202,18 +201,21 @@ define([
 			    c1.min = c2.min = -mug * mass;
 			    c1.max = c2.max = mug * mass;
 			    
-			    c1.ri.copy( c.ri );
-			    c1.rj.copy( c.rj );
-			    c2.ri.copy( c.ri );
-			    c2.rj.copy( c.rj );
+			    c1.ri.x = c2.ri.x = c.ri.x;
+			    c1.ri.y = c2.ri.y = c.ri.y;
 			    
-			    c1.t.copy( c.n ).perpL();
-			    c2.t.copy( c.n ).perpR();
+			    c1.rj.x = c2.rj.x = c.rj.x;
+			    c1.rj.y = c2.rj.y = c.rj.y;
+			    
+			    c1.t.x = c.n.y;
+			    c1.t.y = -c.n.x;
+			    
+			    c2.t.x = -c.n.y;
+			    c2.t.y = c.n.x;
 			    
 			    solverConstraints.push( c1, c2 );
 			}
 		    }
-		    
 		    
 		    if( debug ) profile.nearphase = now() - profileStart;
 		    

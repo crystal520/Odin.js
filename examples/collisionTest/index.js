@@ -29,7 +29,7 @@ require(
 	    });
 	    
 	    ball = new GameObject2D({
-		position: new Vec2( 0.5, 2 ),
+		position: new Vec2( 0, 2 ),
 		components: [
 		    new Sprite({
 			image: player,
@@ -41,7 +41,6 @@ require(
 			height: 1
 		    }),
 		    new RigidBody({
-			shape: RigidBody.CIRCLE,
 			mass: 1,
 			radius: 0.5
 		    })
@@ -61,7 +60,6 @@ require(
 			height: 1
 		    }),
 		    new RigidBody({
-			shape: RigidBody.CIRCLE,
 			mass: 0,
 			radius: 0.5
 		    })

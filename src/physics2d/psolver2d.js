@@ -80,8 +80,8 @@ define([
 			    relativeLambda = c.calculateRelativeLambda();
 			    
 			    deltaLambda = invC * ( B - relativeLambda - c.eps * lambda );
-			    
 			    deltaLambda = clamp( deltaLambda, c.min, c.max );
+			    
 			    lambda[i] += deltaLambda;
 			    
 			    deltaLambdaTotal += deltaLambda;
