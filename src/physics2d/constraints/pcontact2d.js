@@ -127,8 +127,8 @@ define([
 		invMassj = bj.invMass,
 		vlambdaj = bj.vlambda,
 		
-		lambdax = deltalambda  * nx,
-		lambday = deltalambda  * ny;
+		lambdax = deltalambda * nx,
+		lambday = deltalambda * ny;
 	    
 	    vlambdai.x -= lambdax * invMassi;
 	    vlambdai.y -= lambday * invMassi;
@@ -137,10 +137,10 @@ define([
 	    vlambdaj.y += lambday * invMassj;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= ( lambdax * ri.y - lambday * ri.x ) * bi.invInertia;
+		bi.wlambda -= ( ri.x * lambday - ri.y * lambdax ) * bi.invInertia;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += ( lambdax * rj.y - lambday * rj.x ) * bj.invInertia;
+		bj.wlambda += ( rj.x * lambday - rj.y * lambdax ) * bj.invInertia;
 	    }
 	};
 	
