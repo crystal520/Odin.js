@@ -159,7 +159,7 @@ define(
         };
         
         
-        Mathf.prototype.radstoDegs = function( x ){
+        Mathf.prototype.radsToDegs = function( x ){
 	    
 	    return standardAngle( x * TO_DEGS );
         };

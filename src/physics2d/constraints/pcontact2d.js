@@ -4,172 +4,143 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
-	"physics2d/constraints/pconstraint2d",
+	"physics2d/constraints/pequation2d"
+	
     ],
-    function( Class, Vec2, PConstraint2D ){
+    function( Class, Vec2, PEquation2D ){
         "use strict";
 	
-	var sqrt = Math.sqrt,
-	    min = Math.min;
+	var min = Math.min;
 	
         
 	function PContact2D( bi, bj ){
 	    
-	    PConstraint2D.call( this, bi, bj, 0, 1e6 );
+	    PEquation2D.call( this, bi, bj, 0, 1e6 );
 	    
 	    this.n = new Vec2;
 	    
 	    this.ri = new Vec2;
 	    this.rj = new Vec2;
 	    
-	    this.rixn = 0;
-	    this.rjxn = 0;
+	    this.stiffness = 1e7;
+	    this.relaxation = 3;
 	}
 	
-	Class.extend( PContact2D, PConstraint2D );
+	Class.extend( PContact2D, PEquation2D );
 	
 	
 	PContact2D.prototype.calculateB = function( h ){
-	    var a = this.a, b = this.b, eps = this.eps,
+	    var a = this.a, b = this.b,
 		
-		n = this.n,
-		nx = n.x, ny = n.y,
+		n = this.n, nx = n.x, ny = n.y,
+		
+		ri = this.ri, rix = ri.x, riy = ri.y,
+		rj = this.rj, rjx = rj.x, rjy = rj.y,
 		
 		bi = this.bi,
-		ri = this.ri,
-		rix = ri.x, riy = ri.y,
-		invMassi = bi.invMass,
-		invInertiai = bi.invInertia,
+		invMassi = bi.invMass, invInertiai = bi.invInertia,
 		xi = bi.position, vi = bi.velocity, fi = bi.force,
 		wi = bi.angularVelocity, ti = bi.torque,
 		
 		bj = this.bj,
-		rj = this.rj,
-		rjx = rj.x, rjy = rj.y,
-		invMassj = bj.invMass,
-		invInertiaj = bj.invInertia,
+		invMassj = bj.invMass, invInertiaj = bj.invInertia,
 		xj = bj.position, vj = bj.velocity, fj = bj.force,
 		wj = bj.angularVelocity, tj = bj.torque,
 		
 		e = 1 + min( bi.elasticity, bj.elasticity ),
 		
-		px = ( xj.x + rjx ) - ( xi.x + rix ),
-		py = ( xj.y + rjy ) - ( xi.y + riy ),
+		Gqx = xj.x + rjx - xi.x - rix,
+		Gqy = xj.y + rjy - xi.y - riy,
+		Gq = Gqx * nx + Gqy * ny,
 		
-		dvx = e * vj.x + ( -wj * rjy ) - e * vi.x - ( -wi * riy ),
-		dvy = e * vj.y + ( wj * rjx ) - e * vi.y - ( wi * rix ),
+		GWx = vj.x + ( -wj * rjy ) - vi.x - ( -wi * riy ),
+		GWy = vj.y + ( wj * rjx ) - vi.y - ( wi * rix ),
+		GW = e * GWx * nx + e * GWy * ny,
 		
-		dfx = fj.x * invMassj + ( -tj * rjy * invInertiaj ) - fi.x * invMassi - ( -ti * riy * invInertiai ),
-		dfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
-		
-		Gq = px * nx + py * ny,
-		GW = dvx * nx + dvy * ny,
-		GiMf = dfx * nx + dfy * ny,
-		
-		B = -a * Gq - b * GW - h * GiMf;
+		GiMfx = fj.x * invMassj + ( -tj * rjy * invInertiaj ) - fi.x * invMassi - ( -ti * riy * invInertiai ),
+		GiMfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
+		GiMf = GiMfx * nx + GiMfy * ny;
 	    
-	    this.rixn = rix * ny - riy * nx;
-	    this.rjxn = rjx * ny - rjy * nx;
-	    
-	    return B;
+	    return -a * Gq - b * GW - h * GiMf;
 	};
 	
 	
 	PContact2D.prototype.calculateC = function(){
-	    var n = this.n,
-		nx = n.x, ny = n.y,
+	    var n = this.n, nx = n.x, ny = n.y,
 		
 		bi = this.bi,
 		bj = this.bj,
 		
-		invInertiai = bi.invInertia,
-		invInertiaj = bj.invInertia,
-		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixn = this.rixn,
-		rjxn = this.rjxn,
-		
-		wi = bi.angularVelocity,
-		wj = bj.angularVelocity,
-		
 		C = bi.invMass + bj.invMass + this.eps;
-		
-	    C += invInertiai * rixn;
-	    C += invInertiaj * rjxn;
+	    
+	    C += bi.invInertia * ( ri.x * ny - ri.y * nx );
+	    C += bj.invInertia * ( rj.x * ny - rj.y * nx );
 	    
 	    return C;
 	};
 	
 	
-	PContact2D.prototype.calculateRelativeLambda = function(){
-	    var n = this.n,
-		nx = n.x, ny = n.y,
-		
-		bi = this.bi,
-		bj = this.bj,
+	PContact2D.prototype.calculateGWlambda = function(){
+	    var n = this.n, nx = n.x, ny = n.y,
 		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixn = this.rixn,
-		rjxn = this.rjxn,
-		
+		bi = this.bi,
 		vlambdai = bi.vlambda,
-		vlambdaj = bj.vlambda,
 		wlambdai = bi.wlambda,
+		
+		bj = this.bj,
+		vlambdaj = bj.vlambda,
 		wlambdaj = bj.wlambda,
 		
-		lambdax = vlambdaj.x - vlambdai.x,
-		lambday = vlambdaj.y - vlambdai.y,
+		ulambdax = vlambdaj.x - vlambdai.x,
+		ulambday = vlambdaj.y - vlambdai.y,
 		
-		relativeLambda = lambdax * nx + lambday * ny;
+		GWlambda = ulambdax * nx + ulambday * ny;
 	    
 	    if( wlambdai !== undefined ){
-		relativeLambda -= wlambdai * rixn;
+		GWlambda -= wlambdai * ( ri.x * ny - ri.y * nx );
 	    }
 	    if( wlambdaj !== undefined ){
-		relativeLambda += wlambdaj * rjxn;
+		GWlambda += wlambdaj * ( rj.x * ny - rj.y * nx );
 	    }
 	    
-	    return relativeLambda;
+	    return GWlambda;
 	};
 	
 	
-	PContact2D.prototype.addToLambda = function( deltaLambda ){
-	    var n = this.n,
-		nx = n.x, ny = n.y,
-		
-		bi = this.bi,
-		bj = this.bj,
-		
-		invInertiai = bi.invInertia,
-		invInertiaj = bj.invInertia,
+	PContact2D.prototype.addToWlambda = function( deltalambda ){
+	    var n = this.n, nx = n.x, ny = n.y,
 		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixn = this.rixn,
-		rjxn = this.rjxn,
-		
+		bi = this.bi,
+		invMassi = bi.invMass,
 		vlambdai = bi.vlambda,
+		
+		bj = this.bj,
+		invMassj = bj.invMass,
 		vlambdaj = bj.vlambda,
 		
-		invMassi = bi.invMass,
-		invMassj = bj.invMass;
-		
-	    vlambdai.x -= deltaLambda * invMassi * nx;
-	    vlambdai.y -= deltaLambda * invMassi * ny;
+		lambdax = deltalambda  * nx,
+		lambday = deltalambda  * ny;
 	    
-	    vlambdaj.x += deltaLambda * invMassj * nx;
-	    vlambdaj.y += deltaLambda * invMassj * ny;
+	    vlambdai.x -= lambdax * invMassi;
+	    vlambdai.y -= lambday * invMassi;
+	    
+	    vlambdaj.x += lambdax * invMassj;
+	    vlambdaj.y += lambday * invMassj;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= deltaLambda * invInertiai * rixn;
+		bi.wlambda -= ( lambdax * ri.y - lambday * ri.x ) * bi.invInertia;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += deltaLambda * invInertiaj * rjxn;
+		bj.wlambda += ( lambdax * rj.y - lambday * rj.x ) * bj.invInertia;
 	    }
 	};
 	

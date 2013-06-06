@@ -48,25 +48,17 @@ define(
 	
 	
 	Time.prototype.now = function(){
-	    var now, startTime = Date.now(),
-		performance = performance || {};
-		
-	    now = performance.now = function(){
-		return (
-		    performance.now ||
-		    performance.mozNow ||
-		    performance.msNow ||
-		    performance.oNow ||
-		    performance.webkitNow ||
-		    function(){
-			return Date.now() - startTime; 
+	    var startTime = Date.now(),
+		w = window || {},
+		performance = w.performance || function(){
+		    this.now = function(){
+			return Date.now() - startTime;
 		    }
-		);
-	    }();
+		};
 	    
 	    return function(){
 		
-		return now() * 0.001;
+		return performance.now() * 0.001;
 	    }
 	}();
 	

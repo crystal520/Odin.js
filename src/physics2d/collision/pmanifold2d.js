@@ -31,17 +31,12 @@ define([
 	
 	
 	PManifold2D.prototype.add = function( point ){
-	    var manifold;
-	    
-	    if( manifoldPool.length ){
-		manifold = manifoldPool.pop();
-	    }
-	    else{
-		manifold = new Manifold;
-	    }
+	    var manifold = manifoldPool.length ? manifoldPool.pop() : new Manifold,
+		mpoint = manifold.point;
 	    
 	    manifold.normal = this.normal;
-	    manifold.point.copy( point );
+	    mpoint.x = point.x;
+	    mpoint.y = point.y;
 	    
 	    this.push( manifold );
 	};
@@ -51,6 +46,7 @@ define([
 	    var idx = this.indexOf( manifold );
 	    
 	    if( idx !== -1 ){
+		manifoldPool.push( manifold );
 		this.splice( idx, 1 );
 	    }
 	};
@@ -68,13 +64,15 @@ define([
 	
 	
 	PManifold2D.prototype.filter = function( normal, offset ){
-	    var manifold, i = this.length;
+	    var manifold, i;
 	    
-	    while( i-- ){
+	    for( i = this.length; i--; ){
 		manifold = this[i];
 		manifold.depth = normal.dot( manifold.point ) - offset;
 		
-		if( manifold.depth < 0 ) this.remove( manifold );
+		if( manifold.depth < 0 ){
+		    this.remove( manifold );
+		}
 	    }
 	};
 	

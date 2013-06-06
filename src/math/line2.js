@@ -91,7 +91,19 @@ define([
 	};
         
         
-        Line2.prototype.vec = function( target ){
+        Line2.prototype.center = function( target ){
+	    target = target || new Vec2;
+	    
+	    var start = this.start, end = this.end;
+	    
+	    target.x = ( start.x + end.x ) * 0.5;
+	    target.y = ( start.y + end.y ) * 0.5;
+	    
+	    return target;
+	};
+        
+        
+        Line2.prototype.delta = function( target ){
 	    target = target || new Vec2;
 	    
 	    var start = this.start, end = this.end;
@@ -120,6 +132,11 @@ define([
 	    end.y *= el;
 	    
 	    return this;
+	};
+        
+        
+        Line2.prototype.norm = function(){
+	    
 	};
         
         

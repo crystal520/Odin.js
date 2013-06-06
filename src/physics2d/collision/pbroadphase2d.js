@@ -3,18 +3,16 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"math/vec2",
 	"math/aabb2",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Vec2, AABB2, PBody2D ){
+    function( Class, AABB2, PBody2D ){
         "use strict";
 	
-	var DYNAMIC = PBody2D.DYNAMIC,
-	    STATIC = PBody2D.STATIC,
-	    KINEMATIC = PBody2D.KINEMATIC,
+	var intersects = AABB2.intersects,
 	    
-	    intersects = AABB2.intersects;
+	    STATIC = PBody2D.STATIC,
+	    KINEMATIC = PBody2D.KINEMATIC;
 	
         
 	function PBroadphase2D( opts ){
@@ -32,8 +30,8 @@ define([
 	    
 	    return !(
 		bi.filterGroup !== bj.filterGroup ||
-		( bi.type === KINEMATIC || bi.type === STATIC || bi.isSleeping() ) &&
-		( bj.type === KINEMATIC || bj.type === STATIC || bj.isSleeping() ) ||
+		( ( bi.type === KINEMATIC || bi.type === STATIC || bi.isSleeping() ) &&
+		( bj.type === KINEMATIC || bj.type === STATIC || bj.isSleeping() ) ) ||
 		!bi.shape && !bj.shape
 	    );
 	};
@@ -45,31 +43,30 @@ define([
 	    
 	    pairsi.length = pairsj.length = 0;
 	    
-	    for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
-		bi = bodies[i];
-		bj = bodies[j];
-		
-		if( !this.needBroadphaseTest( bi, bj ) ){
-		    continue;
-		}
-		
-		this.intersectionTest( bi, bj, pairsi, pairsj );
-	    }
-	};
-	
-	
-	PBroadphase2D.prototype.intersectionTest = function( bi, bj, pairsi, pairsj ){
-	    
 	    if( this.useBoundingRadius ){
-		this.boundingRadiusBroadphase( bi, bj, pairsi, pairsj );
+		
+		for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
+		    bi = bodies[i]; bj = bodies[j];
+		    
+		    if( !this.needBroadphaseTest( bi, bj ) ) continue;
+		    
+		    this.boundingRadiusBroadphase( bi, bj, pairsi, pairsj );
+		}
 	    }
 	    else{
-		this.AABBBroadphase( bi, bj, pairsi, pairsj );
+		
+		for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
+		    bi = bodies[i]; bj = bodies[j];
+		    
+		    if( !this.needBroadphaseTest( bi, bj ) ) continue;
+		    
+		    this.AABBBroadphase( bi, bj, bi.aabb, bj.aabb, pairsi, pairsj );
+		}
 	    }
 	};
 	
 	
-	PBroadphase2D.prototype.AABBBroadphase = function( bi, bj, pairsi, pairsj ){
+	PBroadphase2D.prototype.AABBBroadphase = function( bi, bj, biAABB, bjAABB, pairsi, pairsj ){
 	    
 	    if( bi.aabbNeedsUpdate ){
 		bi.calculateAABB();
@@ -78,7 +75,7 @@ define([
 		bj.calculateAABB();
 	    }
 	    
-	    if( intersects( bi.aabb, bj.aabb ) ){
+	    if( intersects( biAABB, bjAABB ) ){
 		pairsi.push( bi );
 		pairsj.push( bj );
 	    }

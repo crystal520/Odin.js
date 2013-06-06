@@ -386,15 +386,6 @@ define([
         };
         
         
-        Vec3.prototype.getPositionAffine = function( m ){
-            
-            this.x = m.x;
-            this.y = m.y;
-            
-            return this;
-        };
-        
-        
         Vec3.prototype.getPositionMat4 = function( m ){
             var me = m.elements;
 	    

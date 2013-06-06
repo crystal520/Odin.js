@@ -125,11 +125,11 @@ define([
 		    this.clear();
 		}
 		
-		for( i = 0, il = sprites.length; i < il; i++ ){
+		for( i = sprites.length; i--; ){
 		    this.renderSprite( sprites[i], camera );
 		}
 		
-		for( i = 0, il = rigidbodies.length; i < il; i++ ){
+		for( i = rigidbodies.length; i--; ){
 		    this.renderRigidBody( rigidbodies[i], camera );
 		}
 	    };

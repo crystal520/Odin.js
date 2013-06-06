@@ -19,7 +19,6 @@ define(
 	Odin.Time = requirejs("base/time");
 	Odin.Utils = requirejs("base/utils");
 	
-	Odin.Affine = require("math/affine");
 	Odin.Bounds = requirejs("math/bounds");
 	Odin.Color = requirejs("math/color");
 	Odin.Mathf = requirejs("math/mathf");

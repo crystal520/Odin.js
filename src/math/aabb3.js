@@ -2,12 +2,13 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
+	"math/mathf",
 	"math/vec3"
     ],
-    function( Vec3 ){
+    function( Mathf, Vec3 ){
         "use strict";
         
-	var vEquals = Vec3.equals,
+	var equals = Mathf.equals,
 	    abs = Math.abs,
 	    cos = Math.cos,
 	    sin = Math.sin;
@@ -74,11 +75,13 @@ define([
         
         
         AABB3.prototype.contains = function( point ){
-            
+            var min = this.min, max = this.max,
+		px = point.x, py = point.y, pz = point.z;
+	    
 	    return !(
-		point.x < this.min.x || point.x > this.max.x ||
-                point.y < this.min.y || point.y > this.max.y ||
-                point.z < this.min.z || point.z > this.max.z
+		px < this.min.x || px > this.max.x ||
+                py < this.min.y || py > this.max.y ||
+                pz < this.min.z || pz > this.max.z
 	    );
 	};
         
@@ -103,10 +106,16 @@ define([
         
         
         AABB3.prototype.equals = function( other ){
-            
+            var amin = this.min, amax = this.max,
+		bmin = other.min, bmax = other.max;
+	    
             return !(
-                !vEquals( this.min, other.min ) ||
-                !vEquals( this.max, other.max )
+                !equals( amin.x, bmin.x ) ||
+                !equals( amin.y, bmin.y ) ||
+                !equals( amin.z, bmin.z ) ||
+                !equals( amax.x, bmax.x ) ||
+                !equals( amax.y, bmax.y ) ||
+                !equals( amax.z, bmax.z )
             );
 	};
         
@@ -123,10 +132,16 @@ define([
         
         
         AABB3.equals = function( a, b ){
-            
+            var amin = a.min, amax = a.max,
+		bmin = b.min, bmax = b.max;
+	    
             return !(
-                !vEquals( a.min, b.min ) ||
-                !vEquals( a.max, b.max )
+                !equals( amin.x, bmin.x ) ||
+                !equals( amin.y, bmin.y ) ||
+                !equals( amin.z, bmin.z ) ||
+                !equals( amax.x, bmax.x ) ||
+                !equals( amax.y, bmax.y ) ||
+                !equals( amax.z, bmax.z )
             );
 	};
         

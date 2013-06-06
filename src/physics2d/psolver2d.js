@@ -2,14 +2,12 @@ if( typeof define !== "function" ){
     var define = require("amdefine")( module );
 }
 define([
-	"base/class",
-	"math/mathf",
-	"math/vec2"
+	"base/class"
     ],
-    function( Class, Mathf, Vec2 ){
+    function( Class ){
         "use strict";
 	
-	var clamp = Mathf.clamp;
+	var abs = Math.abs;
 	
         
 	function PSolver2D(){
@@ -18,7 +16,7 @@ define([
 	    
 	    this.constraints = [];
 	    
-	    this.iterations = 25;
+	    this.iterations = 10;
 	    this.tolerance = 1e-6;
 	}
 	
@@ -28,7 +26,7 @@ define([
 	PSolver2D.prototype.solve = function(){
 	    var lambdas = [], invCs = [], Bs = [];
 	    
-	    return function( world, h ){
+	    return function( world, dt ){
 		var iterations = this.iterations,
 		
 		    tolerance = this.tolerance,
@@ -40,62 +38,71 @@ define([
 		    bodies = world.bodies,
 		    bodiesLen = bodies.length,
 		    
-		    B, invC, deltaLambda, deltaLambdaTotal, relativeLambda, lambda,
+		    B, invC, GWlambda, deltalambda, deltalambdaTotal, lambda,
 		    
-		    body, force, c, i, iter;
+		    body, velocity, vlambda, c, i, iter;
 		    
 		if( constraintsLen ){
 		    
-		    for( i = 0; i < bodiesLen; i++ ){
+		    for( i = bodiesLen; i--; ){
 			body = bodies[i];
+			vlambda = body.vlambda;
 			
-			body.vlambda.x = 0;
-			body.vlambda.y = 0;
+			vlambda.x = 0;
+			vlambda.y = 0;
 			
 			if( body.wlambda !== undefined ) body.wlambda = 0;
 		    }
 		    
 		    
-		    for( i = 0; i < constraintsLen; i++ ){
+		    for( i = constraintsLen; i--; ){
 			c = constraints[i];
 			
-			c.updateSpook( h );
+			c.calculateConstants( dt );
 			
-			lambdas[i] = 0
-			Bs[i] = c.calculateB( h );
+			lambdas[i] = 0;
+			Bs[i] = c.calculateB( dt );
 			invCs[i] = 1 / c.calculateC();
 		    }
 		    
 		    
 		    for( iter = 0; iter < iterations; iter++ ){
 			
-			deltaLambdaTotal = 0;
+			deltalambdaTotal = 0;
 			
-			for( i = 0; i < constraintsLen; i++ ){
+			for( i = constraintsLen; i--; ){
 			    c = constraints[i];
 			    
 			    B = Bs[i];
 			    invC = invCs[i];
 			    lambda = lambdas[i];
-			    relativeLambda = c.calculateRelativeLambda();
+			    GWlambda = c.calculateGWlambda();
+			    deltalambda = invC * ( B - GWlambda - c.eps * lambda );
 			    
-			    deltaLambda = invC * ( B - relativeLambda - c.eps * lambda );
-			    deltaLambda = clamp( deltaLambda, c.min, c.max );
+			    if( lambda + deltalambda < c.minForce ){
+				deltalambda = c.minForce - lambda;
+			    }
+			    else if( lambda + deltalambda > c.maxForce ){
+				deltalambda = c.maxForce - lambda;
+			    }
 			    
-			    lambda[i] += deltaLambda;
+			    lambdas[i] += deltalambda;
+			    deltalambdaTotal += abs( deltalambda );
 			    
-			    deltaLambdaTotal += deltaLambda;
-			    
-			    c.addToLambda( deltaLambda );
+			    c.addToWlambda( deltalambda );
 			}
 			
-			if( deltaLambdaTotal * deltaLambdaTotal < toleranceSq ) break;
+			if( deltalambdaTotal * deltalambdaTotal < toleranceSq ) break;
 		    }
 		    
 		    
-		    for( i = 0; i < bodiesLen; i++ ){
+		    for( i = bodiesLen; i--; ){
 			body = bodies[i];
-			body.velocity.add( body.vlambda );
+			velocity = body.velocity;
+			vlambda = body.vlambda;
+			
+			velocity.x += vlambda.x;
+			velocity.y += vlambda.y;
 			
 			if( body.wlambda !== undefined ) body.angularVelocity += body.wlambda;
 		    }

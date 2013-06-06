@@ -34,7 +34,7 @@ define([
 	
 	
 	PShape2D.prototype.calculateWorldAABB = function( position, rotation ){
-	    throw new Error("calculateAABB not implemented for shape type "+ this.type );
+	    throw new Error("calculateWorldAABB not implemented for shape type "+ this.type );
 	};
 	
 	

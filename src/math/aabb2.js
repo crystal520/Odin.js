@@ -77,10 +77,12 @@ define([
         
         
         AABB2.prototype.contains = function( point ){
-            
+            var min = this.min, max = this.max,
+		px = point.x, py = point.y;
+	    
 	    return !(
-		point.x < this.min.x || point.x > this.max.x ||
-                point.y < this.min.y || point.y > this.max.y
+		px < min.x || px > max.x ||
+                py < min.y || py > max.y
 	    );
 	};
         

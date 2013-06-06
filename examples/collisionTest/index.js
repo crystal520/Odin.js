@@ -29,7 +29,7 @@ require(
 	    });
 	    
 	    ball = new GameObject2D({
-		position: new Vec2( 0, 2 ),
+		position: new Vec2( 0.5, 2 ),
 		components: [
 		    new Sprite({
 			image: player,
@@ -42,31 +42,26 @@ require(
 		    }),
 		    new RigidBody({
 			mass: 1,
+			linearDamping: new Vec2( 0.5, 0.5 ),
 			radius: 0.5
 		    })
 		]
 	    });
+	    scene.add( ball );
 	    
-	    ball2 = new GameObject2D({
-		position: new Vec2( 0, 0 ),
-		components: [
-		    new Sprite({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1
-		    }),
-		    new RigidBody({
-			mass: 0,
-			radius: 0.5
+	    for( var i = 1024; i--; ){
+		scene.add(
+		    new GameObject2D({
+			position: new Vec2( Mathf.randFloat( -8, 8 ), -i*0.25 ),
+			components: [
+			    new RigidBody({
+				mass: 0,
+				radius: 0.5
+			    })
+			]
 		    })
-		]
-	    });
-	    
-	    scene.add( ball, ball2 );
+		);
+	    }
 	    
 	    Mouse.on("wheel", function(){
 		camera.zoomBy( -this.wheel*Time.delta*4 );

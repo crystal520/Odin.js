@@ -10,6 +10,8 @@ define([
     function( Class, Vec2, PShape2D, PConvex2D ){
         "use strict";
 	
+	var sqrt = Math.sqrt;
+	
         
 	function PBox2D( extents ){
 	    
@@ -58,8 +60,11 @@ define([
 	
 	
 	PBox2D.prototype.calculateBoundingRadius = function(){
+	    var extents = this.extents,
+		x = extents.x, y = extents.y,
+		l = x * x + y * y;
 	    
-	    this.boundingRadius = this.extents.len();
+	    this.boundingRadius = l !== 0 ? sqrt( l ) : 0;
 	};
 	
 	

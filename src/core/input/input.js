@@ -49,10 +49,10 @@ define([
         
         Input.prototype.key = function(){
             var keys = Keyboard.keys,
-                key, a = 0, al = arguments.length;
+                key, i, il;
             
-            for( a; a < al; a++ ){
-                key = keys[ arguments[a] ];
+            for( i = 0, il = arguments.length; i < il; i++ ){
+                key = keys[ arguments[i] ];
                 
                 if( key && key.down ){
                     return true;
@@ -65,10 +65,10 @@ define([
         
         Input.prototype.keyDown = function(){
             var keys = Keyboard.keys,
-                key, a = 0, al = arguments.length;
+                key, i, il;
             
-            for( a; a < al; a++ ){
-                key = keys[ arguments[a] ];
+            for( i = 0, il = arguments.length; i < il; i++ ){
+                key = keys[ arguments[i] ];
                 
                 if( key && key.down && key._downFrame === ( Time.frame - 1 ) ){
                     return true;
@@ -81,10 +81,10 @@ define([
         
         Input.prototype.keyUp = function(){
             var keys = Keyboard.keys,
-                key, a = 0, al = arguments.length;
+                key, i, il;
             
-            for( a; a < al; a++ ){
-                key = keys[ arguments[a] ];
+            for( i = 0, il = arguments.length; i < il; i++ ){
+                key = keys[ arguments[i] ];
                 
                 if( key && !key.down && key._upFrame === ( Time.frame - 1 ) ){
                     return true;
@@ -100,10 +100,10 @@ define([
             if( Mouse.left && index == 0 ){
                 return true;
             }
-            if( Mouse.middle && index == 1 ){
+            else if( Mouse.middle && index == 1 ){
                 return true;
             }
-            if( Mouse.right && index == 2 ){
+            else if( Mouse.right && index == 2 ){
                 return true;
             }
             

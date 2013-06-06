@@ -34,10 +34,9 @@ define([
         
         
         Scene.prototype.forEach = function( callback ){
-            var children = this.children,
-                i, il;
+            var children = this.children, i;
             
-            for( i = 0, il = children.length; i < il; i++ ){
+            for( i = children.length; i--; ){
                 callback( children[i] );
             }
         };
@@ -45,10 +44,9 @@ define([
         
         Scene.prototype.add = function(){
             var children = this.children,
-                child, index,
-                i, il;
+                child, index, i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 child = arguments[i];
                 index = children.indexOf( child );
 		
@@ -78,10 +76,9 @@ define([
         
         Scene.prototype.remove = function(){
             var children = this.children,
-                child, index,
-                i, il;
+                child, index, i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 child = arguments[i];
                 index = children.indexOf( child );
                 
@@ -137,7 +134,7 @@ define([
 		this._sprites.sort( this.sort );
 	    }
 	    if( rigidbody ){
-		index = this._rigidbodies.indexOf( sprite );
+		index = this._rigidbodies.indexOf( rigidbody );
 		this._rigidbodies.splice( index, 1 );
 		this.world.remove( rigidbody );
 	    }
@@ -158,9 +155,9 @@ define([
             results = results || [];
             
             var children = this.children,
-                child, i, il;
-                
-            for( i = 0, il = children.length; i < il; i++ ){
+                child, i;
+            
+            for( i = children.length; i--; ){
                 child = children[i];
                 
                 if( child.hasTag( tag ) ){
@@ -174,9 +171,9 @@ define([
         
         Scene.prototype.findByName = function( name ){
             var children = this.children,
-                child, i, il;
-                
-            for( i = 0, il = children.length; i < il; i++ ){
+                child, i;
+            
+            for( i = children.length; i--; ){
                 child = children[i];
                 
                 if( child.name === name ){
@@ -190,14 +187,13 @@ define([
         
         
         Scene.prototype.update = function(){
-            var children = this.children,
-                i, il;
-                
+            var children = this.children, i;
+            
             this.trigger("update");
 	    
 	    this.world.update();
             
-            for( i = 0, il = children.length; i < il; i++ ){
+            for( i = children.length; i--; ){
                 children[i].update();
             }
             

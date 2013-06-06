@@ -4,13 +4,14 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
+	"math/mat2",
 	"math/aabb2",
 	"physics2d/body/pbody2d",
 	"physics2d/body/pparticle2d",
 	"physics2d/shape/pshape2d",
 	"physics2d/shape/pbox2d",
     ],
-    function( Class, Vec2, AABB2, PBody2D, PParticle2D, PShape2D, PBox2D ){
+    function( Class, Vec2, Mat2, AABB2, PBody2D, PParticle2D, PShape2D, PBox2D ){
         "use strict";
 	
 	var AWAKE = PParticle2D.AWAKE,
@@ -30,6 +31,7 @@ define([
 	    this.shape = opts.shape instanceof PShape2D ? opts.shape : new PBox2D;
 	    this.shape.body = this;
 	    
+	    this.R = new Mat2;
 	    this.rotation = opts.rotation !== undefined ? opts.rotation : 0;
 	    
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
@@ -57,59 +59,57 @@ define([
 	};
 
 
-	PRigidBody2D.prototype.applyForce = function(){
-	    var point = new Vec2;
+	PRigidBody2D.prototype.applyForce = function( addForce, worldPoint, wake ){
+	    var pos = this.pos,
+		force = this.force,
+		fx = addForce.x, fy = addForce.y,
+		px, py;
 	    
-	    return function( force, worldPoint, wake ){
-		var position = this.position;
-		
-		worldPoint = worldPoint || position;
-		
-		if( this.type === STATIC ){
-		    return;
-		}
-		
-		if( wake && this.sleepState === SLEEPING ){
-		    this.wake();
-		}
-		
-		point.x = worldPoint.x - position.x;
-		point.y = worldPoint.y - position.y;
-		
-		this.force.add( force );
-		this.torque += point.cross( force );
-	    };
-	}();
+	    worldPoint = worldPoint || pos;
+	    
+	    if( this.type === STATIC ){
+		return;
+	    }
+	    
+	    if( wake && this.sleepState === SLEEPING ){
+		this.wake();
+	    }
+	    
+	    px = worldPoint.x - pos.x;
+	    py = worldPoint.y - pos.y;
+	    
+	    force.x += fx;
+	    force.y += fy;
+	    
+	    this.torque += px * fy - py * fx;
+	};
 	
 	
-	PRigidBody2D.prototype.applyImpulse = function(){
-	    var point = new Vec2,
-		vel = new Vec2;
-		
-	    return function( impulse, worldPoint, wake ){
-		var position = this.position,
-		    velocity = this.velocity,
-		    invMass = this.invMass;
-		
-		worldPoint = worldPoint || position;
-		
-		if( this.type === STATIC ){
-		    return;
-		}
-		
-		if( wake && this.sleepState === SLEEPING ){
-		    this.wake();
-		}
-		
-		velocity.x += impulse.x * invMass;
-		velocity.y += impulse.y * invMass;
-		
-		point.x = worldPoint.x - position.x;
-		point.y = worldPoint.y - position.y;
-		
-		this.angularVelocity += this.invInertia * point.cross( impulse );
-	    };
-	}();
+	PRigidBody2D.prototype.applyImpulse = function( impulse, worldPoint, wake ){
+	    var pos = this.pos,
+		invMass = this.invMass,
+		velocity = this.velocity,
+		ix = impulse.x, iy = impulse.y,
+		px, py;
+	    
+	    worldPoint = worldPoint || pos;
+	    
+	    if( this.type === STATIC ){
+		return;
+	    }
+	    
+	    if( wake && this.sleepState === SLEEPING ){
+		this.wake();
+	    }
+	    
+	    px = worldPoint.x - pos.x;
+	    py = worldPoint.y - pos.y;
+	    
+	    velocity.x += ix * invMass;
+	    velocity.y += iy * invMass;
+	    
+	    this.angularVelocity += ( px * iy - py * ix ) * this.invInertia;
+	};
 	
         
         return PRigidBody2D;

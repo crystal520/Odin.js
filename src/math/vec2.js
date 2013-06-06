@@ -254,46 +254,104 @@ define([
 	
 	
 	Vec2.prototype.vproj = function( a, b ){
-	    var dp = a.dot( b ),
-		l = b.dot( b );
+	    var ax = a.x, ay = a.y,
+		bx = b.x, by = b.y,
+		
+		d = ax * bx + ay * by,
+		l = bx * bx + by * by;
 		
 	    l = l !== 0 ? 1 / l : 0;
 	    
-	    this.x = dp * l * b.x;
-	    this.y = dp * l * b.y;
+	    this.x = d * l * bx;
+	    this.y = d * l * by;
 	    
 	    return this;
         };
 	
 	
 	Vec2.prototype.proj = function( other ){
-	    var dp = this.dot( other ),
-		l = other.dot( other );
+	    var ax = this.x, ay = this.y,
+		bx = other.x, by = other.y,
+		
+		d = ax * bx + ay * by,
+		l = bx * bx + by * by;
 		
 	    l = l !== 0 ? 1 / l : 0;
 	    
-	    this.x = dp * l * other.x;
-	    this.y = dp * l * other.y;
+	    this.x = d * l * bx;
+	    this.y = d * l * by;
 	    
 	    return this;
         };
 	
 	
 	Vec2.prototype.vprojN = function( a, b ){
-	    var dp = a.dot( b );
+	    var bx = b.x, by = b.y,
+		d = a.x * bx + a.y * by;
 	    
-	    this.x = dp * b.x;
-	    this.y = dp * b.y;
+	    this.x = d * bx;
+	    this.y = d * by;
 	    
 	    return this;
         };
 	
 	
 	Vec2.prototype.projN = function( other ){
-	    var dp = this.dot( other );
+	    var bx = other.x, by = other.y,
+		d = this.x * bx + this.y * by;
 	    
-	    this.x = dp * other.x;
-	    this.y = dp * other.y;
+	    this.x = d * bx;
+	    this.y = d * by;
+	    
+	    return this;
+        };
+	
+	
+	Vec2.prototype.vreflect = function( a, b ){
+	    var bx = b.x, by = b.y,
+		d = a.x * bx + a.y * by;
+	    
+	    this.x = d * bx * 2 - 2;
+	    this.y = d * by * 2 - 2;
+	    
+	    return this;
+        };
+	
+	
+	Vec2.prototype.reflect = function( other ){
+	    var bx = other.x, by = other.y,
+		d = this.x * bx + this.y * by;
+	    
+	    this.x = d * bx * 2 - 2;
+	    this.y = d * by * 2 - 2;
+	    
+	    return this;
+        };
+	
+	
+	Vec2.prototype.vreflectN = function( a, b ){
+	    var bx = b.x, by = b.y,
+		d = a.x * bx + a.y * by,
+		l = bx * bx + by * by;
+	    
+	    l = l !== 0 ? 1 / l : 0;
+	    
+	    this.x = d * l * bx * 2 - 2;
+	    this.y = d * l * by * 2 - 2;
+	    
+	    return this;
+        };
+	
+	
+	Vec2.prototype.reflectN = function( other ){
+	    var bx = other.x, by = other.y,
+		d = this.x * bx + this.y * by,
+		l = bx * bx + by * by;
+	    
+	    l = l !== 0 ? 1 / l : 0;
+	    
+	    this.x = d * l * bx * 2 - 2;
+	    this.y = d * l * by * 2 - 2;
 	    
 	    return this;
         };
@@ -372,15 +430,6 @@ define([
         };
         
         
-        Vec2.prototype.getPositionAffine = function( m ){
-            
-            this.x = m.x;
-            this.y = m.y;
-            
-            return this;
-        };
-        
-        
         Vec2.prototype.getPositionMat32 = function( m ){
             var me = m.elements
 	    
@@ -396,17 +445,6 @@ define([
 	    
             this.x = me[12];
             this.y = me[13];
-            
-            return this;
-        };
-        
-        
-        Vec2.prototype.getScaleAffine = function( m ){
-            var sx = this.set( m.a, m.c ).len(),
-                sy = this.set( m.b, m.d ).len();
-            
-            this.x = sx;
-            this.y = sy;
             
             return this;
         };
@@ -490,7 +528,7 @@ define([
 	    this.x = -y;
 	    this.y = x;
 	    
-            return this.norm();
+            return this;
         };
         
         
@@ -500,7 +538,12 @@ define([
 	    this.x = y;
 	    this.y = -x;
 	    
-            return this.norm();
+            return this;
+        };
+        
+        
+        Vec2.prototype.tangents = function( a, b ){
+	    
         };
         
         
@@ -517,8 +560,8 @@ define([
             var x = this.x, y = this.y,
 		c = cos( a ), s = sin( a );
 	    
-	    this.x = ( x * c ) - ( y * s );
-	    this.y = ( x * s ) + ( y * c );
+	    this.x = x * c - y * s;
+	    this.y = x * s + y * c;
 	    
             return this;
         };

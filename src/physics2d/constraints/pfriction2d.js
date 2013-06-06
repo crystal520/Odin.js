@@ -4,167 +4,137 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"math/vec2",
-	"physics2d/constraints/pconstraint2d",
+	"physics2d/constraints/pequation2d"
+	
     ],
-    function( Class, Vec2, PConstraint2D ){
+    function( Class, Vec2, PEquation2D ){
         "use strict";
 	
-	var sqrt = Math.sqrt,
-	    min = Math.min;
-	
         
-	function PFriction2D( bi, bj, slip ){
+	function PFriction2D( bi, bj, slipForce ){
 	    
-	    PConstraint2D.call( this, bi, bj, -slip, slip );
+	    PEquation2D.call( this, bi, bj, -slipForce, slipForce );
 	    
 	    this.t = new Vec2;
 	    
 	    this.ri = new Vec2;
 	    this.rj = new Vec2;
 	    
-	    this.rixt = 0;
-	    this.rjxt = 0;
+	    this.stiffness = 1e7;
+	    this.relaxation = 3;
 	}
 	
-	Class.extend( PFriction2D, PConstraint2D );
+	Class.extend( PFriction2D, PEquation2D );
 	
 	
 	PFriction2D.prototype.calculateB = function( h ){
-	    var a = this.a, b = this.b, eps = this.eps,
+	    var a = this.a, b = this.b,
 		
-		t = this.t,
-		tx = t.x, ty = t.y,
+		t = this.t, tx = t.x, ty = t.y,
+		
+		ri = this.ri, rix = ri.x, riy = ri.y,
+		rj = this.rj, rjx = rj.x, rjy = rj.y,
 		
 		bi = this.bi,
-		ri = this.ri,
-		rix = ri.x, riy = ri.y,
-		invMassi = bi.invMass,
-		invInertiai = bi.invInertia,
+		invMassi = bi.invMass, invInertiai = bi.invInertia,
 		vi = bi.velocity, fi = bi.force,
 		wi = bi.angularVelocity, ti = bi.torque,
 		
 		bj = this.bj,
-		rj = this.rj,
-		rjx = rj.x, rjy = rj.y,
-		invMassj = bj.invMass,
-		invInertiaj = bj.invInertia,
+		invMassj = bj.invMass, invInertiaj = bj.invInertia,
 		vj = bj.velocity, fj = bj.force,
 		wj = bj.angularVelocity, tj = bj.torque,
 		
-		dvx = vj.x + ( -wj * rjy ) - vi.x - ( -wi * riy ),
-		dvy = vj.y + ( wj * rjx ) - vi.y - ( wi * rix ),
-		
-		dfx = fj.x * invMassj + ( -tj * rjy * invInertiaj ) - fi.x * invMassi - ( -ti * riy * invInertiai ),
-		dfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
-		
 		Gq = 0,
-		GW = dvx * tx + dvy * ty,
-		GiMf = dfx * tx + dfy * ty,
 		
-		B = -a * Gq - b * GW - h * GiMf;
+		GWx = vj.x + ( -wj * rjy ) - vi.x - ( -wi * riy ),
+		GWy = vj.y + ( wj * rjx ) - vi.y - ( wi * rix ),
+		GW = GWx * tx + GWy * ty,
+		
+		GiMfx = fj.x * invMassj + ( -tj * rjy * invInertiaj ) - fi.x * invMassi - ( -ti * riy * invInertiai ),
+		GiMfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
+		GiMf = GiMfx * tx + GiMfy * ty;
 	    
-	    this.rixt = rix * ty - riy * tx;
-	    this.rjxt = rjx * ty - rjy * tx;
-	    
-	    return B;
+	    return -a * Gq - b * GW - h * GiMf;
 	};
 	
 	
 	PFriction2D.prototype.calculateC = function(){
-	    var t = this.t,
-		tx = t.x, ty = t.y,
+	    var t = this.t, tx = t.x, ty = t.y,
 		
 		bi = this.bi,
 		bj = this.bj,
 		
-		invInertiai = bi.invInertia,
-		invInertiaj = bj.invInertia,
-		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixt = this.rixt,
-		rjxt = this.rjxt,
-		
-		wi = bi.angularVelocity,
-		wj = bj.angularVelocity,
-		
 		C = bi.invMass + bj.invMass + this.eps;
-		
-	    C += invInertiai * rixt;
-	    C += invInertiaj * rjxt;
+	    
+	    C += bi.invInertia * ( ri.x * ty - ri.y * tx );
+	    C += bj.invInertia * ( rj.x * ty - rj.y * tx );
 	    
 	    return C;
 	};
 	
 	
-	PFriction2D.prototype.calculateRelativeLambda = function(){
-	    var t = this.t,
-		tx = t.x, ty = t.y,
-		
-		bi = this.bi,
-		bj = this.bj,
+	PFriction2D.prototype.calculateGWlambda = function(){
+	    var t = this.t, tx = t.x, ty = t.y,
 		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixt = this.rixt,
-		rjxt = this.rjxt,
-		
+		bi = this.bi,
 		vlambdai = bi.vlambda,
-		vlambdaj = bj.vlambda,
 		wlambdai = bi.wlambda,
+		
+		bj = this.bj,
+		vlambdaj = bj.vlambda,
 		wlambdaj = bj.wlambda,
 		
-		lambdax = vlambdaj.x - vlambdai.x,
-		lambday = vlambdaj.y - vlambdai.y,
+		ulambdax = vlambdaj.x - vlambdai.x,
+		ulambday = vlambdaj.y - vlambdai.y,
 		
-		relativeLambda = lambdax * tx + lambday * ty;
+		GWlambda = ulambdax * tx + ulambday * ty;
 	    
 	    if( wlambdai !== undefined ){
-		relativeLambda -= wlambdai * rixt;
+		GWlambda -= wlambdai * ( ri.x * ty - ri.y * tx );
 	    }
 	    if( wlambdaj !== undefined ){
-		relativeLambda += wlambdaj * rjxt;
+		GWlambda += wlambdaj * ( rj.x * ty - rj.y * tx );
 	    }
 	    
-	    return relativeLambda;
+	    return GWlambda;
 	};
 	
 	
-	PFriction2D.prototype.addToLambda = function( deltaLambda ){
-	    var t = this.t,
-		tx = t.x, ty = t.y,
-		
-		bi = this.bi,
-		bj = this.bj,
-		
-		invInertiai = bi.invInertia,
-		invInertiaj = bj.invInertia,
+	PFriction2D.prototype.addToWlambda = function( deltalambda ){
+	    var t = this.t, tx = t.x, ty = t.y,
 		
 		ri = this.ri,
 		rj = this.rj,
 		
-		rixt = this.rixt,
-		rjxt = this.rjxt,
-		
+		bi = this.bi,
+		invMassi = bi.invMass,
 		vlambdai = bi.vlambda,
+		
+		bj = this.bj,
+		invMassj = bj.invMass,
 		vlambdaj = bj.vlambda,
 		
-		invMassi = bi.invMass,
-		invMassj = bj.invMass;
-		
-	    vlambdai.x -= deltaLambda * invMassi * tx;
-	    vlambdai.y -= deltaLambda * invMassi * ty;
+		lambdax = deltalambda  * tx,
+		lambday = deltalambda  * ty;
 	    
-	    vlambdaj.x += deltaLambda * invMassj * tx;
-	    vlambdaj.y += deltaLambda * invMassj * ty;
+	    vlambdai.x -= lambdax * invMassi;
+	    vlambdai.y -= lambday * invMassi;
+	    
+	    vlambdaj.x += lambdax * invMassj;
+	    vlambdaj.y += lambday * invMassj;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= deltaLambda * invInertiai * rixt;
+		bi.wlambda -= ( lambdax * ri.y - lambday * ri.x ) * bi.invInertia;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += deltaLambda * invInertiaj * rjxt;
+		bj.wlambda += ( lambdax * rj.y - lambday * rj.x ) * bj.invInertia;
 	    }
 	};
 	

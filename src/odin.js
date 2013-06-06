@@ -62,9 +62,7 @@ define(
 	Odin.PManifold2D = require("physics2d/collision/pmanifold2d");
 	Odin.PNearphase2D = require("physics2d/collision/pnearphase2d");
 	
-	Odin.PConstrain2D = require("physics2d/constraints/pconstraint2d");
 	Odin.PContact2D = require("physics2d/constraints/pcontact2d");
-	Odin.PFriction2D = require("physics2d/constraints/pfriction2d");
 	
 	Odin.PBox2D = require("physics2d/shape/pbox2d");
 	Odin.PCircle2D = require("physics2d/shape/pcircle2d");

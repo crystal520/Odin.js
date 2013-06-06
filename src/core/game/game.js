@@ -53,10 +53,9 @@ define([
 	
 	Game.prototype.addScene = function(){
             var scenes = this.scenes,
-                scene, index,
-                i, il;
+                scene, index, i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 scene = arguments[i];
                 index = scenes.indexOf( scene );
                 
@@ -82,10 +81,9 @@ define([
         
         Game.prototype.removeScene = function(){
             var scenes = this.scenes,
-                scene, index,
-                i, il;
+                scene, index, i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 scene = arguments[i];
                 index = scenes.indexOf( scene );
                 

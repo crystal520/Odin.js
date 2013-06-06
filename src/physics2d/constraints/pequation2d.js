@@ -8,29 +8,29 @@ define([
         "use strict";
 	
         
-	function PConstraint2D( bi, bj, min, max ){
+	function PEquation2D( bi, bj, minForce, maxForce ){
 	    
 	    Class.call( this );
 	    
 	    this.bi = bi;
 	    this.bj = bj;
 	    
-	    this.min = min !== undefined ? min : -1e6;
-	    this.max = max !== undefined ? max : 1e6;
+	    this.minForce = minForce !== undefined ? minForce : -1e6;
+	    this.maxForce = maxForce !== undefined ? maxForce : 1e6;
 	    
 	    this.stiffness = 1e7;
-	    this.stabilizeSteps = 5;
+	    this.relaxation = 5;
 	    
 	    this.a = 0;
 	    this.b = 0;
 	    this.eps = 0;
 	}
 	
-	Class.extend( PConstraint2D, Class );
+	Class.extend( PEquation2D, Class );
 	
 	
-	PConstraint2D.prototype.updateSpook = function( h ){
-	    var d = this.stabilizeSteps,
+	PEquation2D.prototype.calculateConstants = function( h ){
+	    var d = this.relaxation,
 		k = this.stiffness;
 	    
 	    this.a = 4 / ( h * ( 1 + 4 * d ) );
@@ -39,6 +39,6 @@ define([
 	};
 	
         
-        return PConstraint2D;
+        return PEquation2D;
     }
 );

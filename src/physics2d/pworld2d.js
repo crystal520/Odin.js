@@ -6,18 +6,18 @@ define([
 	"math/mathf",
 	"math/vec2",
 	"physics2d/psolver2d",
+	"physics2d/constraints/pfriction2d",
 	"physics2d/collision/pbroadphase2d",
 	"physics2d/collision/pnearphase2d",
-	"physics2d/constraints/pfriction2d",
 	"physics2d/shape/pshape2d",
 	"physics2d/body/pparticle2d",
 	"physics2d/body/pbody2d"
     ],
-    function( Class, Mathf, Vec2, PSolver2D, PBroadphase2D, PNearphase2D, PFriction2D, PShape2D, PParticle2D, PBody2D ){
+    function( Class, Mathf, Vec2, PSolver2D, PFriction2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D ){
         "use strict";
 	
 	var pow = Math.pow,
-	    mMax = Math.max,
+	    min = Math.min,
 	    
 	    CIRCLE = PShape2D.CIRCLE,
 	    BOX = PShape2D.BOX,
@@ -29,7 +29,9 @@ define([
 	    
 	    DYNAMIC = PBody2D.DYNAMIC,
 	    STATIC = PBody2D.STATIC,
-	    KINEMATIC = PBody2D.KINEMATIC;
+	    KINEMATIC = PBody2D.KINEMATIC,
+	    
+	    frictionPool = [];
 	
         
 	function PWorld2D( opts ){
@@ -53,7 +55,7 @@ define([
 	    
 	    this.solver = new PSolver2D();
 	    
-	    this.broadphase = new PBroadphase2D( opts.useBoundingRadius );
+	    this.broadphase = new PBroadphase2D( opts );
 	    this.nearphase = new PNearphase2D;
 	    
 	    this.debug = opts.debug !== undefined ? opts.debug : true;
@@ -91,10 +93,10 @@ define([
 	
 	PWorld2D.prototype._remove = function(){
 	    var bodies = this.bodies,
-		removeList = this.removeList,
+		removeList = this._removeList,
 		body, index, i, il;
 	    
-	    for( i = 0, il = removeList.length; i < il; i++ ){
+	    for( i = removeList.length; i--; ){
 		body = removeList[i];
 		index = bodies.indexOf( body );
 		
@@ -103,193 +105,180 @@ define([
 		    body.trigger("remove");
 		}
 	    }
+	    
+	    removeList.length = 0;
 	};
 	
 	
-	PWorld2D.prototype.step = function(){
-	    var accumulator = 0,
-		max = 0.25,
-		lastTime = 0,
-		ddt = 1 / 60,
-		time = 0,
-		frictionsPool = [],
-		now, startTime = Date.now(),
-		performance = performance || {};
-		
-		now = performance.now = function(){
-		    return (
-			performance.now ||
-			performance.mozNow ||
-			performance.msNow ||
-			performance.oNow ||
-			performance.webkitNow ||
-			function(){
-			    return Date.now() - startTime; 
-			}
-		    );
-		}();
-		
-	    return function( dt ){
-		var debug = this.debug,
-		    profile = this.profile, profileStart,
-		    
-		    gravity = this.gravity,
-		    gn = gravity.len(),
-		    bodies = this.bodies,
-		    solver = this.solver,
-		    solverConstraints = solver.constraints,
-		    pairsi = this.pairsi, pairsj = this.pairsj,
-		    c, c1, c2, bi, bj, mu, mug,
-		    frictions = this.frictions, contacts = this.contacts,
-		    
-		    body, type, force, vel, linearDamping, pos, mass, invMass,
-		    i, il;
-		
-		this.time = time += dt;
-		
-		accumulator += time - lastTime;
-		accumulator = accumulator > max ? max : accumulator;
-		this.dt = dt = dt !== 0 ? dt : ddt;
-		
-		while( accumulator >= dt ){
-		    
-		    for( i = 0, il = bodies.length; i < il; i++ ){
-			body = bodies[i];
-			force = body.force;
-			mass = body.mass;
-			
-			if( body.type === DYNAMIC ){
-			    force.x += gravity.x * mass;
-			    force.y += gravity.y * mass;
-			}
+	PWorld2D.prototype.now = function(){
+	    var startTime = Date.now(),
+		w = window || {},
+		performance = w.performance || function(){
+		    this.now = function(){
+			return Date.now() - startTime;
 		    }
-		    
-		    if( debug ) profileStart = now();
-		    
-		    this.broadphase.collisionPairs( this, pairsi, pairsj );
-		    
-		    if( debug ) profile.broadphase = now() - profileStart;
-		    
-		    
-		    if( debug ) profileStart = now();
-		    
-		    for( i = 0, il = frictions.length; i < il; i++ ){
-			frictionsPool.push( frictions[i] );
-		    }
-		    frictions.length = 0;
-		    
-		    this.nearphase.collisions( this, pairsi, pairsj, contacts );
-		    
-		    for( i = 0, il = contacts.length; i < il; i++ ){
-			c = contacts[i];
-			solverConstraints.push( c );
-			
-			bi = c.bi; bj = c.bj;
-			mu = mMax( bi.friction, bj.friction );
-			
-			if( mu > 0 ){
-			    mug = mu / gn;
-			    mass = bi.invMass + bj.invMass;
-			    mass = mass > 0 ? 1 / mass : mass;
-			    
-			    c1 = frictionsPool.length ? frictionsPool.pop() : new PFriction2D( bi, bj, mug * mass );
-			    c2 = frictionsPool.length ? frictionsPool.pop() : new PFriction2D( bi, bj, mug * mass );
-			    frictions.push( c1, c2 );
-			    
-			    c1.bi = c2.bi = bi;
-			    c1.bj = c2.bj = bj;
-			    c1.min = c2.min = -mug * mass;
-			    c1.max = c2.max = mug * mass;
-			    
-			    c1.ri.x = c2.ri.x = c.ri.x;
-			    c1.ri.y = c2.ri.y = c.ri.y;
-			    
-			    c1.rj.x = c2.rj.x = c.rj.x;
-			    c1.rj.y = c2.rj.y = c.rj.y;
-			    
-			    c1.t.x = c.n.y;
-			    c1.t.y = -c.n.x;
-			    
-			    c2.t.x = -c.n.y;
-			    c2.t.y = c.n.x;
-			    
-			    solverConstraints.push( c1, c2 );
-			}
-		    }
-		    
-		    if( debug ) profile.nearphase = now() - profileStart;
-		    
-		    
-		    if( debug ) profileStart = now();
-		    
-		    solver.solve( this, dt );
-		    solverConstraints.length = 0;
-		    
-		    if( debug ) profile.solve = now() - profileStart;
-		    
-		    
-		    if( debug ) profileStart = now();
-		    
-		    for( i = 0, il = bodies.length; i < il; i++ ){
-			body = bodies[i];
-			
-			type = body.type;
-			force = body.force;
-			vel = body.velocity;
-			linearDamping = body.linearDamping;
-			pos = body.position;
-			mass = body.mass;
-			invMass = body.invMass;
-			
-			body.trigger("prestep");
-			
-			if( type === DYNAMIC ){
-			    
-			    vel.x *= pow( 1 - linearDamping.x, dt );
-			    vel.y *= pow( 1 - linearDamping.y, dt );
-			    
-			    if( body.angularVelocity !== undefined ) body.angularVelocity *= pow( 1 - body.angularDamping, dt );
-			}
-			
-			if( type === DYNAMIC || type === KINEMATIC ){
-			    
-			    vel.x += force.x * invMass * dt;
-			    vel.y += force.y * invMass * dt;
-			    
-			    if( body.angularVelocity !== undefined ) body.angularVelocity += body.torque * body.invInertia * dt;
-			    
-			    if( body.sleepState !== SLEEPING ){
-				pos.x += vel.x * dt;
-				pos.y += vel.y * dt;
-				
-				if( body.angularVelocity !== undefined ) body.rotation += body.angularVelocity * dt;
-				
-				if( body.aabb ) body.aabbNeedsUpdate = true;
-			    }
-			}
-			
-			force.x = 0;
-			force.y = 0;
-			
-			if( body.torque ) body.torque = 0;
-			
-			if( this.allowSleep ) body.sleepTick( time );
-			
-			body.trigger("poststep");
-		    }
-		    
-		    if( debug ) profile.integration = now() - profileStart;
-		    
-		    accumulator -= dt;
-		}
+		};
+	    
+	    return function(){
 		
-		if( this._removeList.length ){
-		    this._remove();
-		}
-		
-		lastTime = time;
-	    };
+		return performance.now() * 0.001;
+	    }
 	}();
+	
+	
+	PWorld2D.prototype.step = function( dt ){
+	    var debug = this.debug,
+		now = this.now,
+		profile = this.profile, profileStart,
+		
+		gravity = this.gravity,
+		gn = gravity.len(),
+		bodies = this.bodies,
+		solver = this.solver,
+		solverConstraints = solver.constraints,
+		pairsi = this.pairsi, pairsj = this.pairsj,
+		contacts = this.contacts, frictions = this.frictions,
+		c, bi, bj, um, umg, c1, c2,
+		
+		body, shape, shapeType, type, force, vel, aVel, linearDamping, pos, mass, invMass,
+		i;
+	    
+	    this.time += dt;
+	    
+	    for( i = bodies.length; i--; ){
+		body = bodies[i];
+		force = body.force;
+		mass = body.mass;
+		
+		if( body.type === DYNAMIC ){
+		    force.x += gravity.x * mass;
+		    force.y += gravity.y * mass;
+		}
+	    }
+	    
+	    if( debug ) profileStart = now();
+	    
+	    this.broadphase.collisionPairs( this, pairsi, pairsj );
+	    
+	    if( debug ) profile.broadphase = now() - profileStart;
+	    
+	    
+	    if( debug ) profileStart = now();
+	    
+	    this.nearphase.collisions( this, pairsi, pairsj, contacts );
+	    
+	    for( i = frictions.length; i--; ){
+		frictionPool.push( frictions[i] );
+	    }
+	    frictions.length = 0;
+	    
+	    for( i = contacts.length; i--; ){
+		c = contacts[i];
+		bi = c.bi; bj = c.bj;
+		
+		solverConstraints.push( c );
+		
+		um = min( bi.friction, bj.friction );
+		
+		if( um > 0 ){
+		    umg = um * gn;
+		    mass = bi.invMass + bj.invMass;
+		    mass = mass > 0 ? 1 / mass : 0;
+		    
+		    c1 = frictionPool.length ? frictionPool.pop() : new PFriction2D( bi, bj, umg * mass );
+		    c2 = frictionPool.length ? frictionPool.pop() : new PFriction2D( bi, bj, umg * mass );
+		    
+		    frictions.push( c1, c2 );
+		    
+		    c1.bi = c2.bi = bi;
+		    c1.bj = c2.bj = bj;
+		    c1.minForce = c2.minForce = -umg * mass;
+		    c1.maxForce = c2.maxForce = umg * mass;
+		    
+		    c1.ri.x = c2.ri.x = c.ri.x;
+		    c1.ri.y = c2.ri.y = c.ri.y;
+		    c1.rj.x = c2.rj.x = c.rj.x;
+		    c1.rj.y = c2.rj.y = c.rj.y;
+		    
+		    c1.t.copy( c.n ).perpL();
+		    c2.t.copy( c.n ).perpR();
+		    
+		    solverConstraints.push( c1, c2 );
+		}
+	    }
+	    
+	    if( debug ) profile.nearphase = now() - profileStart;
+	    
+	    
+	    if( debug ) profileStart = now();
+	    
+	    solver.solve( this, dt );
+	    solverConstraints.length = 0;
+	    
+	    if( debug ) profile.solve = now() - profileStart;
+	    
+	    
+	    if( debug ) profileStart = now();
+	    
+	    for( i = bodies.length; i--; ){
+		body = bodies[i];
+		
+		shape = body.shape;
+		shapeType = shape.type;
+		
+		type = body.type;
+		force = body.force;
+		vel = body.velocity;
+		aVel = body.angularVelocity;
+		linearDamping = body.linearDamping;
+		pos = body.position;
+		invMass = body.invMass;
+		
+		body.trigger("prestep");
+		
+		if( type === DYNAMIC ){
+		    
+		    vel.x *= pow( 1 - linearDamping.x, dt );
+		    vel.y *= pow( 1 - linearDamping.y, dt );
+		    
+		    if( aVel !== undefined ) body.angularVelocity *= pow( 1 - body.angularDamping, dt );
+		}
+		
+		if( type === DYNAMIC || type === KINEMATIC ){
+		    
+		    vel.x += force.x * invMass * dt;
+		    vel.y += force.y * invMass * dt;
+		    
+		    if( aVel !== undefined ) body.angularVelocity += body.torque * body.invInertia * dt;
+		    
+		    if( body.sleepState !== SLEEPING ){
+			pos.x += vel.x * dt;
+			pos.y += vel.y * dt;
+			
+			if( aVel !== undefined ) body.rotation += aVel * dt;
+			
+			if( body.aabb ) body.aabbNeedsUpdate = true;
+		    }
+		}
+		
+		body.R.setRotation( body.rotation );
+		
+		force.x = 0;
+		force.y = 0;
+		
+		if( body.torque ) body.torque = 0;
+		
+		if( this.allowSleep ) body.sleepTick( this.time );
+		
+		body.trigger("poststep");
+	    }
+	    
+	    if( debug ) profile.integration = now() - profileStart;
+	    
+	    if( this._removeList.length ){
+		this._remove();
+	    }
+	};
 	
         
         return PWorld2D;
