@@ -22,6 +22,9 @@ define([
 	    this.ri = new Vec2;
 	    this.rj = new Vec2;
 	    
+	    this.rixt = 0;
+	    this.rjxt = 0;
+	    
 	    this.stiffness = 1e7;
 	    this.relaxation = 3;
 	}
@@ -46,6 +49,9 @@ define([
 		vj = bj.velocity, fj = bj.force,
 		wj = bj.angularVelocity, tj = bj.torque,
 		
+		rixt = rix * ty - riy * tx,
+		rjxt = rjx * ty - rjy * tx,
+		
 		GWx = vj.x + ( -wj * rjy ) - vi.x - ( -wi * riy ),
 		GWy = vj.y + ( wj * rjx ) - vi.y - ( wi * rix ),
 		GW = GWx * tx + GWy * ty,
@@ -53,6 +59,9 @@ define([
 		GiMfx = fj.x * invMassj + ( -tj * rjy * invInertiaj ) - fi.x * invMassi - ( -ti * riy * invInertiai ),
 		GiMfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
 		GiMf = GiMfx * tx + GiMfy * ty;
+		
+	    this.rixt = rixt;
+	    this.rjxt = rjxt;
 	    
 	    return -b * GW - h * GiMf;
 	};
@@ -67,10 +76,13 @@ define([
 		ri = this.ri,
 		rj = this.rj,
 		
+		rixt = this.rixt,
+		rjxt = this.rjxt,
+		
 		C = bi.invMass + bj.invMass + this.eps;
 	    
-	    C += bi.invInertia * ( ri.x * ty - ri.y * tx );
-	    C += bj.invInertia * ( rj.x * ty - rj.y * tx );
+	    C += bi.invInertia * rixt * rixt;
+	    C += bj.invInertia * rjxt * rjxt;
 	    
 	    return C;
 	};
@@ -96,10 +108,10 @@ define([
 		GWlambda = ulambdax * tx + ulambday * ty;
 	    
 	    if( wlambdai !== undefined ){
-		GWlambda -= wlambdai * ( ri.x * ty - ri.y * tx );
+		GWlambda -= wlambdai * this.rixt;
 	    }
 	    if( wlambdaj !== undefined ){
-		GWlambda += wlambdaj * ( rj.x * ty - rj.y * tx );
+		GWlambda += wlambdaj * this.rjxt;
 	    }
 	    
 	    return GWlambda;
@@ -111,6 +123,9 @@ define([
 		
 		ri = this.ri,
 		rj = this.rj,
+		
+		rixt = this.rixt,
+		rjxt = this.rjxt,
 		
 		bi = this.bi,
 		invMassi = bi.invMass,
@@ -130,10 +145,10 @@ define([
 	    vlambdaj.y += lambday * invMassj;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= ( ri.x * lambday - ri.y * lambdax ) * bi.invInertia;
+		bi.wlambda -= ( ri.x * lambday - ri.y * lambdax ) * bi.invInertia * rixt * rixt;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += ( rj.x * lambday - rj.y * lambdax ) * bj.invInertia;
+		bj.wlambda += ( rj.x * lambday - rj.y * lambdax ) * bj.invInertia * rjxt * rjxt;
 	    }
 	};
 	

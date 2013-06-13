@@ -24,7 +24,7 @@ define([
 	    
 	    this.velocity = opts.velocity instanceof Vec2 ? opts.velocity : new Vec2;
 	    
-	    this.linearDamping = opts.linearDamping instanceof Vec2 ? opts.linearDamping : new Vec2;
+	    this.linearDamping = opts.linearDamping instanceof Vec2 ? opts.linearDamping : new Vec2( 0.01, 0.01 );
 	    
 	    this.mass = opts.mass !== undefined ? opts.mass : 1;
 	    this.invMass = this.mass > 0 ? 1 / this.mass : 0;

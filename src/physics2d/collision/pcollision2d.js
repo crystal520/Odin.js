@@ -29,7 +29,7 @@ define([
 	Class.extend( PCollision2D, Class );
 	
 	
-	PCollision2D.prototype.findBestEdge = findBestEdge = function( vertices, position, R, normal, edge, max ){
+	PCollision2D.prototype.findBestEdge = findBestEdge = function( vertices, position, R, normal, edge ){
 	    var count = vertices.length, start = edge.start, end = edge.end,
 		
 		R11 = R[0], R21 = R[1], R12 = R[2], R22 = R[3],
@@ -73,9 +73,6 @@ define([
 	    
 	    leftx = vx - v2x;
 	    lefty = vy - v2y;
-	    
-	    max.x = vx;
-	    max.y = vy;
 	    
 	    if( rightx * nx + righty * ny <= leftx * nx + lefty * ny ){
 		start.x = v1x;
@@ -150,7 +147,7 @@ define([
 		    tmp = minj; minj = maxj; maxj = tmp;
 		}
 		
-		if( maxi < minj || maxj < mini ) return -1;
+		if( maxi < minj || maxj < mini ) return 1;
 		
 		d1 = maxi - minj;
 		d2 = maxj - mini;
@@ -173,8 +170,8 @@ define([
 	
 	
 	PCollision2D.prototype.convexConvex = function(){
-	    var edgei = new Line2, edgej = new Line2, maxi = new Vec2, maxj = new Vec2,
-		e = new Vec2, vec = new Vec2, refNorm = new Vec2, axis = new Vec2;
+	    var edgei = new Line2, edgej = new Line2,
+		e = new Vec2, vec = new Vec2, axis = new Vec2;
 	    
 	    function clipPoints( v1, v2, n, o, manifold ){
 		var d1 = n.dot( v1 ) - o,
@@ -194,57 +191,77 @@ define([
 	    
 	    return function( si, sj, xi, xj, Ri, Rj, manifold ){
 		var depth = findSeparatingAxis( si, sj, xi, xj, Ri, Rj, axis ),
-		    ref, inc, maxVertex, flip = false, offset1, offset2, tmp,
+		
+		    ref, inc, flip = false,
+		    
+		    dvx, dvy, length, invLength,
+		    sideNormalx, sideNormaly, frontNormalx, frontNormaly,
+		    frontOffset, sideOffset1, sideOffset2, separation,
+		    
 		    mn = manifold.normal;
 		
 		if( depth > 0 ) return false;
 		
-		findBestEdge( si.vertices, xi, Ri, axis, edgei, maxi );
+		findBestEdge( si.vertices, xi, Ri, axis, edgei );
 		
 		vec.x = -axis.x; vec.y = -axis.y;
-		findBestEdge( sj.vertices, xj, Rj, vec, edgej, maxj );
+		findBestEdge( sj.vertices, xj, Rj, vec, edgej );
 		
 		manifold.clear();
-		mn.x = axis.x; mn.y = axis.y;
 		
 		if( edgei.dot( axis ) <= edgej.dot( axis ) ){
 		    ref = edgei;
 		    inc = edgej;
-		    maxVertex = maxi;
 		}
 		else{
 		    ref = edgej;
 		    inc = edgei;
-		    maxVertex = maxj;
 		    flip = true;
 		}
 		
-		ref.norm();
+		dvx = ref.start.x - ref.end.x;
+		dvy = ref.start.y - ref.end.y;
 		
-		offset1 = ref.dot( ref.start );
-		clipPoints( inc.start, inc.end, ref.delta( vec ), offset1, manifold );
+		sideNormalx = dvx;
+		sideNormaly = dvy;
 		
-		if( manifold.length < 2 ){
-		    return true;
+		length = sqrt( sideNormalx * sideNormalx + sideNormaly * sideNormaly );
+		invLength = 1 / length;
+		
+		sideNormalx *= invLength;
+		sideNormaly *= invLength;
+		
+		frontNormalx = sideNormaly;
+		frontNormaly = -sideNormalx;
+		
+		frontOffset = frontNormalx * ref.start.x + frontNormaly * ref.start.y;
+		sideOffset1 = -( sideNormalx * ref.start.x + sideNormaly * ref.start.y );
+		sideOffset2 = sideNormalx * ref.end.x + sideNormaly * ref.end.y;
+		
+		vec.x = -sideNormalx;
+		vec.y = -sideNormaly;
+		clipPoints( inc.start, inc.end, axis, sideOffset1, manifold );
+		
+		if( manifold.length < 2 ) return true;
+		
+		vec.x = sideNormalx;
+		vec.y = sideNormaly;
+		clipPoints( manifold[0].point, manifold[1].point, vec, sideOffset2, manifold );
+		
+		if( manifold.length < 2 ) return true;
+		
+		if( flip ){
+		    mn.x = frontNormalx;
+		    mn.y = frontNormaly;
+		}
+		else{
+		    mn.x = -frontNormalx;
+		    mn.y = -frontNormaly;
 		}
 		
-		offset2 = ref.dot( ref.end );
-		ref.delta( vec ); vec.x = -vec.x; vec.y = -vec.y;
-		clipPoints( manifold[0].point, manifold[1].point, vec, offset2, manifold );
-		
-		if( manifold.length < 2 ){
-		    return true;
-		}
-		
-		ref.delta( refNorm );
-		
-		tmp = refNorm.x;
-		refNorm.x = -refNorm.y;
-		refNorm.y = tmp;
-		
-		if( flip ) refNorm.negate();
-		
-		manifold.filter( refNorm, refNorm.dot( maxVertex ) );
+		vec.x = frontNormalx;
+		vec.y = frontNormaly;
+		manifold.filter( vec, frontOffset );
 		
 		return true;
 	    };

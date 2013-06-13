@@ -36,7 +36,7 @@ define([
 	    
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
 	    
-	    this.angularDamping = opts.angularDamping !== undefined ? opts.angularDamping : 0;
+	    this.angularDamping = opts.angularDamping !== undefined ? opts.angularDamping : 0.1;
 	    
 	    this.aabb = new AABB2;
 	    this.aabbNeedsUpdate = true;
@@ -87,11 +87,11 @@ define([
 	
 	PRigidBody2D.prototype.calculateAABB = function(){
 	    
-	    this.shape.calculateWorldAABB( this.position, this.rotation, this.aabb );
+	    this.shape.calculateWorldAABB( this.position, this.R.elements, this.aabb );
 	    this.aabbNeedsUpdate = false;
 	};
-
-
+	
+	
 	PRigidBody2D.prototype.applyForce = function( addForce, worldPoint, wake ){
 	    var pos = this.position,
 		force = this.force,
@@ -115,6 +115,20 @@ define([
 	    force.y += fy;
 	    
 	    this.torque += px * fy - py * fx;
+	};
+	
+	
+	PRigidBody2D.prototype.applyTorque = function( torque, wake ){
+	    
+	    if( this.type === STATIC ){
+		return;
+	    }
+	    
+	    if( wake && this.sleepState === SLEEPING ){
+		this.wake();
+	    }
+	    
+	    this.torque += torque;
 	};
 	
 	

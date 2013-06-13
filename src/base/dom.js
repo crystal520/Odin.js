@@ -133,7 +133,7 @@ define(
 		}
 		
 		if( !gl ){
-		    throw new Error("Dom.getWebGLContext: WebGL Context Creation Failed: "+ error );
+		    throw new Error("Dom.getWebGLContext: WebGL Context Creation Failed" );
 		}
 		
 		return gl;
@@ -145,7 +145,7 @@ define(
 	    var gl = canvas.getContext("2d");
 	    
 	    if( !gl ){
-		throw new Error("Dom.get2DContext: Canvas 2D Context Creation Failed: "+ error );
+		throw new Error("Dom.get2DContext: Canvas 2D Context Creation Failed" );
 	    }
 	    
 	    return gl;

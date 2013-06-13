@@ -22,6 +22,9 @@ define([
 	    this.ri = new Vec2;
 	    this.rj = new Vec2;
 	    
+	    this.rixn = 0;
+	    this.rjxn = 0;
+	    
 	    this.stiffness = 1e7;
 	    this.relaxation = 3;
 	}
@@ -47,6 +50,9 @@ define([
 		xj = bj.position, vj = bj.velocity, fj = bj.force,
 		wj = bj.angularVelocity, tj = bj.torque,
 		
+		rixn = rix * ny - riy * nx,
+		rjxn = rjx * ny - rjy * nx,
+		
 		e = 1 + min( bi.elasticity, bj.elasticity ),
 		
 		Gqx = xj.x + rjx - xi.x - rix,
@@ -61,6 +67,9 @@ define([
 		GiMfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
 		GiMf = GiMfx * nx + GiMfy * ny;
 	    
+	    this.rixn = rixn;
+	    this.rjxn = rjxn;
+	    
 	    return -a * Gq - b * GW - h * GiMf;
 	};
 	
@@ -74,10 +83,13 @@ define([
 		ri = this.ri,
 		rj = this.rj,
 		
+		rixn = this.rixn,
+		rjxn = this.rjxn,
+		
 		C = bi.invMass + bj.invMass + this.eps;
 	    
-	    C += bi.invInertia * ( ri.x * ny - ri.y * nx );
-	    C += bj.invInertia * ( rj.x * ny - rj.y * nx );
+	    C += bi.invInertia * rixn * rixn;
+	    C += bj.invInertia * rjxn * rjxn;
 	    
 	    return C;
 	};
@@ -103,10 +115,10 @@ define([
 		GWlambda = ulambdax * nx + ulambday * ny;
 	    
 	    if( wlambdai !== undefined ){
-		GWlambda -= wlambdai * ( ri.x * ny - ri.y * nx );
+		GWlambda -= wlambdai * this.rixn;
 	    }
 	    if( wlambdaj !== undefined ){
-		GWlambda += wlambdaj * ( rj.x * ny - rj.y * nx );
+		GWlambda += wlambdaj * this.rjxn;
 	    }
 	    
 	    return GWlambda;
@@ -118,6 +130,9 @@ define([
 		
 		ri = this.ri,
 		rj = this.rj,
+		
+		rixn = this.rixn,
+		rjxn = this.rjxn,
 		
 		bi = this.bi,
 		invMassi = bi.invMass,
@@ -137,10 +152,10 @@ define([
 	    vlambdaj.y += lambday * invMassj;
 	    
 	    if( bi.wlambda !== undefined ){
-		bi.wlambda -= ( ri.x * lambday - ri.y * lambdax ) * bi.invInertia;
+		bi.wlambda -= ( ri.x * lambday - ri.y * lambdax ) * bi.invInertia * rixn * rixn;
 	    }
 	    if( bj.wlambda !== undefined ){
-		bj.wlambda += ( rj.x * lambday - rj.y * lambdax ) * bj.invInertia;
+		bj.wlambda += ( rj.x * lambday - rj.y * lambdax ) * bj.invInertia * rjxn * rjxn;
 	    }
 	};
 	

@@ -10,8 +10,6 @@ define([
         "use strict";
 	
 	var abs = Math.abs,
-	    cos = Math.cos,
-	    sin = Math.sin,
 	    sqrt = Math.sqrt;
 	
         
@@ -78,19 +76,19 @@ define([
 	PConvex2D.prototype.calculateWorldAABB = function(){
 	    var v = new Vec2;
 	    
-	    return function( position, rotation, aabb ){
+	    return function( position, R, aabb ){
 		var vertices = this.vertices,
 		    min = aabb.min, max = aabb.max,
 		    minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity,
-		    c = cos( rotation ), s = sin( rotation ),
+		    R11 = R[0], R21 = R[1], R12 = R[2], R22 = R[3],
 		    vertex, ox, oy, x, y, i, il;
 		
 		for( i = vertices.length; i--; ){
 		    vertex = vertices[i];
 		    ox = vertex.x; oy = vertex.y;
 		    
-		    x = position.x + ( ox * c - oy * s );
-		    y = position.y + ( ox * s + oy * c );
+		    x = position.x + ( ox * R11 + oy * R12 );
+		    y = position.y + ( ox * R21 + oy * R22 );
 		    
 		    minx = x < minx ? x : minx;
 		    miny = y < miny ? y : miny;

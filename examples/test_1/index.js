@@ -81,7 +81,6 @@ require(
 	    
 	    Keyboard.on("keydown", function( key ){
 		if( key.name === "up" ){
-		    console.log("up");
 		    sprite.components.RigidBody2D.applyForce( vec2_1.set( 0, 100 ) );
 		}
 		if( key.name === "down" ){
