@@ -23,7 +23,7 @@ define([
 	    addMeta( this.viewportId +"-width", "viewport", "width=device-width" );
 	    addMeta( this.viewportId +"-height", "viewport", "height=device-height" );
 	    
-	    var element = document.createElement("canvas")
+	    var element = document.createElement("canvas");
 	    this.element = element; 
 	    
 	    if( !width && !height ){
@@ -31,11 +31,17 @@ define([
 		
 		this.width = window.innerWidth;
 		this.height = window.innerHeight;
+		
+		this._aspect = window.innerWidth / window.innerHeight;
 	    }
 	    else{
 		this.width = width !== undefined ? width : 960;
 		this.height = height !== undefined ? height : 640;
 	    }
+	    
+	    this._width = this.width;
+	    this._height = this.height;
+	    this._aspect = this._width / this._height;
 	    
 	    element.style.position = "absolute";
 	    element.style.left = "50%";
@@ -94,13 +100,19 @@ define([
 	    
 	    
 	    if( this.fullScreen ){
+		this.aspect = w / h;
+		
+		if( this.aspect >= this._aspect ){
+		    this.width = element.width = this._height * this.aspect;
+		    this.height = element.height = this._height;
+		}
+		else{
+		    this.width = element.width = this._width;
+		    this.height = element.height = this._width / this.aspect;
+		}
+		
 		width = w;
 		height = h;
-		
-		this.width = element.width = width;
-		this.height = element.height = height;
-		
-		this.aspect = width / height;
 	    }
 	    else{
 		if( aspect >= this.aspect ){

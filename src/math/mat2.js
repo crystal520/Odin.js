@@ -11,6 +11,7 @@ define([
 	var abs = Math.abs,
 	    sin = Math.sin,
 	    cos = Math.cos,
+	    atan2 = Math.atan2,
 	    lerp = Mathf.lerp,
 	    equals= Mathf.equals;
 	

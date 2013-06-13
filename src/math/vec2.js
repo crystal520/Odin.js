@@ -542,11 +542,6 @@ define([
         };
         
         
-        Vec2.prototype.tangents = function( a, b ){
-	    
-        };
-        
-        
         Vec2.prototype.abs = function(){
 	    
 	    this.x = abs( this.x );

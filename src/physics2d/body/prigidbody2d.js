@@ -46,10 +46,43 @@ define([
 	    this.inertia = this.shape.calculateInertia( this.mass );
 	    this.invInertia = this.inertia > 0 ? 1 / this.inertia : 0;
 	    
+	    this.density = this.mass / this.shape.volume;
+	    
 	    this.wlambda = 0;
+	    
+	    this._sleepAngularVelocity = 0.1;
 	}
 	
 	Class.extend( PRigidBody2D, PParticle2D );
+	
+	
+	PRigidBody2D.prototype.sleepTick = function( time ){
+	    
+	    if( this.allowSleep ){
+		var sleepState = this.sleepState,
+		    
+		    velSq = this.velocity.lenSq(),
+		    
+		    aVel = this.angularVelocity,
+		    aVelSq = aVel * aVel,
+		    
+		    sleepVel = this._sleepVelocity,
+		    sleepVelSq = sleepVel * sleepVel,
+		    
+		    sleepAngularVel = this._sleepAngularVelocity,
+		    sleepAngularVelSq = sleepAngularVel * sleepAngularVel;
+		
+		if( sleepState === AWAKE && ( velSq < sleepVelSq || aVelSq < sleepAngularVelSq ) ){
+		    this.sleepy( time )
+		}
+		else if( sleepState === SLEEPY && ( velSq > sleepVelSq || aVelSq > sleepAngularVelSq ) ){
+		    this.wake();
+		}
+		else if( sleepState === SLEEPY && ( time - this._sleepLastSleepy ) > this._sleepTimeLimit ){
+		    this.sleep();
+		}
+	    }
+	};
 	
 	
 	PRigidBody2D.prototype.calculateAABB = function(){
@@ -60,7 +93,7 @@ define([
 
 
 	PRigidBody2D.prototype.applyForce = function( addForce, worldPoint, wake ){
-	    var pos = this.pos,
+	    var pos = this.position,
 		force = this.force,
 		fx = addForce.x, fy = addForce.y,
 		px, py;
@@ -86,7 +119,7 @@ define([
 	
 	
 	PRigidBody2D.prototype.applyImpulse = function( impulse, worldPoint, wake ){
-	    var pos = this.pos,
+	    var pos = this.position,
 		invMass = this.invMass,
 		velocity = this.velocity,
 		ix = impulse.x, iy = impulse.y,

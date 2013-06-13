@@ -54,7 +54,6 @@ define([
 	    }
 	    contacts.length = 0;
 	    
-	    
 	    for( i = pairsi.length; i--; ){
 		bi = pairsi[i];
 		bj = pairsj[i];
@@ -65,12 +64,35 @@ define([
 	
 	
 	PNearphase2D.prototype.convexConvex = function(){
-	    var manifold = new PManifold2D;
+	    var manifold = new PManifold2D,
+		m, mnormal, mpoint, mdepth,
+		c, n, ri, rj, i;
 	    
-	    return function( bi, bj, si, sj, xi, xj, contacts ){
+	    return function( bi, bj, si, sj, xi, xj, Ri, Rj, contacts ){
 		
-		if( convexConvex( si, sj, xi, xj, manifold ) ){
+		if( convexConvex( si, sj, xi, xj, Ri, Rj, manifold ) ){
 		    
+		    for( i = manifold.length; i--; ){
+			m = manifold[i];
+			mnormal = m.normal;
+			mpoint = m.point;
+			mdepth = m.depth;
+			
+			c = createContact( bi, bj, contacts );
+			n = c.n, ri = c.ri, rj = c.rj;
+			
+			n.x = mnormal.x;
+			n.y = mnormal.y;
+			
+			ri.x = ( mpoint.x + mnormal.x * mdepth ) - xi.x;
+			ri.y = ( mpoint.y + mnormal.y * mdepth ) - xi.y;
+			
+			rj.x = mpoint.x - xj.x;
+			rj.y = mpoint.y - xj.y;
+		    }
+		    
+		    bi.wake();
+		    bj.wake();
 		}
 	    };
 	}();
@@ -80,9 +102,9 @@ define([
 	    var normal = new Vec2, point = new Vec2,
 		radius, c, n, nx, ny, ri, rj;
 	    
-	    return function( bi, bj, si, sj, xi, xj, contacts ){
+	    return function( bi, bj, si, sj, xi, xj, Ri, contacts ){
 		
-		if( convexCircle( si, sj, xi, xj, normal, point ) ){
+		if( convexCircle( si, sj, xi, xj, Ri, normal, point ) ){
 		    c = createContact( bi, bj, contacts );
 		    n = c.n, ri = c.ri, rj = c.rj;
 		    
@@ -94,8 +116,11 @@ define([
 		    ri.x = point.x - xi.x;
 		    ri.y = point.y - xi.y;
 		    
-		    rj.x = -radius * nx;
-		    rj.y = -radius * ny;
+		    rj.x = radius * -nx;
+		    rj.y = radius * -ny;
+		    
+		    bi.wake();
+		    bj.wake();
 		}
 	    };
 	}();
@@ -121,8 +146,11 @@ define([
 		    ri.x = radiusi * nx;
 		    ri.y = radiusi * ny;
 		    
-		    rj.x = -radiusj * nx;
-		    rj.y = -radiusj * ny;
+		    rj.x = radiusj * -nx;
+		    rj.y = radiusj * -ny;
+		    
+		    bi.wake();
+		    bj.wake();
 		}
 	    };
 	}();
@@ -142,32 +170,21 @@ define([
 			
 			case BOX:
 			case CONVEX:
-			    
-			    sj.calculateWorldVertices( xj, Rj );
-			    sj.calculateWorldNormals( Rj );
-			    
-			    this.convexCircle( bj, bi, sj, si, xj, xi, contacts );
+			    this.convexCircle( bj, bi, sj, si, xj, xi, Rj, contacts );
 			    break;
 		    }
 		}
 		else if( si.type === BOX || si.type === CONVEX ){
 		    
-		    si.calculateWorldVertices( xi, Ri );
-		    si.calculateWorldNormals( Ri );
-		    
 		    switch( sj.type ){
 			
 			case CIRCLE:
-			    this.convexCircle( bi, bj, si, sj, bi.position, bj.position, contacts );
+			    this.convexCircle( bi, bj, si, sj, xi, xj, Ri, contacts );
 			    break;
 			
 			case BOX:
 			case CONVEX:
-			    
-			    sj.calculateWorldVertices( xj, Rj );
-			    sj.calculateWorldNormals( Rj );
-			    
-			    convexConvex( bi, bj, si, sj, bi.position, bj.position, contacts );
+			    this.convexConvex( bi, bj, si, sj, xi, xj, Ri, Rj, contacts );
 			    break;
 		    }
 		}

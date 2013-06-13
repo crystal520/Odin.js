@@ -16,7 +16,7 @@ define([
         "use strict";
 	
         
-        function RigidBody( opts ){
+        function RigidBody2D( opts ){
             opts || ( opts = {} );
 	    
             Component.call( this );
@@ -41,10 +41,10 @@ define([
 	    }, this );
         }
         
-	Class.extend( RigidBody, Component );
+	Class.extend( RigidBody2D, Component );
 	
 	
-	RigidBody.prototype.init = function(){
+	RigidBody2D.prototype.init = function(){
 	    var body = this.body,
 		gameObject = this.gameObject;
 	    
@@ -53,7 +53,7 @@ define([
 	};
 	
 	
-	RigidBody.prototype.update = function(){
+	RigidBody2D.prototype.update = function(){
 	    var body = this.body,
 		gameObject = this.gameObject;
 	    
@@ -68,29 +68,29 @@ define([
 	};
 	
 	
-	RigidBody.prototype.applyForce = function( force, worldPoint, wake ){
+	RigidBody2D.prototype.applyForce = function( force, worldPoint, wake ){
 	    
 	    this.body.applyForce( force, worldPoint, wake );
 	};
 	
 	
-	RigidBody.prototype.applyTorque = function( torque, wake ){
+	RigidBody2D.prototype.applyTorque = function( torque, wake ){
 	    
 	    this.body.applyTorque( torque, wake );
 	};
 	
 	
-	RigidBody.prototype.applyImpulse = function( impulse, worldPoint, wake ){
+	RigidBody2D.prototype.applyImpulse = function( impulse, worldPoint, wake ){
 	    
 	    this.body.applyImpulse( impulse, worldPoint, wake );
 	};
 	
 	
-	RigidBody.DYNAMIC = PBody2D.DYNAMIC;
-	RigidBody.STATIC = PBody2D.STATIC;
-	RigidBody.KINEMATIC = PBody2D.KINEMATIC;
+	RigidBody2D.DYNAMIC = PBody2D.DYNAMIC;
+	RigidBody2D.STATIC = PBody2D.STATIC;
+	RigidBody2D.KINEMATIC = PBody2D.KINEMATIC;
 	
         
-        return RigidBody;
+        return RigidBody2D;
     }
 );

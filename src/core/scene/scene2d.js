@@ -4,15 +4,15 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/utils",
-	"core/world"
+	"core/scene/world2d"
     ],
-    function( Class, Utils, World ){
+    function( Class, Utils, World2D ){
         "use strict";
 	
 	var isString = Utils.isString;
 	
         
-        function Scene( opts ){
+        function Scene2D( opts ){
 	    opts || ( opts = {} );
             
             Class.call( this );
@@ -25,15 +25,15 @@ define([
             this._rigidbodies = [];
             this._cameras = [];
 	    
-            this.world = opts.world instanceof World ? opts.world : new World( opts );
+            this.world = opts.world instanceof World2D ? opts.world : new World2D( opts );
             
             this.add.apply( this, opts.children );
         }
         
-	Class.extend( Scene, Class );
+	Class.extend( Scene2D, Class );
         
         
-        Scene.prototype.forEach = function( callback ){
+        Scene2D.prototype.forEach = function( callback ){
             var children = this.children, i;
             
             for( i = children.length; i--; ){
@@ -42,7 +42,7 @@ define([
         };
         
         
-        Scene.prototype.add = function(){
+        Scene2D.prototype.add = function(){
             var children = this.children,
                 child, index, i;
             
@@ -68,13 +68,13 @@ define([
 		    child.init();
                 }
                 else{
-                    console.warn("Scene.add: "+ child.name +" is already added to scene");
+                    console.warn("Scene2D.add: "+ child.name +" is already added to scene");
                 }
             }
         };
         
         
-        Scene.prototype.remove = function(){
+        Scene2D.prototype.remove = function(){
             var children = this.children,
                 child, index, i;
             
@@ -98,23 +98,23 @@ define([
 		    this.trigger("removegameobject", child );
                 }
                 else{
-                    console.warn("Scene.remove: "+ child +" is not in scene");
+                    console.warn("Scene2D.remove: "+ child +" is not in scene");
                 }
             }
         };
         
 	
-	Scene.prototype._add = function( gameObject ){
-	    var sprite = gameObject.getComponent("Sprite"),
-		rigidbody = gameObject.getComponent("RigidBody");
+	Scene2D.prototype._add = function( gameObject ){
+	    var sprite2d = gameObject.getComponent("Sprite2D"),
+		rigidbody2d = gameObject.getComponent("RigidBody2D");
 	    
-	    if( sprite ){
-		this._sprites.push( sprite );
+	    if( sprite2d ){
+		this._sprites.push( sprite2d );
 		this._sprites.sort( this.sort );
 	    }
-	    if( rigidbody ){
-		this._rigidbodies.push( rigidbody );
-		this.world.add( rigidbody );
+	    if( rigidbody2d ){
+		this._rigidbodies.push( rigidbody2d );
+		this.world.add( rigidbody2d );
 	    }
 	    if( gameObject.matrixProjection ){
 		this._cameras.push( gameObject );
@@ -122,36 +122,36 @@ define([
 	};
         
 	
-	Scene.prototype._remove = function( gameObject ){
-	    var sprite = gameObject.getComponent("Sprite"),
-		rigidbody = gameObject.getComponent("RigidBody"),
+	Scene2D.prototype._remove = function( gameObject ){
+	    var sprite2d = gameObject.getComponent("Sprite2D"),
+		rigidbody2d = gameObject.getComponent("RigidBody2D"),
 		index;
 	    
-	    if( sprite ){
-		index = this._sprites.indexOf( sprite );
+	    if( sprite2d ){
+		index = this._sprites.indexOf( sprite2d );
 		this._sprites.splice( index, 1 );
 		
 		this._sprites.sort( this.sort );
 	    }
-	    if( rigidbody ){
-		index = this._rigidbodies.indexOf( rigidbody );
+	    if( rigidbody2d ){
+		index = this._rigidbodies.indexOf( rigidbody2d );
 		this._rigidbodies.splice( index, 1 );
-		this.world.remove( rigidbody );
+		this.world.remove( rigidbody2d );
 	    }
 	    if( gameObject.matrixProjection ){
-		index = this._sprites.indexOf( gameObject );
+		index = this._cameras.indexOf( gameObject );
 		this._cameras.splice( index, 1 );
 	    }
 	};
         
 	
-	Scene.prototype.sort = function( a, b ){
+	Scene2D.prototype.sort = function( a, b ){
 	    
 	    return a.gameObject.z - b.gameObject.z;
 	};
 	
         
-        Scene.prototype.findByTag = function( tag, results ){
+        Scene2D.prototype.findByTag = function( tag, results ){
             results = results || [];
             
             var children = this.children,
@@ -169,7 +169,7 @@ define([
         };
         
         
-        Scene.prototype.findByName = function( name ){
+        Scene2D.prototype.findByName = function( name ){
             var children = this.children,
                 child, i;
             
@@ -186,7 +186,7 @@ define([
         };
         
         
-        Scene.prototype.update = function(){
+        Scene2D.prototype.update = function(){
             var children = this.children, i;
             
             this.trigger("update");
@@ -201,6 +201,6 @@ define([
         };
         
         
-        return Scene;
+        return Scene2D;
     }
 );

@@ -16,8 +16,7 @@ define([
 	    TWO_PI = PI * 2,
 	    HALF_PI = PI * 0.5,
 	    defaultImg = new Image;
-	    
-	defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+	    defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 	
 	
         function CanvasRenderer( opts ){

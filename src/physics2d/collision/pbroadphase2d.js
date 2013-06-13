@@ -66,22 +66,6 @@ define([
 	};
 	
 	
-	PBroadphase2D.prototype.AABBBroadphase = function( bi, bj, biAABB, bjAABB, pairsi, pairsj ){
-	    
-	    if( bi.aabbNeedsUpdate ){
-		bi.calculateAABB();
-	    }
-	    if( bj.aabbNeedsUpdate ){
-		bj.calculateAABB();
-	    }
-	    
-	    if( intersects( biAABB, bjAABB ) ){
-		pairsi.push( bi );
-		pairsj.push( bj );
-	    }
-	};
-	
-	
 	PBroadphase2D.prototype.boundingRadiusBroadphase = function( bi, bj, pairsi, pairsj ){
 	    var si = bi.shape, sj = bj.shape,
 		
@@ -95,6 +79,22 @@ define([
 		d = dx * dx + dy * dy;
 	    
 	    if( d <= r * r ){
+		pairsi.push( bi );
+		pairsj.push( bj );
+	    }
+	};
+	
+	
+	PBroadphase2D.prototype.AABBBroadphase = function( bi, bj, biAABB, bjAABB, pairsi, pairsj ){
+	    
+	    if( bi.aabbNeedsUpdate ){
+		bi.calculateAABB();
+	    }
+	    if( bj.aabbNeedsUpdate ){
+		bj.calculateAABB();
+	    }
+	    
+	    if( intersects( biAABB, bjAABB ) ){
 		pairsi.push( bi );
 		pairsj.push( bj );
 	    }

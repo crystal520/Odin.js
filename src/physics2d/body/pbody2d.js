@@ -7,8 +7,6 @@ define([
     function( Class ){
         "use strict";
 	
-	var DYNAMIC, STATIC, KINEMATIC;
-	
         
 	function PBody2D( opts ){
 	    opts || ( opts = {} );

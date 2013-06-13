@@ -18,43 +18,47 @@ require(
 	});
 	
 	game.on("init", function(){
+	    var ball;
 	    vec2_1 = new Vec2;
 	    
-	    scene = new Scene;
+	    scene = new Scene2D;
 	    camera = new Camera2D({
-		zoom: 1
+		zoom: 4
 	    });
 	    camera.on("update", function(){
 		this.follow( ball, 16 );
 	    });
 	    
-	    ball = new GameObject2D({
-		position: new Vec2( 0.5, 2 ),
-		components: [
-		    new Sprite({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1
-		    }),
-		    new RigidBody({
-			mass: 1,
-			linearDamping: new Vec2( 0.5, 0.5 ),
-			radius: 0.5
+	    for( var i = 64; i--; ){
+		scene.add(
+		    new GameObject2D({
+			position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 8 ) ),
+			components: [
+			    new Sprite2D({
+				image: player,
+				x: 0,
+				y: 0,
+				w: 64,
+				h: 64,
+				width: 1,
+				height: 1
+			    }),
+			    new RigidBody2D({
+				mass: 1,
+				radius: 0.5
+			    })
+			]
 		    })
-		]
-	    });
-	    scene.add( ball );
+		);
+	    }
+	    ball = scene.children[0];
 	    
 	    for( var i = 1024; i--; ){
 		scene.add(
 		    new GameObject2D({
 			position: new Vec2( Mathf.randFloat( -8, 8 ), -i*0.25 ),
 			components: [
-			    new RigidBody({
+			    new RigidBody2D({
 				mass: 0,
 				radius: 0.5
 			    })

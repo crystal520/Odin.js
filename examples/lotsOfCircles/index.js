@@ -20,7 +20,7 @@ require(
 	game.on("init", function(){
 	    vec2_1 = new Vec2;
 	    
-	    scene = new Scene;
+	    scene = new Scene2D;
 	    camera = new Camera2D({
 		position: new Vec2( 0, 4 ),
 		zoom: 3
@@ -29,7 +29,7 @@ require(
 	    ground = new GameObject2D({
 		position: new Vec2( 0, 0 ),
 		components: [
-		    new RigidBody({
+		    new RigidBody2D({
 			mass: 0,
 			extents: new Vec2( 8, 0.5 )
 		    })
@@ -39,7 +39,7 @@ require(
 	    wallLeft = new GameObject2D({
 		position: new Vec2( -8, 8 ),
 		components: [
-		    new RigidBody({
+		    new RigidBody2D({
 			mass: 0,
 			extents: new Vec2( 0.5, 8 )
 		    })
@@ -49,7 +49,7 @@ require(
 	    wallRight = new GameObject2D({
 		position: new Vec2( 8, 8 ),
 		components: [
-		    new RigidBody({
+		    new RigidBody2D({
 			mass: 0,
 			extents: new Vec2( 0.5, 8 )
 		    })
@@ -59,10 +59,9 @@ require(
 	    spinner = new GameObject2D({
 		position: new Vec2( 0, 4 ),
 		components: [
-		    new RigidBody({
+		    new RigidBody2D({
 			mass: 0,
-			extents: new Vec2( 0.1, 2 ),
-			typeof: RigidBody.KINEMATIC
+			extents: new Vec2( 1, 2 )
 		    })
 		]
 	    });
@@ -78,7 +77,7 @@ require(
 		    new GameObject2D({
 			position: new Vec2( Mathf.randFloat( -3, 3 ), Mathf.randFloat( 3, 16 ) ),
 			components: [
-			    new Sprite({
+			    new Sprite2D({
 				image: player,
 				x: 0,
 				y: 0,
@@ -87,7 +86,7 @@ require(
 				width: r+r,
 				height: r+r
 			    }),
-			    new RigidBody({
+			    new RigidBody2D({
 				linearDamping: new Vec2( 0, 0 ),
 				mass: 1,
 				radius: r

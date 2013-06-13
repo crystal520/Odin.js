@@ -42,6 +42,7 @@ define([
 	    this.allowSleep = opts.allowSleep !== undefined ? opts.allowSleep : true;
 	    
 	    this.dt = 1 / 60;
+	    this.time = 0;
 	    
 	    this.bodies = [];
 	    

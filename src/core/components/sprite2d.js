@@ -4,23 +4,19 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/time",
-	"core/components/component",
+	"core/components/renderable2d",
 	"math/vec2"
     ],
-    function( Class, Time, Component, Vec2 ){
+    function( Class, Time, Renderable2D, Vec2 ){
         "use strict";
 	
         
-        function Sprite( opts ){
+        function Sprite2D( opts ){
             opts || ( opts = {} );
 	    
-            Component.call( this );
-	    
-	    this.visible = opts.visible !== undefined ? opts.visible : true;
+            Renderable2D.call( this, opts );
 	    
 	    this.image = opts.image instanceof Image ? opts.image : undefined;
-	    
-	    this.offset = opts.offset instanceof Vec2 ? opts.offset : new Vec2;
 	    
 	    this.width = opts.width || 1;
 	    this.height = opts.height || 1;
@@ -42,7 +38,7 @@ define([
 	    
 	    this.animation = this.animations["idle"];
 	    
-	    this.mode = Sprite.loop;
+	    this.mode = Sprite2D.loop;
 	    
 	    this._last = 0;
 	    this._frame = 0
@@ -50,33 +46,33 @@ define([
 	    this.playing = this.animation !== undefined ? true : false;
         }
         
-	Class.extend( Sprite, Component );
+	Class.extend( Sprite2D, Renderable2D );
 	
 	
-	Sprite.prototype.play = function( name, mode ){
+	Sprite2D.prototype.play = function( name, mode ){
 	    
 	    if( this.playing && this.animation === this.animations[ name ] ){
 		this.animation = this.animations[ name ];
 		
 		switch( mode ){
 		    
-		    case Sprite.LOOP:
+		    case Sprite2D.LOOP:
 		    case "loop":
-			this.mode = Sprite.LOOP;
+			this.mode = Sprite2D.LOOP;
 			break;
 		    
-		    case Sprite.PINGPONG:
+		    case Sprite2D.PINGPONG:
 		    case "pingpong":
-			this.mode = Sprite.PINGPONG;
+			this.mode = Sprite2D.PINGPONG;
 			break;
 		    
-		    case Sprite.ONCE:
+		    case Sprite2D.ONCE:
 		    case "once":
-			this.mode = Sprite.ONCE;
+			this.mode = Sprite2D.ONCE;
 			break;
 		    
 		    default:
-			this.mode = Sprite.LOOP;
+			this.mode = Sprite2D.LOOP;
 		}
 		
 		this.playing = true;
@@ -84,13 +80,13 @@ define([
 	};
 	
 	
-	Sprite.prototype.stop = function(){
+	Sprite2D.prototype.stop = function(){
 	    
 	    this.playing = false;
 	};
 	
 	
-	Sprite.prototype.update = function(){
+	Sprite2D.prototype.update = function(){
 	    var animation = this.animation,
 		currentFrame;
 	    
@@ -109,10 +105,10 @@ define([
 		    }
 		    
 		    if( this._frame >= animation.frames.length - 1 ){
-			if( this.mode === Sprite.loop ){
+			if( this.mode === Sprite2D.loop ){
 			    this._frame = 0;
 			}
-			else if( this.mode === Sprite.ONCE ){
+			else if( this.mode === Sprite2D.ONCE ){
 			    this.stop();
 			}
 		    }
@@ -124,11 +120,11 @@ define([
 	};
 	
 	
-	Sprite.ONCE = 0;
-	Sprite.LOOP = 1;
-	Sprite.PINGPONG = 2;
+	Sprite2D.ONCE = 0;
+	Sprite2D.LOOP = 1;
+	Sprite2D.PINGPONG = 2;
 	
         
-        return Sprite;
+        return Sprite2D;
     }
 );

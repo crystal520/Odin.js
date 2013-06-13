@@ -15,24 +15,10 @@ define([
 	var abs = Math.abs,
 	    sqrt = Math.sqrt,
 	    equals = Mathf.equals,
+	    EPSILON = Mathf.EPSILON,
 	    
-	    findMaxSeparation = PCollision2D.findMaxSeparation,
-	    edgeSeparation = PCollision2D.edgeSeparation,
-	    findIncidentEdge = PCollision2D.findIncidentEdge,
-	    
-	    contactPool = [];
-	
-	
-	function createContact( bi, bj, contacts ){
-	    var c = contactPool.length ? contactPool.pop() : new PContact2D( bi, bj );
-	    
-	    c.bi = bi;
-	    c.bj = bj;
-	    
-	    contacts.push( c );
-	    
-	    return c;
-	};
+	    findBestEdge,
+	    findSeparatingAxis;
 	
         
 	function PCollision2D(){
@@ -43,23 +29,154 @@ define([
 	Class.extend( PCollision2D, Class );
 	
 	
-	PCollision2D.prototype.clear = function( contacts ){
-	    var i, il;
+	PCollision2D.prototype.findBestEdge = findBestEdge = function( vertices, position, R, normal, edge, max ){
+	    var count = vertices.length, start = edge.start, end = edge.end,
+		
+		R11 = R[0], R21 = R[1], R12 = R[2], R22 = R[3],
+		posx = position.x, posy = position.y,
+		nx = normal.x, ny = normal.y,
+		
+		vert, vx, vy, x, y, d, dmax = -Infinity, index = 0, prev, next,
+		vx, vy, v1x, v1y, v2x, v2y, leftx, lefty, rightx, righty, tmp,
+		i;
 	    
-	    for( i = 0, il = contacts.length; i < il; i++ ){
-		contactPool.push( contacts[i] );
+	    for( i = count; i--; ){
+		vert = vertices[i]; vx = vert.x; vy = vert.y;
+		x = posx + ( vx * R11 + vy * R12 );
+		y = posy + ( vx * R21 + vy * R22 );
+		
+		d = x * nx + y * ny;
+		if( d > dmax ){
+		    dmax = d;
+		    index = i;
+		}
 	    }
-	    contacts.length = 0;
+	    
+	    vert = vertices[ index ];
+	    prev = index - 1 < 0 ? vertices[ count - 1 ] : vertices[ index - 1 ];
+	    next = index + 1 < count ? vertices[ index + 1 ] : vertices[0];
+	    
+	    x = vert.x; y = vert.y;
+	    vx = posx + ( x * R11 + y * R12 );
+	    vy = posy + ( x * R21 + y * R22 );
+	    
+	    x = prev.x; y = prev.y;
+	    v1x = posx + ( x * R11 + y * R12 );
+	    v1y = posy + ( x * R21 + y * R22 );
+	    
+	    x = next.x; y = next.y;
+	    v2x = posx + ( x * R11 + y * R12 );
+	    v2y = posy + ( x * R21 + y * R22 );
+	    
+	    rightx = vx - v1x;
+	    righty = vy - v1y;
+	    
+	    leftx = vx - v2x;
+	    lefty = vy - v2y;
+	    
+	    max.x = vx;
+	    max.y = vy;
+	    
+	    if( rightx * nx + righty * ny <= leftx * nx + lefty * ny ){
+		start.x = v1x;
+		start.y = v1y;
+		end.x = vx;
+		end.y = vy;
+	    }
+	    else{
+		start.x = vx;
+		start.y = vy;
+		end.x = v2x;
+		end.y = v2y;
+	    }
+	};
+	
+	
+	PCollision2D.prototype.findSeparatingAxis = findSeparatingAxis = function( si, sj, xi, xj, Ri, Rj, axis ){
+	    var verticesi = si.vertices, normalsi = si.normals, counti = normalsi.length,
+		verticesj = sj.vertices, normalsj = sj.normals, countj = normalsj.length,
+		
+		xix = xi.x, xiy = xi.y,
+		Ri11 = Ri[0], Ri21 = Ri[1], Ri12 = Ri[2], Ri22 = Ri[3],
+		
+		xjx = xj.x, xjy = xj.y,
+		Rj11 = Rj[0], Rj21 = Rj[1], Rj12 = Rj[2], Rj22 = Ri[3],
+		
+		dx = xjx - xix,
+		dy = xjy - xiy,
+		
+		normal, nx, ny, vert, vx, vy, x, y, dot, tmp, d, d1, d2, dmax = Infinity,
+		mini = Infinity, maxi = -Infinity, minj = Infinity, maxj = -Infinity,
+		
+		i, il, j;
+	    
+	    for( i = 0, il = counti + countj; i < il; i++ ){
+		if( i < counti ){
+		    normal = normalsi[i]; x = normal.x; y = normal.y;
+		    
+		    nx = x * Ri11 + y * Ri12;
+		    ny = x * Ri21 + y * Ri22;
+		}
+		else{
+		    normal = normalsj[ i - counti ]; x = normal.x; y = normal.y;
+		    
+		    nx = x * Rj11 + y * Rj12;
+		    ny = x * Rj21 + y * Rj22;
+		}
+		
+		for( j = counti; j--; ){
+		    vert = verticesi[j]; vx = vert.x, vy = vert.y;
+		    x = xix + ( vx * Ri11 + vy * Ri12 );
+		    y = xiy + ( vx * Ri21 + vy * Ri22 );
+		    
+		    dot = x * nx + y * ny;
+		    mini = dot < mini ? dot : mini;
+		    maxi = dot > maxi ? dot : maxi;
+		}
+		if( mini > maxi ){
+		    tmp = mini; mini = maxi; maxi = tmp;
+		}
+		
+		for( j = countj; j--; ){
+		    vert = verticesj[j]; vx = vert.x, vy = vert.y;
+		    x = xjx + ( vx * Rj11 + vy * Rj12 );
+		    y = xjy + ( vx * Rj21 + vy * Rj22 );
+		    
+		    dot = x * nx + y * ny;
+		    minj = dot < minj ? dot : minj;
+		    maxj = dot > maxj ? dot : maxj;
+		}
+		if( minj > maxj ){
+		    tmp = minj; minj = maxj; maxj = tmp;
+		}
+		
+		if( maxi < minj || maxj < mini ) return -1;
+		
+		d1 = maxi - minj;
+		d2 = maxj - mini;
+		d = d1 < d2 ? d1 : d2;
+		
+		if( d < dmax ){
+		    dmax = d;
+		    axis.x = nx;
+		    axis.y = ny;
+		    
+		    if( dx * x + dy * y < 0 ){
+			axis.x = -nx;
+			axis.y = -ny;
+		    }
+		}
+	    }
+	    
+	    return dmax * dmax - ( dx * dx + dy * dy );
 	};
 	
 	
 	PCollision2D.prototype.convexConvex = function(){
-	    var manifold = new PManifold2D,
-		normal = new Vec2, vec = new Vec2, e = new Vec2, refNorm = new Vec2,
-		edgei = new Line2, edgej = new Line2;
+	    var edgei = new Line2, edgej = new Line2, maxi = new Vec2, maxj = new Vec2,
+		e = new Vec2, vec = new Vec2, refNorm = new Vec2, axis = new Vec2;
 	    
-	    
-	    function clipPoints( v1, v2, n, o ){
+	    function clipPoints( v1, v2, n, o, manifold ){
 		var d1 = n.dot( v1 ) - o,
 		    d2 = n.dot( v2 ) - o,
 		    interp;
@@ -75,235 +192,48 @@ define([
 		}
 	    }
 	    
-	    
-	    function buildContacts( bi, bj, xi, xj, contacts ){
-		var m, mnormal, mpoint, mdepth, c, n, ri, rj,
-		    i, il;
+	    return function( si, sj, xi, xj, Ri, Rj, manifold ){
+		var depth = findSeparatingAxis( si, sj, xi, xj, Ri, Rj, axis ),
+		    ref, inc, maxVertex, flip = false, offset1, offset2, tmp,
+		    mn = manifold.normal;
 		
-		for( i = manifold.length; i--; ){
-		    m = manifold[i];
-		    mnormal = m.normal;
-		    mpoint = m.point;
-		    mdepth = m.depth;
-		    
-		    c = createContact( bi, bj, contacts );
-		    n = c.n; ri = c.ri; rj = c.rj;
-		    
-		    n.x = mnormal.x;
-		    n.y = mnormal.y;
-		    
-		    ri.x = ( mpoint.x + mnormal.x * mdepth ) - xi.x;
-		    ri.y = ( mpoint.y + mnormal.y * mdepth ) - xi.y;
-		    
-		    rj.x = mpoint.x - xj.x;
-		    rj.y = mpoint.y - xj.y;
-		}
-	    }
-	    
-	    
-	    return function( bi, bj, si, sj, xi, xj, Ri, Rj, contacts ){
-		var vertsi = si.vertices, vertsj = sj.vertices,
-		    counti = vertsi.length, countj = vertsj.length,
-		    
-		    normsi = si.normals, normsj = sj.normals,
-		    
-		    dx = xj.x - xi.x,
-		    dy = xj.y - xi.y,
-		    
-		    Ri11 = Ri[0], Ri21 = Ri[1], Ri12 = Ri[2], Ri22 = Ri[3],
-		    Rj11 = Rj[0], Rj21 = Rj[1], Rj12 = Rj[2], Rj22 = Rj[3],
-		    
-		    n, vertex, x, y, nx, ny, dot, tmp, d, depth = Infinity, d1, d2,
-		    mini = Infinity, maxi = -Infinity, minj = Infinity, maxj = -Infinity,
-		    
-		    dmaxi = -Infinity, dmaxj = -Infinity, edgeIndexi = 0, edgeIndexj = 0,
-		    normalx, normaly, v, v1, v2, next, prev, leftx, lefty, rightx, righty,
-		    
-		    mnormal = manifold.normal, ref, inc, max1, max2, maxVertex, flip = false, offset1, offset2,
-		    
-		    i, j, il;
+		if( depth > 0 ) return false;
 		
-		for( i = 0, il = counti + countj; i < il; i++ ){
-		    
-		    if( i < counti ){
-			n = normsi[i];
-			x = n.x; y = n.y;
-			
-			nx = x * Ri11 + y * Ri12;
-			ny = x * Ri21 + y * Ri22;
-		    }
-		    else{
-			n = normsj[ i - counti ];
-			x = n.x; y = n.y;
-			
-			nx = x * Rj11 + y * Rj12;
-			ny = x * Rj21 + y * Rj22;
-		    }
-		    
-		    for( j = counti; j--; ){
-			vertex = vertsi[j];
-			x = xi.x + ( vertex.x * Ri11 + vertex.y * Ri12 );
-			y = xi.y + ( vertex.x * Ri21 + vertex.y * Ri22 );
-			
-			dot = x * nx + y * ny;
-			mini = dot < mini ? dot : mini;
-			maxi = dot > maxi ? dot : maxi;
-		    }
-		    if( mini > maxi ){
-			tmp = mini; mini = maxi; maxi = tmp;
-		    }
-		    
-		    for( j = countj; j--; ){
-			vertex = vertsj[j];
-			x = xj.x + ( vertex.x * Rj11 + vertex.y * Rj12 );
-			y = xj.y + ( vertex.x * Rj21 + vertex.y * Rj22 );
-			
-			dot = x * nx + y * ny;
-			minj = dot < minj ? dot : minj;
-			maxj = dot > maxj ? dot : maxj;
-		    }
-		    if( minj > maxj ){
-			tmp = minj; minj = maxj; maxj = tmp;
-		    }
-		    
-		    if( maxi < minj || maxj < mini ) return;
-		    
-		    d1 = maxi - minj;
-		    d2 = maxj - mini;
-		    d = d1 < d2 ? d1 : d2;
-		    
-		    x = n.x;
-		    y = n.y;
-		    
-		    if( d < depth ){
-			depth = d;
-			normal.x = x;
-			normal.y = y;
-			
-			if( dx * x + dy * y < 0 ){
-			    normal.x = -x;
-			    normal.y = -y;
-			}
-		    }
-		}
+		findBestEdge( si.vertices, xi, Ri, axis, edgei, maxi );
 		
-		normalx = normal.x;
-		normaly = normal.y;
-		
-		for( i = counti; i--; ){
-		    vertex = vertsi[i];
-		    x = xi.x + ( vertex.x * Ri11 + vertex.y * Ri12 );
-		    y = xi.y + ( vertex.x * Ri21 + vertex.y * Ri22 );
-		    
-		    dot = x * normalx + y * normaly;
-		    if( dot > dmaxi ){
-			dmaxi = dot;
-			edgeIndexi = i;
-		    }
-		}
-		
-		v = vertsi[ edgeIndexi ];
-		prev = edgeIndexi - 1 < 0 ? counti - 1 : edgeIndexi - 1;
-		next = edgeIndexi + 1 < counti ? edgeIndexi + 1 : 0;
-		
-		v1 = vertsi[ prev ];
-		v2 = vertsi[ next ];
-		
-		tmp = v.x - v1.x;
-		righty = v.y - v1.y;
-		
-		rightx = xi.x + ( tmp * Ri11 + righty * Ri12 );
-		righty = xi.y + ( tmp * Ri21 + righty * Ri22 );
-		
-		tmp = v.x - v2.x;
-		lefty = v.y - v2.y;
-		
-		leftx = xi.x + ( tmp * Ri11 + lefty * Ri12 );
-		lefty = xi.y + ( tmp * Ri21 + lefty * Ri22 );
-		
-		max1 = v;
-		
-		if( rightx * normalx + righty * normaly <= leftx * normalx + lefty * normaly ){
-		    edgei.set( v1, v );
-		}
-		else{
-		    edgei.set( v, v2 );
-		}
-		
-		for( i = counti; i--; ){
-		    vertex = vertsj[i];
-		    x = xj.x + ( vertex.x * Rj11 + vertex.y * Rj12 );
-		    y = xj.y + ( vertex.x * Rj21 + vertex.y * Rj22 );
-		    
-		    dot = x * -normalx + y * -normaly;
-		    if( dot > dmaxj ){
-			dmaxj = dot;
-			edgeIndexj = i;
-		    }
-		}
-		
-		v = vertsj[ edgeIndexj ];
-		prev = edgeIndexj - 1 < 0 ? counti - 1 : edgeIndexj - 1;
-		next = edgeIndexj + 1 < counti ? edgeIndexj + 1 : 0;
-		
-		v1 = vertsj[ prev ];
-		v2 = vertsj[ next ];
-		
-		tmp = v.x - v1.x;
-		righty = v.y - v1.y;
-		
-		rightx = xj.x + ( tmp * Rj11 + righty * Rj12 );
-		righty = xj.y + ( tmp * Rj21 + righty * Rj22 );
-		
-		tmp = v.x - v2.x;
-		lefty = v.y - v2.y;
-		
-		leftx = xj.x + ( tmp * Rj11 + lefty * Rj12 );
-		lefty = xj.y + ( tmp * Rj21 + lefty * Rj22 );
-		
-		max2 = v;
-		
-		if( rightx * -normalx + righty * -normaly <= leftx * -normalx + lefty * -normaly ){
-		    edgej.set( v1, v );
-		}
-		else{
-		    edgej.set( v, v2 );
-		}
+		vec.x = -axis.x; vec.y = -axis.y;
+		findBestEdge( sj.vertices, xj, Rj, vec, edgej, maxj );
 		
 		manifold.clear();
-		mnormal.x = normalx;
-		mnormal.y = normaly;
+		mn.x = axis.x; mn.y = axis.y;
 		
-		if( edgei.dot( normal ) <= edgej.dot( normal ) ){
+		if( edgei.dot( axis ) <= edgej.dot( axis ) ){
 		    ref = edgei;
 		    inc = edgej;
-		    maxVertex = max1;
+		    maxVertex = maxi;
 		}
 		else{
 		    ref = edgej;
 		    inc = edgei;
-		    maxVertex = max2;
+		    maxVertex = maxj;
 		    flip = true;
 		}
 		
 		ref.norm();
 		
 		offset1 = ref.dot( ref.start );
-		clipPoints( inc.start, inc.end, ref.delta( vec ), offset1 );
+		clipPoints( inc.start, inc.end, ref.delta( vec ), offset1, manifold );
 		
 		if( manifold.length < 2 ){
-		    manifold.filter( refNorm, refNorm.dot( maxVertex ) );
-		    buildContacts( bi, bj, xi, xj, contacts );
-		    return;
+		    return true;
 		}
 		
 		offset2 = ref.dot( ref.end );
-		clipPoints(  manifold[0].point, manifold[1].point, ref.delta( vec ).negate(), offset2 );
+		ref.delta( vec ); vec.x = -vec.x; vec.y = -vec.y;
+		clipPoints( manifold[0].point, manifold[1].point, vec, offset2, manifold );
 		
 		if( manifold.length < 2 ){
-		    manifold.filter( refNorm, refNorm.dot( maxVertex ) );
-		    buildContacts( bi, bj, xi, xj, contacts );
-		    return;
+		    return true;
 		}
 		
 		ref.delta( refNorm );
@@ -316,23 +246,31 @@ define([
 		
 		manifold.filter( refNorm, refNorm.dot( maxVertex ) );
 		
-		buildContacts( bi, bj, xi, xj, contacts );
+		return true;
 	    };
 	}();
 	
 	
-	PCollision2D.prototype.convexCircle = function( si, sj, xi, xj, normal, point ){
-	    var vertices = si.worldVertices, normals = si.worldNormals, count = vertices.length, radius = sj.radius,
-		vert, norm, v1, v2, len, invLen, dist, invDist,
+	PCollision2D.prototype.convexCircle = function( si, sj, xi, xj, Ri, normal, point ){
+	    var vertices = si.vertices, normals = si.normals, vert, norm,
+		count = vertices.length, radius = sj.radius,
 		
-		dx, dy, ex, ey, u, px, py,
+		Ri11 = Ri[0], Ri21 = Ri[1], Ri12 = Ri[2], Ri22 = Ri[3],
+		
+		dx = xj.x - xi.x,
+		dy = xj.y - xi.y,
+		
+		localx = dx * Ri[0] + dy * Ri[2],
+		localy = dx * Ri[1] + dy * Ri[3],
+		
+		v1, v2, ex, ey, length, invLength, dist, invDist, u, px, py,
 		
 		s, separation = -Infinity, normIndex, i;
 		
 	    for( i = count; i--; ){
 		vert = vertices[i]; norm = normals[i];
 		
-		s = norm.x * ( xj.x - vert.x ) + norm.y * ( xj.y - vert.y );
+		s = norm.x * ( localx - vert.x ) + norm.y * ( localy - vert.y );
 		
 		if( s > radius ) return false;
 		
@@ -342,7 +280,7 @@ define([
 		}
 	    }
 	    
-	    if( separation > 0 ){
+	    if( separation < EPSILON ){
 		norm = normals[ normIndex ];
 		
 		normal.x = norm.x;
@@ -350,61 +288,64 @@ define([
 		
 		point.x = xj.x - radius * normal.x;
 		point.y = xj.y - radius * normal.y;
+		
+		return true;
 	    }
 	    
 	    v1 = vertices[ normIndex ];
 	    v2 = vertices[ normIndex + 1 ] || vertices[0];
 	    
-	    ex = v1.x - v2.x;
-	    ey = v1.y - v2.y;
+	    ex = v2.x - v1.x;
+	    ey = v2.y - v1.y;
 	    
-	    len = sqrt( ex * ex + ey * ey );
-	    invLen = len !== 0 ? 1 / len : 0;
+	    length = sqrt( ex * ex + ey * ey )
+	    invLength = 1 / length;
 	    
-	    ex *= invLen;
-	    ey *= invLen;
+	    ex *= invLength;
+	    ey *= invLength;
 	    
-	    if( len < 0 ){
-		dx = xj.x - v2.x;
-		dy = xj.y - v2.y;
+	    if( length < EPSILON ){
+		dx = localx - xi.x;
+		dy = localy - xi.y;
 		
 		dist = sqrt( dx * dx + dy * dy );
-		if( dist > radius ) return false;
-		
-		invDist = dist !== 0 ? 1 / dist : 0;
+		invDist = 1 / dist;
 		
 		dx *= invDist;
 		dy *= invDist;
+		
+		if( dist > radius ) return false;
 		
 		normal.x = dx;
 		normal.y = dy;
 		
 		point.x = xj.x - radius * dx;
 		point.y = xj.y - radius * dy;
+		
+		return true;
 	    }
 	    
-	    u = ( xj.x - v2.x ) * ex + ( xj.y - v2.y ) * ey;
+	    u = ( localx - v1.x ) * ex + ( localy - v1.y ) * ey;
 	    
 	    if( u <= 0 ){
-		px = v2.x;
-		py = v2.y;
-	    }
-	    else if( u >= len ){
 		px = v1.x;
 		py = v1.y;
 	    }
+	    else if( u >= length ){
+		px = v2.x;
+		py = v2.y;
+	    }
 	    else{
-		px = ex * u + v2.x;
-		py = ey * u + v2.y;
+		px = ex * u + v1.x;
+		py = ey * u + v1.y;
 	    }
 	    
-	    dx = xj.x - px;
-	    dy = xj.y - py;
+	    dx = localx - px;
+	    dy = localy - py;
 	    
 	    dist = sqrt( dx * dx + dy * dy );
 	    if( dist > radius ) return false;
-	    
-	    invDist = dist !== 0 ? 1 / dist : 0;
+	    invDist = 1 / dist;
 	    
 	    dx *= invDist;
 	    dy *= invDist;
@@ -414,7 +355,7 @@ define([
 	    
 	    point.x = xj.x - radius * dx;
 	    point.y = xj.y - radius * dy;
- 	    
+	    
 	    return true;
 	};
 	
@@ -429,9 +370,9 @@ define([
 	    
 	    if( dsq > r * r ) return false;
 	    
-	    if( dsq < 0 ){
+	    if( dsq < EPSILON ){
 		normal.x = 0;
-		normal.y = -1;
+		normal.y = 1;
 	    }
 	    else{
 		d = 1 / sqrt( dsq );

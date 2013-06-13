@@ -42,7 +42,7 @@ define([
 	    
 	    this.sleepState = AWAKE;
 	    
-	    this._sleepMinVelocity = 1e-4;
+	    this._sleepVelocity = 0.01;
 	    this._sleepTimeLimit = 1;
 	    this._sleepLastSleepy = 0;
 	}
@@ -101,13 +101,14 @@ define([
 	    if( this.allowSleep ){
 		var sleepState = this.sleepState,
 		    velSq = this.velocity.lenSq(),
-		    sleepMinVelocity = this._sleepMinVelocity,
-		    sleepMinVelocitySq = sleepMinVelocity * sleepMinVelocity;
+		    
+		    sleepVel = this._sleepVelocity,
+		    sleepVelSq = sleepVel * sleepVel;
 		
-		if( sleepState === AWAKE && velSq < sleepMinVelocitySq ){
+		if( sleepState === AWAKE && velSq < sleepVelSq ){
 		    this.sleepy( time )
 		}
-		else if( sleepState === SLEEPY && velSq > sleepMinVelocitySq ){
+		else if( sleepState === SLEEPY && velSq > sleepVelSq ){
 		    this.wake();
 		}
 		else if( sleepState === SLEEPY && ( time - this._sleepLastSleepy ) > this._sleepTimeLimit ){

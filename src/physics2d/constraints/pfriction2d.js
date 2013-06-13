@@ -30,8 +30,7 @@ define([
 	
 	
 	PFriction2D.prototype.calculateB = function( h ){
-	    var a = this.a, b = this.b,
-		
+	    var b = this.b,
 		t = this.t, tx = t.x, ty = t.y,
 		
 		ri = this.ri, rix = ri.x, riy = ri.y,
@@ -47,8 +46,6 @@ define([
 		vj = bj.velocity, fj = bj.force,
 		wj = bj.angularVelocity, tj = bj.torque,
 		
-		Gq = 0,
-		
 		GWx = vj.x + ( -wj * rjy ) - vi.x - ( -wi * riy ),
 		GWy = vj.y + ( wj * rjx ) - vi.y - ( wi * rix ),
 		GW = GWx * tx + GWy * ty,
@@ -57,7 +54,7 @@ define([
 		GiMfy = fj.y * invMassj + ( tj * rjx * invInertiaj ) - fi.y * invMassi - ( ti * rix * invInertiai ),
 		GiMf = GiMfx * tx + GiMfy * ty;
 	    
-	    return -a * Gq - b * GW - h * GiMf;
+	    return -b * GW - h * GiMf;
 	};
 	
 	

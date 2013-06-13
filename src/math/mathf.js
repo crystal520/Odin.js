@@ -135,7 +135,7 @@ define(
 	Mathf.prototype.smoothStep = function( x, min, max ){
             x = ( clamp01( x ) - min ) / ( max - min );
             
-            return x * x * ( 3 - 2 * t );
+            return x * x * ( 3 - 2 * x );
         };
         
         

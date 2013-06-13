@@ -73,8 +73,9 @@ define(
 	Odin.PWorld2D = require("physics2d/pworld2d");
 	
 	Odin.Component = require("core/components/component");
-	Odin.RigidBody = require("core/components/rigidbody");
-	Odin.Sprite = require("core/components/sprite");
+	Odin.Renderable2D = require("core/components/renderable2d");
+	Odin.RigidBody2D = require("core/components/rigidbody2d");
+	Odin.Sprite2D = require("core/components/sprite2d");
 	
 	Odin.Game = require("core/game/game");
 	Odin.ClientGame = require("core/game/clientgame");
@@ -92,11 +93,12 @@ define(
 	Odin.GameObject2D = require("core/objects/gameobject2d");
 	Odin.Transform2D = require("core/objects/transform2d");
 	
+	Odin.Scene2D = require("core/scene/scene2d");
+	Odin.World2D = require("core/scene/world2d");
+	
 	Odin.Canvas = require("core/canvas");
 	Odin.CanvasRenderer = require("core/canvasrenderer");
-	Odin.Scene = require("core/scene");
 	Odin.WebGLRenderer = require("core/webglrenderer");
-	Odin.World = require("core/world");
 	
 	return Odin;
     }

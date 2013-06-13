@@ -79,12 +79,8 @@ define([
 			    GWlambda = c.calculateGWlambda();
 			    deltalambda = invC * ( B - GWlambda - c.eps * lambda );
 			    
-			    if( lambda + deltalambda < c.minForce ){
-				deltalambda = c.minForce - lambda;
-			    }
-			    else if( lambda + deltalambda > c.maxForce ){
-				deltalambda = c.maxForce - lambda;
-			    }
+			    if( lambda + deltalambda < c.minForce ) deltalambda = c.minForce - lambda;
+			    if( lambda + deltalambda > c.maxForce ) deltalambda = c.maxForce - lambda;
 			    
 			    lambdas[i] += deltalambda;
 			    deltalambdaTotal += abs( deltalambda );

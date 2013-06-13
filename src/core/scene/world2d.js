@@ -12,7 +12,7 @@ define([
         "use strict";
         
         
-        function World( opts ){
+        function World2D( opts ){
 	    opts || ( opts = {} );
             
             Class.call( this );
@@ -26,29 +26,31 @@ define([
 	    this.pworld = new PWorld2D( opts );
         }
         
-	Class.extend( World, Class );
+	Class.extend( World2D, Class );
         
         
-        World.prototype.add = function( rigidbody ){
+        World2D.prototype.add = function( rigidbody ){
+	    var body = rigidbody.body;
 	    
-	    rigidbody.body.userData = rigidbody;
-	    this.pworld.add( rigidbody.body );
+	    body.userData = rigidbody;
+	    this.pworld.add( body );
         };
         
         
-        World.prototype.remove = function( rigidbody ){
+        World2D.prototype.remove = function( rigidbody ){
+	    var body = rigidbody.body;
 	    
-	    rigidbody.body.userData = undefined;
-	    this.pworld.remove( rigidbody.body );
+	    body.userData = undefined;
+	    this.pworld.remove( body );
         };
         
         
-        World.prototype.update = function(){
+        World2D.prototype.update = function(){
 	    
 	    this.pworld.step( Time.delta );
 	};
         
         
-        return World;
+        return World2D;
     }
 );

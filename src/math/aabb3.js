@@ -40,7 +40,7 @@ define([
         
         
         AABB3.prototype.setFromPoints = function( points ){
-            var v, i = 0, il = points.length,
+            var v, i = points.length,
 		minx, miny, minz, maxx, maxy, maxz,
 		min = this.min, max = this.max,
 		x, y, z;
@@ -50,7 +50,7 @@ define([
 		minx = miny = minz = Infinity;
 		maxx = maxy = maxz = -Infinity;
                 
-                for( i; i < il; i++ ){
+                for( i; i--; ){
                     v = points[i];
 		    x = v.x; y = v.y; z = v.z;
 		    

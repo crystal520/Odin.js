@@ -3,18 +3,19 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
+	"base/utils",
 	"base/device",
 	"base/dom",
 	"base/time",
-	"core/scene",
 	"core/input/input",
 	"core/canvasrenderer",
 	"core/webglrenderer",
     ],
-    function( Class, Device, Dom, Time, Scene, Input, CanvasRenderer, WebGLRenderer ){
+    function( Class, Utils, Device, Dom, Time, Input, CanvasRenderer, WebGLRenderer ){
 	"use strict";
 	
 	var floor = Math.floor,
+	    isString = Utils.isString,
 	    addEvent = Dom.addEvent;
 	
 	
@@ -23,7 +24,7 @@ define([
 	    
 	    Class.call( this, opts );
 	    
-	    this.debug = opts.debug !== undefined ? opts.debug : false;
+	    this.debug = opts.debug !== undefined ? !!opts.debug : false;
 	    
 	    this.camera = undefined;
             this.scene = undefined;
@@ -60,17 +61,11 @@ define([
                 index = scenes.indexOf( scene );
                 
                 if( index === -1 ){
-                    
-		    if( scene instanceof Scene ){
-			scenes.push( scene );
-			scene.game = this;
-			
-			scene.trigger("addtogame");
-			this.trigger("addscene", scene );
-		    }
-		    else{
-			console.warn("Game.add: Object is not an instance of Scene");
-		    }
+		    scenes.push( scene );
+		    scene.game = this;
+		    
+		    scene.trigger("addtogame");
+		    this.trigger("addscene", scene );
                 }
 		else{
 		    console.warn("Game.add: "+ scene.name +" is already added to game");
@@ -88,7 +83,6 @@ define([
                 index = scenes.indexOf( scene );
                 
                 if( index !== -1 ){
-                    
                     scenes.splice( index, 1 );
 		    scene.game = undefined;
                     
@@ -105,8 +99,11 @@ define([
 	Game.prototype.setScene = function( scene ){
             var index, newScene;
 	    
-            if( scene instanceof Scene ){
-                index = this.scenes.indexOf( scene );
+            if( Utils.isString( scene ) ){
+                this.scene = this.getScene( scene );
+            }
+	    else{
+		index = this.scenes.indexOf( scene );
 		
 		if( index === -1 ){
 		    console.warn("Game.setScene: scene not added to Game, adding it...");
@@ -114,10 +111,6 @@ define([
 		}
 		
                 this.scene = scene;
-            }
-            else if( Utils.isString( scene ) ){
-		
-                this.scene = this.getScene( scene );
             }
 	    
 	    if( !this.scene ){
@@ -127,15 +120,17 @@ define([
 	
 	
 	Game.prototype.setCamera = function( camera ){
-            var index,
-		scene = this.scene;
+            var index, scene = this.scene;
 		
 	    if( !scene ){
 		console.warn("Game.setCamera: no active scene for camera.");
 		return;
 	    }
 	    
-	    if( camera.matrixProjection ){
+            if( isString( camera ) ){
+                this.camera = scene.findByName( camera );
+            }
+	    else{
 		index = scene.children.indexOf( camera );
 		
 		if( index === -1 ){
@@ -145,9 +140,6 @@ define([
 		
 		this.camera = camera;
 	    }
-            else if( isString( camera ) ){
-                this.camera = scene.findByName( camera );
-            }
 	    
             if( !this.camera ){
                 console.warn("Scene.setCamera: no camera found "+ camera );

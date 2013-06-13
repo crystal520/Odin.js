@@ -33,17 +33,14 @@ define([
 	    
 	    this.normals = normals = [];
 	    
-	    this.worldVertices = worldVertices = [];
-	    this.worldNormals = worldNormals = [];
-	    
 	    for( i = 0, il = verts.length; i < il; i++ ){
 		v1 = verts[i];
 		v2 = verts[i+1] || verts[0];
 		
-		normals[i] = normal = new Vec2().vsub( v2, v1 ).perpR().norm();
-		
-		worldVertices[i] = v1.clone();
-		worldNormals[i] = normal.clone();
+		normals[i] = new Vec2(
+		    v2.y - v1.y,
+		    -( v2.x - v1.x )
+		).norm();
 	    }
 	    
 	    this.calculateAABB();
@@ -178,36 +175,6 @@ define([
 	    }
 	    
 	    this.volume = volume;
-	};
-	
-	
-	PConvex2D.prototype.calculateWorldVertices = function( position, R ){
-	    var vertices = this.vertices, worldVertices = this.worldVertices,
-		vertex, worldVertex, x, y, i, il;
-	    
-	    for( i = vertices.length; i--; ){
-		vertex = vertices[i];
-		worldVertex = worldVertices[i];
-		x = vertex.x; y = vertex.y;
-		
-		worldVertex.x = position.x + ( x * R[0] + y * R[2] );
-		worldVertex.y = position.y + ( x * R[1] + y * R[3] );
-	    }
-	};
-	
-	
-	PConvex2D.prototype.calculateWorldNormals = function( R ){
-	    var normals = this.normals, worldNormals = this.worldNormals,
-		normal, worldNormal, x, y, i, il;
-	    
-	    for( i = normals.length; i--; ){
-		normal = normals[i];
-		worldNormal = worldNormals[i];
-		x = normal.x; y = normal.y;
-		
-		worldNormal.x = x * R[0] + y * R[2];
-		worldNormal.y = x * R[1] + y * R[3];
-	    }
 	};
 	
         
