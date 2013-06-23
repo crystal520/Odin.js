@@ -14,7 +14,8 @@ define([
     function( Class, Dom, Time, Mouse, Touches, Keyboard, Accelerometer, Orientation ){
 	"use strict";
 	
-	var addEvent = Dom.addEvent;
+	var addEvent = Dom.addEvent,
+	    removeEvent = Dom.removeEvent;
 	
 	
 	function Input(){
@@ -38,6 +39,23 @@ define([
             addEvent( top, "keydown keyup", Keyboard.handleEvents, Keyboard );
             addEvent( window, "devicemotion", Accelerometer.handle_devicemotion, Accelerometer );
             addEvent( window, "deviceorientation orientationchange", Orientation.handleEvents, Orientation );
+        }
+        
+        
+        Input.prototype.clear = function(){
+	    var element = this.element;
+	    
+	    if( element ){
+		removeEvent( element, "mousedown mousemove mouseup mouseout DOMMouseScroll mousewheel touchstart touchmove touchend touchcancel", this.handleEvents, this );
+		
+		removeEvent( element, "mousedown mousemove mouseup mouseout DOMMouseScroll mousewheel", Mouse.handleEvents, Mouse );
+		removeEvent( element, "touchstart touchmove touchend touchcancel", Touches.handleEvents, Touches );
+		removeEvent( top, "keydown keyup", Keyboard.handleEvents, Keyboard );
+		removeEvent( window, "devicemotion", Accelerometer.handle_devicemotion, Accelerometer );
+		removeEvent( window, "deviceorientation orientationchange", Orientation.handleEvents, Orientation );
+	    }
+	    
+            this.element = undefined;
         }
         
         

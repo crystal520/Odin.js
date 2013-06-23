@@ -54,7 +54,7 @@ define([
 		minx = miny = Infinity;
 		maxx = maxy = -Infinity;
                 
-                for( i; i--; ){
+                for( ; i--; ){
                     v = points[i];
 		    x = v.x; y = v.y;
 		    

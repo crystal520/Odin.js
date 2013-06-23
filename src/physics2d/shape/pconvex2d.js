@@ -78,17 +78,19 @@ define([
 	    
 	    return function( position, R, aabb ){
 		var vertices = this.vertices,
+		    px = position.x, py = position.y,
 		    min = aabb.min, max = aabb.max,
 		    minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity,
-		    R11 = R[0], R21 = R[1], R12 = R[2], R22 = R[3],
+		    R11 = R[0], R12 = R[2],
+		    R21 = R[1], R22 = R[3],
 		    vertex, ox, oy, x, y, i, il;
 		
 		for( i = vertices.length; i--; ){
 		    vertex = vertices[i];
 		    ox = vertex.x; oy = vertex.y;
 		    
-		    x = position.x + ( ox * R11 + oy * R12 );
-		    y = position.y + ( ox * R21 + oy * R22 );
+		    x = px + ( ox * R11 + oy * R12 );
+		    y = py + ( ox * R21 + oy * R22 );
 		    
 		    minx = x < minx ? x : minx;
 		    miny = y < miny ? y : miny;

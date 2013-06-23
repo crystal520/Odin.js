@@ -4,7 +4,7 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/time",
-	"core/components/component",
+	"core/components/renderable2d",
 	"physics2d/body/pbody2d",
 	"physics2d/body/prigidbody2d",
 	"physics2d/shape/pshape2d",
@@ -12,25 +12,35 @@ define([
 	"physics2d/shape/pbox2d",
 	"physics2d/shape/pconvex2d"
     ],
-    function( Class, Time, Component, PBody2D, PRigidBody2D, PShape2D, PCircle2D, PBox2D, PConvex2D ){
+    function( Class, Time, Renderable2D, PBody2D, PRigidBody2D, PShape2D, PCircle2D, PBox2D, PConvex2D ){
         "use strict";
 	
         
         function RigidBody2D( opts ){
             opts || ( opts = {} );
 	    
-            Component.call( this );
+            Renderable2D.call( this );
+	    
+	    this.radius = undefined;
+	    this.extents = undefined;
+	    this.vertices = undefined;
 	    
 	    var shape;
 	    
 	    if( opts.radius ){
 		shape = new PCircle2D( opts.radius );
+		this.radius = opts.radius || shape.radius;
+		this.updateCircle();
 	    }
 	    if( opts.extents ){
 		shape = new PBox2D( opts.extents );
+		this.extents = opts.extents || shape.extents;
+		this.updateBox();
 	    }
 	    if( opts.vertices ){
 		shape = new PConvex2D( opts.vertices );
+		this.vertices = opts.vertices || shape.vertices;
+		this.updatePoly();
 	    }
 	    
 	    opts.shape = shape instanceof PShape2D ? shape : undefined;
@@ -39,9 +49,27 @@ define([
 	    this.listenTo( this.body, "collide", function( pbody2d ){
 		this.trigger("collide", pbody2d.userData, Time.time );
 	    }, this );
+	    
+	    this.line = true;
+	    this.alpha = 0.25;
+	    
+	    switch( this.body.type ){
+		
+		case RigidBody2D.DYNAMIC:
+		    this.color.setArgs( 0, 1, 0, 1 );
+		    break;
+		    
+		case RigidBody2D.STATIC:
+		    this.color.setArgs( 0, 0, 1, 1 );
+		    break;
+		    
+		case RigidBody2D.KINEMATIC:
+		    this.color.setArgs( 1, 0, 0, 1 );
+		    break;
+	    }
         }
         
-	Class.extend( RigidBody2D, Component );
+	Class.extend( RigidBody2D, Renderable2D );
 	
 	
 	RigidBody2D.prototype.init = function(){

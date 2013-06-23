@@ -35,10 +35,33 @@ require(
 		    })
 		]
 	    });
+	    ground.on("update", function(){
+		
+		if( Input.key("up") ){
+		    this.position.y += 0.01;
+		}
+		if( Input.key("down") ){
+		    this.position.y -= 0.01;
+		}
+		if( Input.key("right") ){
+		    this.position.x += 0.01;
+		}
+		if( Input.key("left") ){
+		    this.position.x -= 0.01;
+		}
+		
+		if( Input.key("a") ){
+		    this.rotation += 0.01;
+		}
+		if( Input.key("d") ){
+		    this.rotation -= 0.01;
+		}
+	    });
+	    
 	    scene.add( ground );
 	    
 	    ball = new GameObject2D({
-		position: new Vec2( 0, 1 ),
+		position: new Vec2( 0, 2 ),
 		components: [
 		    new Sprite2D({
 			image: player,

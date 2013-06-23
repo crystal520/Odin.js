@@ -5,7 +5,8 @@ define(
     function(){
 	"use strict";
 	
-	var splitter = /\s*[\s,]\s*/;
+	var splitter = /\s*[\s,]\s*/,
+	    createShader;
 	
 	
 	function Dom(){}
@@ -152,7 +153,7 @@ define(
 	};
 	
 	
-        Dom.prototype.createShader = function( gl, type, source ){
+        Dom.prototype.createShader = createShader = function( gl, type, source ){
             var shader;
             
             if( type === "fragment" ){
@@ -182,11 +183,11 @@ define(
             var program = gl.createProgram(),
                 shader;
             
-	    shader = this.createShader( gl, "vertex", vertex );
+	    shader = createShader( gl, "vertex", vertex );
 	    gl.attachShader( program, shader );
 	    gl.deleteShader( shader );
 	    
-	    shader = this.createShader( gl, "fragment", fragment );
+	    shader = createShader( gl, "fragment", fragment );
 	    gl.attachShader( program, shader );
 	    gl.deleteShader( shader );
             

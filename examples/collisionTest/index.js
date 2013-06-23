@@ -25,14 +25,11 @@ require(
 	    camera = new Camera2D({
 		zoom: 4
 	    });
-	    camera.on("update", function(){
-		this.follow( ball, 16 );
-	    });
 	    
-	    for( var i = 64; i--; ){
+	    for( var i = 128; i--; ){
 		scene.add(
 		    new GameObject2D({
-			position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 8 ) ),
+			position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 16 ) ),
 			components: [
 			    new Sprite2D({
 				image: player,
@@ -51,9 +48,8 @@ require(
 		    })
 		);
 	    }
-	    ball = scene.children[0];
 	    
-	    for( var i = 1024; i--; ){
+	    for( var i = 256; i--; ){
 		scene.add(
 		    new GameObject2D({
 			position: new Vec2( Mathf.randFloat( -8, 8 ), -i*0.25 ),

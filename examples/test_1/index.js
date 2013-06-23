@@ -22,12 +22,9 @@ require(
 	    
 	    scene = new Scene2D;
 	    camera = new Camera2D;
-	    camera.on("update", function(){
-		this.follow( sprite, 16 );
-	    });
 	    
 	    sprite = new GameObject2D({
-		position: new Vec2( 0, 3 ),
+		position: new Vec2( 3, 0 ),
 		rotation: 0,
 		components: [
 		    new Sprite2D({
@@ -39,13 +36,10 @@ require(
 			width: 1,
 			height: 1,
 			animations: {
-			    idle: {
-				frames: [
-				    [ 0, 0, 64, 64 ],
-				    [ 64, 0, 64, 64 ]
-				],
-				rate: 0.5
-			    }
+			    idle: [
+				[ 0, 0, 64, 64, 0.25 ],
+				[ 64, 0, 64, 64, 0.5 ]
+			    ]
 			}
 		    }),
 		    new RigidBody2D({
@@ -56,6 +50,26 @@ require(
 	    });
 	    
 	    sprite2 = new GameObject2D({
+		position: new Vec2( 0, -3 ),
+		rotation: 0,
+		components: [
+		    new Sprite2D({
+			image: player,
+			x: 0,
+			y: 0,
+			w: 64,
+			h: 64,
+			width: 1,
+			height: 1
+		    }),
+		    new RigidBody2D({
+			mass: 1,
+			extents: new Vec2( 0.5, 0.5 )
+		    })
+		]
+	    });
+	    
+	    sprite3 = new GameObject2D({
 		position: new Vec2( 0, 0 ),
 		components: [
 		    new Sprite2D({
@@ -77,7 +91,15 @@ require(
 		//this.rotation += Math.PI*Time.delta;
 	    });
 	    
-	    scene.add( sprite2, sprite );
+	    scene.add( sprite, sprite2, sprite3 );
+	    
+	    
+	    scene.world.pworld.addConstraint(
+		new PDistanceConstraint2D( sprite3.components.RigidBody2D.body, sprite.components.RigidBody2D.body, 3 )
+	    );
+	    scene.world.pworld.addConstraint(
+		new PDistanceConstraint2D( sprite3.components.RigidBody2D.body, sprite2.components.RigidBody2D.body, 3 )
+	    );
 	    
 	    Keyboard.on("keydown", function( key ){
 		if( key.name === "up" ){

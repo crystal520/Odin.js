@@ -31,8 +31,9 @@ define([
 	    this.shape = opts.shape instanceof PShape2D ? opts.shape : new PBox2D;
 	    this.shape.body = this;
 	    
-	    this.R = new Mat2;
 	    this.rotation = opts.rotation !== undefined ? opts.rotation : 0;
+	    this.R = new Mat2;
+	    this.R.setRotation( this.rotation );
 	    
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
 	    
@@ -50,7 +51,7 @@ define([
 	    
 	    this.wlambda = 0;
 	    
-	    this._sleepAngularVelocity = 0.1;
+	    this._sleepAngularVelocity = 0.001;
 	}
 	
 	Class.extend( PRigidBody2D, PParticle2D );
@@ -60,7 +61,6 @@ define([
 	    
 	    if( this.allowSleep ){
 		var sleepState = this.sleepState,
-		    
 		    velSq = this.velocity.lenSq(),
 		    
 		    aVel = this.angularVelocity,
@@ -69,13 +69,15 @@ define([
 		    sleepVel = this._sleepVelocity,
 		    sleepVelSq = sleepVel * sleepVel,
 		    
-		    sleepAngularVel = this._sleepAngularVelocity,
-		    sleepAngularVelSq = sleepAngularVel * sleepAngularVel;
+		    sleepAVel = this._sleepAngularVelocity,
+		    sleepAVelSq = sleepVel * sleepVel;
 		
-		if( sleepState === AWAKE && ( velSq < sleepVelSq || aVelSq < sleepAngularVelSq ) ){
-		    this.sleepy( time )
+		if( sleepState === AWAKE && ( velSq < sleepVelSq || aVelSq < sleepAVelSq ) ){
+		    this._sleepLastSleepy = time;
+		    this.sleepState = SLEEPY;
+		    this.trigger("sleepy");
 		}
-		else if( sleepState === SLEEPY && ( velSq > sleepVelSq || aVelSq > sleepAngularVelSq ) ){
+		else if( sleepState === SLEEPY && ( velSq > sleepVelSq || aVelSq > sleepAVelSq ) ){
 		    this.wake();
 		}
 		else if( sleepState === SLEEPY && ( time - this._sleepLastSleepy ) > this._sleepTimeLimit ){

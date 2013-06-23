@@ -76,6 +76,21 @@ define([
             
             return this;
         };
+        
+        
+        Mat4.prototype.fromMat32 = function( m ){
+            var te = this.elements,
+		me = m.elements;
+            
+	    te[0] = me[0];
+	    te[1] = me[1];
+	    te[4] = me[2];
+	    te[5] = me[3];
+	    te[12] = me[4];
+	    te[13] = me[5];
+	    
+            return this;
+        };
 	
 	
 	Mat4.prototype.identity = function(){

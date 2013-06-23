@@ -24,16 +24,13 @@ define([
             this.x = opts.x || 0;
             this.y = opts.y || 0;
             
-            this.w = opts.w || 1;
-            this.h = opts.h || 1;
+            this.w = opts.w || this.image.width;
+            this.h = opts.h || this.image.height;
 	    
 	    this.animations = opts.animations || {
-		idle: {
-		    frames: [
-			[ this.x, this.y, this.w, this.h ]
-		    ],
-		    rate: 0.25
-		}
+		idle: [
+		    [ this.x, this.y, this.w, this.h, 0.25 ]
+		]
 	    };
 	    
 	    this.animation = this.animations["idle"];
@@ -44,6 +41,8 @@ define([
 	    this._frame = 0
 	    
 	    this.playing = this.animation !== undefined ? true : false;
+	    
+	    this.updateSprite();
         }
         
 	Class.extend( Sprite2D, Renderable2D );
@@ -88,14 +87,14 @@ define([
 	
 	Sprite2D.prototype.update = function(){
 	    var animation = this.animation,
+		currentFrame = animation[ this._frame ],
+		rate = currentFrame[4],
 		currentFrame;
 	    
 	    if( animation && this.playing ){
 		
-		if( this._last + ( animation.rate / Time.scale ) <= Time.time ){
+		if( this._last + ( rate / Time.scale ) <= Time.time ){
 		    this._last = Time.time;
-		    
-		    currentFrame = animation.frames[ this._frame ];
 		    
 		    if( currentFrame ){
 			this.x = currentFrame[0];
@@ -104,7 +103,7 @@ define([
 			this.h = currentFrame[3];
 		    }
 		    
-		    if( this._frame >= animation.frames.length - 1 ){
+		    if( this._frame >= animation.length - 1 ){
 			if( this.mode === Sprite2D.loop ){
 			    this._frame = 0;
 			}

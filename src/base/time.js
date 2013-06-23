@@ -19,15 +19,16 @@ define(
 	    this.scale = 1;
 	}
 	
-	var last = 0;
-	
-	Time.prototype.start = function(){
-	    var frames = 0, time = 0, ms = 0, msLast = 0;
+	Time.prototype.update = function(){
+	    var frames = 0, time = 0, last = 0, delta = 0, ms = 0, msLast = 0;
 	    
 	    return function(){
-		
 		this.time = time = this.now();
-		this.delta = ( time - last ) * this.scale;
+		
+		delta = ( time - last ) * this.scale;
+		this.delta = delta < 0.001 ? 0.001 : delta > 0.05 ? 0.05 : delta;
+		
+		last = time;
 		
 		frames++;
 		ms = time * 1000;
@@ -39,12 +40,6 @@ define(
 		}
 	    };
 	}();
-	
-	
-	Time.prototype.end = function(){
-	    
-	    last = this.time;
-	};
 	
 	
 	Time.prototype.now = function(){

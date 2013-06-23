@@ -21,8 +21,8 @@ define([
 	    this.elements = new Float32Array(4);
 	    var te = this.elements;
 	    
-            te[0] = m11 !== undefined ? m11 : 1; te[2] = m12 || 1;
-            te[1] = m21 || 1; te[3] = m22 !== undefined ? m22 : 1;
+            te[0] = m11 !== undefined ? m11 : 1; te[2] = m12 || 0;
+            te[1] = m21 || 0; te[3] = m22 !== undefined ? m22 : 1;
 	}
         
         
@@ -275,10 +275,10 @@ define([
 		
 		s = sin( angle ), c = sin( angle );
 	    
-	    te[0] = m11 * c - m12 * s;
-	    te[1] = m11 * s + m12 * c;
-	    te[2] = m21 * c - m22 * s;
-	    te[3] = m21 * s + m22 * c;
+	    te[0] = m11 * c + m12 * s;
+	    te[1] = m11 * -s + m12 * c;
+	    te[2] = m21 * c + m22 * s;
+	    te[3] = m21 * -s + m22 * c;
 	    
 	    return this;
         };

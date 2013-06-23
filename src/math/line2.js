@@ -135,11 +135,6 @@ define([
 	};
         
         
-        Line2.prototype.norm = function(){
-	    
-	};
-        
-        
         Line2.prototype.intersect = function( other, target ){
 	    target = target || new Vec2;
 	    

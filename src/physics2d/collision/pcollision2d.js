@@ -6,10 +6,9 @@ define([
 	"math/mathf",
 	"math/vec2",
 	"math/line2",
-	"physics2d/collision/pmanifold2d",
 	"physics2d/constraints/pcontact2d"
     ],
-    function( Class, Mathf, Vec2, Line2, PManifold2D, PContact2D ){
+    function( Class, Mathf, Vec2, Line2, PContact2D ){
         "use strict";
 	
 	var abs = Math.abs,
@@ -147,7 +146,7 @@ define([
 		    tmp = minj; minj = maxj; maxj = tmp;
 		}
 		
-		if( maxi < minj || maxj < mini ) return 1;
+		if( maxi < minj || maxj < mini ) return false;
 		
 		d1 = maxi - minj;
 		d2 = maxj - mini;
@@ -165,7 +164,7 @@ define([
 		}
 	    }
 	    
-	    return dmax * dmax - ( dx * dx + dy * dy );
+	    return true;
 	};
 	
 	
@@ -190,9 +189,7 @@ define([
 	    }
 	    
 	    return function( si, sj, xi, xj, Ri, Rj, manifold ){
-		var depth = findSeparatingAxis( si, sj, xi, xj, Ri, Rj, axis ),
-		
-		    ref, inc, flip = false,
+		var ref, refStart, refEnd, inc, flip = false,
 		    
 		    dvx, dvy, length, invLength,
 		    sideNormalx, sideNormaly, frontNormalx, frontNormaly,
@@ -200,7 +197,7 @@ define([
 		    
 		    mn = manifold.normal;
 		
-		if( depth > 0 ) return false;
+		if( !findSeparatingAxis( si, sj, xi, xj, Ri, Rj, axis ) ) return false;
 		
 		findBestEdge( si.vertices, xi, Ri, axis, edgei );
 		
@@ -219,6 +216,9 @@ define([
 		    flip = true;
 		}
 		
+		refStart = ref.start;
+		refEnd = ref.end;
+		
 		dvx = ref.start.x - ref.end.x;
 		dvy = ref.start.y - ref.end.y;
 		
@@ -234,9 +234,9 @@ define([
 		frontNormalx = sideNormaly;
 		frontNormaly = -sideNormalx;
 		
-		frontOffset = frontNormalx * ref.start.x + frontNormaly * ref.start.y;
-		sideOffset1 = -( sideNormalx * ref.start.x + sideNormaly * ref.start.y );
-		sideOffset2 = sideNormalx * ref.end.x + sideNormaly * ref.end.y;
+		frontOffset = frontNormalx * refStart.x + frontNormaly * refStart.y;
+		sideOffset1 = -( sideNormalx * refStart.x + sideNormaly * refStart.y );
+		sideOffset2 = sideNormalx * refEnd.x + sideNormaly * refEnd.y;
 		
 		vec.x = -sideNormalx;
 		vec.y = -sideNormaly;
@@ -246,13 +246,14 @@ define([
 		
 		vec.x = sideNormalx;
 		vec.y = sideNormaly;
-		clipPoints( manifold[0].point, manifold[1].point, vec, sideOffset2, manifold );
+		clipPoints( manifold[0].position, manifold[1].position, vec, sideOffset2, manifold );
 		
 		if( manifold.length < 2 ) return true;
 		
 		if( flip ){
 		    mn.x = frontNormalx;
 		    mn.y = frontNormaly;
+		    manifold.flip = true;
 		}
 		else{
 		    mn.x = -frontNormalx;
@@ -283,7 +284,7 @@ define([
 		v1, v2, ex, ey, length, invLength, dist, invDist, u, px, py,
 		
 		s, separation = -Infinity, normIndex, i;
-		
+	    
 	    for( i = count; i--; ){
 		vert = vertices[i]; norm = normals[i];
 		
@@ -377,28 +378,48 @@ define([
 	};
 	
 	
-	PCollision2D.prototype.circleCircle = function( si, sj, xi, xj, normal ){
-	    var dx = xj.x - xi.x,
-		dy = xj.y - xi.y,
-		d, dsq = dx * dx + dy * dy,
+	PCollision2D.prototype.circleCircle = function(){
+	    var dx, dy, dist, invDist, radiusi, radiusj, r, separation,
+		mnormal, point, vec = new Vec2;
+	    
+	    return function( si, sj, xi, xj, manifold ){
+		dx = xj.x - xi.x;
+		dy = xj.y - xi.y;
+		dist = dx * dx + dy * dy
 		
-		radiusi = si.radius, radiusj = sj.radius,
+		radiusi = si.radius;
+		radiusj = sj.radius;
 		r = radiusi + radiusj;
-	    
-	    if( dsq > r * r ) return false;
-	    
-	    if( dsq < EPSILON ){
-		normal.x = 0;
-		normal.y = 1;
-	    }
-	    else{
-		d = 1 / sqrt( dsq );
-		normal.x = dx * d;
-		normal.y = dy * d;
-	    }
-	    
-	    return true;
-	};
+		
+		if( dist > r * r ) return false;
+		
+		manifold.clear();
+		mnormal = manifold.normal;
+		
+		if( dist < EPSILON ){
+		    mnormal.x = 0;
+		    mnormal.y = 1;
+		    separation = r;
+		}
+		else{
+		    dist = sqrt( dist );
+		    invDist = 1 / dist;
+		    mnormal.x = dx * invDist;
+		    mnormal.y = dy * invDist;
+		    separation = dist - r;
+		}
+		
+		manifold.add( vec );
+		
+		point = manifold[0];
+		point.position.x = xj.x - ( radiusi * mnormal.x );
+		point.position.y = xj.y - ( radiusi * mnormal.y );
+		
+		point.separation = separation;
+		
+		return true;
+	    };
+	}();
 	
         
         return new PCollision2D;

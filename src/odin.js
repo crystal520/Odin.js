@@ -59,10 +59,13 @@ define(
 	
 	Odin.PBroadphase2D = require("physics2d/collision/pbroadphase2d");
 	Odin.PCollision2D = require("physics2d/collision/pcollision2d");
-	Odin.PManifold2D = require("physics2d/collision/pmanifold2d");
 	Odin.PNearphase2D = require("physics2d/collision/pnearphase2d");
 	
+	Odin.PConstraint2D = require("physics2d/constraints/pconstraint2d");
 	Odin.PContact2D = require("physics2d/constraints/pcontact2d");
+	Odin.PDistanceConstraint2D = require("physics2d/constraints/pdistanceconstraint2d");
+	Odin.PEquation2D = require("physics2d/constraints/pequation2d");
+	Odin.PFriction2D = require("physics2d/constraints/pfriction2d");
 	
 	Odin.PBox2D = require("physics2d/shape/pbox2d");
 	Odin.PCircle2D = require("physics2d/shape/pcircle2d");
@@ -72,7 +75,10 @@ define(
 	Odin.PSolver2D = require("physics2d/psolver2d");
 	Odin.PWorld2D = require("physics2d/pworld2d");
 	
+	Odin.Box2D = require("core/components/box2d");
+	Odin.Circle2D = require("core/components/circle2d");
 	Odin.Component = require("core/components/component");
+	Odin.Poly2D = require("core/components/poly2d");
 	Odin.Renderable2D = require("core/components/renderable2d");
 	Odin.RigidBody2D = require("core/components/rigidbody2d");
 	Odin.Sprite2D = require("core/components/sprite2d");
@@ -97,8 +103,8 @@ define(
 	Odin.World2D = require("core/scene/world2d");
 	
 	Odin.Canvas = require("core/canvas");
-	Odin.CanvasRenderer = require("core/canvasrenderer");
-	Odin.WebGLRenderer = require("core/webglrenderer");
+	Odin.CanvasRenderer2D = require("core/canvasrenderer2d");
+	Odin.WebGLRenderer2D = require("core/webglrenderer2d");
 	
 	return Odin;
     }

@@ -77,16 +77,6 @@ define([
 	};
 	
 	
-	PParticle2D.prototype.sleepy = function( time ){
-	    
-	    if( this.sleepState === AWAKE ){
-		this.trigger("sleepy");
-		this._sleepLastSleepy = time;
-	    }
-	    this.sleepState = SLEEPY;
-	};
-	
-	
 	PParticle2D.prototype.sleep = function(){
 	    
 	    if( this.sleepState === AWAKE || this.sleepState === SLEEPY ){
@@ -106,7 +96,9 @@ define([
 		    sleepVelSq = sleepVel * sleepVel;
 		
 		if( sleepState === AWAKE && velSq < sleepVelSq ){
-		    this.sleepy( time )
+		    this._sleepLastSleepy = time;
+		    this.sleepState = SLEEPY;
+		    this.trigger("sleepy");
 		}
 		else if( sleepState === SLEEPY && velSq > sleepVelSq ){
 		    this.wake();

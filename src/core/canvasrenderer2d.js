@@ -19,11 +19,13 @@ define([
 	    defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 	
 	
-        function CanvasRenderer( opts ){
+        function CanvasRenderer2D( opts ){
             opts || ( opts = {} );
             
             Class.call( this );
             
+	    this.debug = opts.debug !== undefined ? !!opts.debug : false;
+	    
 	    this.pixelRatio = opts.pixelRatio !== undefined ? opts.pixelRatio : 128;
 	    this.invPixelRatio = 1 / this.pixelRatio;
 	    
@@ -34,10 +36,10 @@ define([
             this.context = Dom.get2DContext( this.canvas.element );
         }
         
-	Class.extend( CanvasRenderer, Class );
+	Class.extend( CanvasRenderer2D, Class );
 	
         
-        CanvasRenderer.prototype.setClearColor = function( color ){
+        CanvasRenderer2D.prototype.setClearColor = function( color ){
             
 	    if( color ){
 		this.canvas.element.style.background = color.hex();
@@ -48,36 +50,21 @@ define([
 	};
 	
         
-        CanvasRenderer.prototype.clear = function(){
+        CanvasRenderer2D.prototype.clear = function(){
 	    
             this.context.clearRect( -1, -1, 2, 2 );
 	};
         
         
-        CanvasRenderer.prototype.setLineWidth = function(){
-	    var lastLineWidth, ctx;
-	    
-	    return function( width ){
-		ctx = this.context;
-		
-		if( width !== lastLineWidth ){
-		    
-		    ctx.lineWidth = width;
-		    lastLineWidth = width;
-		}
-	    };
-	}();
-        
-        
-        CanvasRenderer.prototype.render = function(){
+        CanvasRenderer2D.prototype.render = function(){
 	    var lastScene, lastCamera, lastBackground = new Color;
 	    
 	    return function( scene, camera ){
 		var self = this,
 		    background = scene.world.background,
 		    ctx = this.context,
-		    rigidbodies = scene._rigidbodies,
-		    sprites = scene._sprites,
+		    renderable, renderables = scene._renderables,
+		    rigidbody, rigidbodies = scene._rigidbodies,
 		    i, il;
 		
 		if( !lastBackground.equals( background ) ){
@@ -124,30 +111,41 @@ define([
 		    this.clear();
 		}
 		
-		for( i = sprites.length; i--; ){
-		    this.renderSprite( sprites[i], camera );
+		if( this.debug ){
+		    for( i = 0, il = rigidbodies.length; i < il; i++ ){
+			rigidbody = rigidbodies[i];
+			
+			if( rigidbody.visible ){
+			    this.renderComponent( rigidbody, camera );
+			}
+		    }
 		}
 		
-		for( i = rigidbodies.length; i--; ){
-		    this.renderRigidBody( rigidbodies[i], camera );
+		for( i = 0, il = renderables.length; i < il; i++ ){
+		    renderable = renderables[i];
+		    
+		    if( renderable.visible ){
+			this.renderComponent( renderable, camera );
+		    }
 		}
 	    };
         }();
         
         
-        CanvasRenderer.prototype.renderRigidBody = function(){
+        CanvasRenderer2D.prototype.renderComponent = function(){
 	    var modelViewProj = new Mat32,
 		mvp = modelViewProj.elements;
 	    
-	    return function( rigidbody, camera ){
+	    return function( component, camera ){
 		var ctx = this.context,
-		    gameObject = rigidbody.gameObject,
-		    body = rigidbody.body,
-		    shape = body.shape,
-		    radius = shape.radius,
-		    vertices = shape.vertices,
-		    aabb = shape.aabb,
-		    vertex, i, il;
+		    gameObject = component.gameObject,
+		    offset = component.offset,
+		    image = component.image || defaultImg,
+		    radius = component.radius,
+		    extents = component.extents,
+		    vertices = component.vertices,
+		    body = component.body, sleepState,
+		    vertex, x, y, i;
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
 		modelViewProj.mmul( gameObject.matrixModelView, camera.matrixProjection );
@@ -157,68 +155,67 @@ define([
 		ctx.transform( mvp[0], -mvp[2], -mvp[1], mvp[3], mvp[4], mvp[5] );
 		ctx.scale( 1, -1 );
 		
-		ctx.strokeStyle = "#ff0000";
-		
-		if( body.isSleepy() ){
-		    ctx.strokeStyle = "#0000ff";
+		if( component.image ){
+		    ctx.drawImage(
+			image,
+			component.x, component.y,
+			component.w, component.h,
+			offset.x - component.width * 0.5,
+			component.height * -0.5 - offset.y,
+			component.width, component.height
+		    );
 		}
-		if( body.isSleeping() ){
-		    ctx.strokeStyle = "#000000";
-		}
-		
-		ctx.lineWidth = this.invPixelRatio;
-		
-		ctx.beginPath();
-		
-		if( radius ){
-		    ctx.arc( 0, 0, radius, 0, TWO_PI );
-		}
-		if( vertices ){
-		    for( i = 0, il = vertices.length; i < il; i++ ){
-			vertex = vertices[i];
-			ctx.lineTo( vertex.x, vertex.y );
+		if( radius || extents || vertices ){
+		    if( body ) sleepState = body.sleepState;
+		    
+		    if( component.fill ) ctx.fillStyle = component.color ? component.color.rgba() : "#000000";
+		    ctx.globalAlpha = component.alpha;
+		    
+		    if( sleepState ){
+			if( sleepState === 2 ){
+			    ctx.globalAlpha *= 0.5;
+			}
+			if( sleepState === 3 ){
+			    ctx.globalAlpha *= 0.25;
+			}
 		    }
+		    
+		    if( component.line ){
+			ctx.strokeStyle = component.lineColor ? component.lineColor.rgba() : "#000000";
+			ctx.lineWidth = component.lineWidth || this.invPixelRatio;
+		    }
+		    ctx.beginPath();
+		    
+		    if( radius ){
+			if( component.body ){
+			    ctx.lineTo( 0, 0 );
+			}
+			ctx.arc( 0, 0, radius, 0, TWO_PI );
+		    }
+		    else if( extents ){
+			x = extents.x; y = extents.y;
+			ctx.lineTo( x, y );
+			ctx.lineTo( -x, y );
+			ctx.lineTo( -x, -y );
+			ctx.lineTo( x, -y );
+		    }
+		    else if( vertices ){
+			for( i = vertices.length; i--; ){
+			    vertex = vertices[i];
+			    ctx.lineTo( vertex.x, vertex.y );
+			}
+		    }
+		    
+		    ctx.closePath();
+		    if( component.line ) ctx.stroke();
+		    if( component.fill ) ctx.fill();
 		}
-		
-		ctx.closePath();
-		ctx.stroke();
-		
-		ctx.restore();
-	    };
-	}();
-        
-        
-        CanvasRenderer.prototype.renderSprite = function(){
-	    var modelViewProj = new Mat32,
-		mvp = modelViewProj.elements;
-	    
-	    return function( sprite, camera ){
-		var ctx = this.context,
-		    gameObject = sprite.gameObject,
-		    offset = sprite.offset,
-		    image = sprite.image || defaultImg;
-		
-		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
-		modelViewProj.mmul( gameObject.matrixModelView, camera.matrixProjection );
-		
-		ctx.save();
-		
-		ctx.transform( mvp[0], -mvp[2], -mvp[1], mvp[3], mvp[4], mvp[5] );
-		ctx.scale( 1, -1 );
-		ctx.drawImage(
-		    image,
-		    sprite.x, sprite.y,
-		    sprite.w, sprite.h,
-		    offset.x - sprite.width * 0.5,
-		    offset.y - sprite.height * 0.5,
-		    sprite.width, sprite.height
-		);
 		
 		ctx.restore();
 	    };
 	}();
 	
         
-        return CanvasRenderer;
+        return CanvasRenderer2D;
     }
 );

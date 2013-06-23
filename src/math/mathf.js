@@ -10,7 +10,7 @@ define(
 	    abs = Math.abs,
 	    atan2 = Math.atan2,
 	    EPSILON = 0.000001,
-	    PI = 3.141592653589793,
+	    PI = 3.1415926535897932384626433832795028841968,
 	    TWO_PI = PI * 2,
 	    HALF_PI = PI * 0.5,
 	    TO_RADS = PI / 180,
@@ -116,7 +116,7 @@ define(
 		max = tmp;
 	    }
 	    
-	    return ( x >= min && x <= max );
+	    return !( x < min || x > max );
         };
 	
 	

@@ -50,7 +50,7 @@ define([
 		minx = miny = minz = Infinity;
 		maxx = maxy = maxz = -Infinity;
                 
-                for( i; i--; ){
+                for( ; i--; ){
                     v = points[i];
 		    x = v.x; y = v.y; z = v.z;
 		    

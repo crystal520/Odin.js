@@ -29,23 +29,24 @@ define([
 	PBroadphase2D.prototype.needBroadphaseTest = function( bi, bj ){
 	    
 	    return !(
-		bi.filterGroup !== bj.filterGroup ||
+		( bi.filterGroup !== bj.filterGroup ) ||
 		( ( bi.type === KINEMATIC || bi.type === STATIC || bi.isSleeping() ) &&
 		( bj.type === KINEMATIC || bj.type === STATIC || bj.isSleeping() ) ) ||
-		!bi.shape && !bj.shape
+		( !bi.shape && !bj.shape )
 	    );
 	};
 	
 	
 	PBroadphase2D.prototype.collisionPairs = function( world, pairsi, pairsj ){
 	    var bodies = world.bodies,
-		bi, bj, i, j, il;
+		count = bodies.length,
+		bi, bj, i, j;
 	    
 	    pairsi.length = pairsj.length = 0;
 	    
 	    if( this.useBoundingRadius ){
 		
-		for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
+		for( i = 0; i < count; i++ ) for( j = 0; j !== i; j++ ){
 		    bi = bodies[i]; bj = bodies[j];
 		    
 		    if( !this.needBroadphaseTest( bi, bj ) ) continue;
@@ -55,7 +56,7 @@ define([
 	    }
 	    else{
 		
-		for( i = 0, il = bodies.length; i < il; i++ ) for( j = 0; j !== i; j++ ){
+		for( i = 0; i < count; i++ ) for( j = 0; j !== i; j++ ){
 		    bi = bodies[i]; bj = bodies[j];
 		    
 		    if( !this.needBroadphaseTest( bi, bj ) ) continue;

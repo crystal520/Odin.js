@@ -21,7 +21,7 @@ define([
 	    
             this.children = [];
 	    
-            this._sprites = [];
+            this._renderables = [];
             this._rigidbodies = [];
             this._cameras = [];
 	    
@@ -105,12 +105,17 @@ define([
         
 	
 	Scene2D.prototype._add = function( gameObject ){
-	    var sprite2d = gameObject.getComponent("Sprite2D"),
+	    var renderable = (
+		    gameObject.getComponent("Sprite2D") ||
+		    gameObject.getComponent("Box2D") ||
+		    gameObject.getComponent("Circle2D") ||
+		    gameObject.getComponent("Poly2D")
+		),
 		rigidbody2d = gameObject.getComponent("RigidBody2D");
 	    
-	    if( sprite2d ){
-		this._sprites.push( sprite2d );
-		this._sprites.sort( this.sort );
+	    if( renderable ){
+		this._renderables.push( renderable );
+		this._renderables.sort( this.sort );
 	    }
 	    if( rigidbody2d ){
 		this._rigidbodies.push( rigidbody2d );
@@ -123,15 +128,20 @@ define([
         
 	
 	Scene2D.prototype._remove = function( gameObject ){
-	    var sprite2d = gameObject.getComponent("Sprite2D"),
+	    var renderable = (
+		    gameObject.getComponent("Sprite2D") ||
+		    gameObject.getComponent("Box2D") ||
+		    gameObject.getComponent("Circle2D") ||
+		    gameObject.getComponent("Poly2D")
+		),
 		rigidbody2d = gameObject.getComponent("RigidBody2D"),
 		index;
 	    
-	    if( sprite2d ){
-		index = this._sprites.indexOf( sprite2d );
-		this._sprites.splice( index, 1 );
+	    if( renderable ){
+		index = this._renderables.indexOf( renderable );
+		this._renderables.splice( index, 1 );
 		
-		this._sprites.sort( this.sort );
+		this._renderables.sort( this.sort );
 	    }
 	    if( rigidbody2d ){
 		index = this._rigidbodies.indexOf( rigidbody2d );

@@ -8,10 +8,12 @@ define([
 	"base/dom",
 	"base/time",
 	"core/input/input",
-	"core/canvasrenderer",
-	"core/webglrenderer",
+	"core/scene/scene2d",
+	"core/canvas",
+	"core/canvasrenderer2d",
+	"core/webglrenderer2d"
     ],
-    function( Class, Utils, Device, Dom, Time, Input, CanvasRenderer, WebGLRenderer ){
+    function( Class, Utils, Device, Dom, Time, Input, Scene2D, Canvas, CanvasRenderer2D, WebGLRenderer2D ){
 	"use strict";
 	
 	var floor = Math.floor,
@@ -25,21 +27,17 @@ define([
 	    Class.call( this, opts );
 	    
 	    this.debug = opts.debug !== undefined ? !!opts.debug : false;
+	    this.forceCanvas = opts.forceCanvas !== undefined ? !!opts.forceCanvas : false;
 	    
 	    this.camera = undefined;
             this.scene = undefined;
 	    
 	    this.scenes = [];
-            
-	    if( Device.webgl && !opts.forceCanvas ){
-		this.renderer = new WebGLRenderer( opts );
-	    }
-	    else if( Device.canvas ){
-		this.renderer = new CanvasRenderer( opts );
-	    }
-	    else{
-		throw new Error("Game: Could not get rendering context");
-	    }
+	    
+	    this.WebGLRenderer2D = new WebGLRenderer2D( opts );
+	    this.CanvasRenderer2D = new CanvasRenderer2D( opts );
+	    
+	    this.renderer = this.WebGLRenderer2D;
 	    
 	    Input.init( this.renderer.canvas.element );
             
@@ -50,6 +48,29 @@ define([
 	}
         
 	Class.extend( Game, Class );
+	
+	
+	Game.prototype.updateRenderer = function( scene ){
+	    
+	    this.renderer.canvas.element.style.zIndex = -1;
+	    
+            if( scene instanceof Scene2D ){
+		if( Device.webgl && !this.forceCanvas ){
+		    this.renderer = this.WebGLRenderer2D;
+		}
+		else if( Device.canvas ){
+		    this.renderer = this.CanvasRenderer2D;
+		}
+		else{
+		    throw new Error("Game: Could not get a renderer");
+		}
+	    }
+	    
+	    Input.clear();
+	    Input.init( this.renderer.canvas.element );
+	    
+	    this.renderer.canvas.element.style.zIndex = 1;
+        };
 	
 	
 	Game.prototype.addScene = function(){
@@ -116,6 +137,9 @@ define([
 	    if( !this.scene ){
 		console.warn("Game.setScene: could not find scene in Game "+ scene );
 	    }
+	    else{
+		this.updateRenderer( this.scene );
+	    }
         };
 	
 	
@@ -160,7 +184,7 @@ define([
 	    Input.update();
 	    
 	    if( !this.pause ){
-		Time.start();
+		Time.update();
 		
 		this.trigger("update");
 		
@@ -169,8 +193,6 @@ define([
 		}
 		
 		this.trigger("lateupdate");
-		
-		Time.end();
 	    }
 	};
 	

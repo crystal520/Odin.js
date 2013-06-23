@@ -6,9 +6,10 @@ define([
 	"math/mathf",
 	"math/vec2",
 	"math/mat32",
+	"math/mat4",
 	"core/objects/gameobject2d"
     ],
-    function( Class, Mathf, Vec2, Mat32, GameObject2D ){
+    function( Class, Mathf, Vec2, Mat32, Mat4, GameObject2D ){
         "use strict";
 	
 	var clampBottom = Mathf.clampBottom;
@@ -26,6 +27,8 @@ define([
             
             this.zoom = opts.zoom !== undefined ? opts.zoom : 1;
             
+	    this._matrixProjection3D = new Mat4;
+	    
             this.matrixProjection = new Mat32;
             this.matrixProjectionInverse = new Mat32;
             
@@ -111,9 +114,11 @@ define([
 		left = -right,
 		top = ( h * 0.5 ) * zoom,
 		bottom = -top;
-		
+	    
 	    this.matrixProjection.orthographic( left, right, top, bottom );
             this.matrixProjectionInverse.minv( this.matrixProjection );
+	    
+	    this._matrixProjection3D.orthographic( left, right, top, bottom, -1, 1 );
             
             this.needsUpdate = false;
         };

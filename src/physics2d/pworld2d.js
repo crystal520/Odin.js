@@ -48,6 +48,7 @@ define([
 	    
 	    this.contacts = [];
 	    this.frictions = [];
+	    this.constraints = [];
 	    
 	    this.pairsi = [];
 	    this.pairsj = [];
@@ -111,6 +112,26 @@ define([
 	};
 	
 	
+	PWorld2D.prototype.addConstraint = function( constraint ){
+	    var constraints = this.constraints,
+		index = constraints.indexOf( constraint );
+		
+	    if( index === -1 ){
+		constraints.push( constraint );
+	    }
+	};
+	
+	
+	PWorld2D.prototype.removeConstraint = function( constraint ){
+	    var constraints = this.constraints,
+		index = constraints.indexOf( constraint );
+		
+	    if( index !== -1 ){
+		constraints.splice( index, 1 );
+	    }
+	};
+	
+	
 	PWorld2D.prototype.now = function(){
 	    var startTime = Date.now(),
 		w = window || {},
@@ -138,11 +159,11 @@ define([
 		solver = this.solver,
 		solverConstraints = solver.constraints,
 		pairsi = this.pairsi, pairsj = this.pairsj,
-		contacts = this.contacts, frictions = this.frictions,
+		contacts = this.contacts, frictions = this.frictions, constraints = this.constraints,
 		c, bi, bj, um, umg, c1, c2,
 		
 		body, shape, shapeType, type, force, vel, aVel, linearDamping, pos, mass, invMass,
-		i;
+		i, j;
 	    
 	    this.time += dt;
 	    
@@ -212,6 +233,15 @@ define([
 	    
 	    
 	    if( debug ) profileStart = now();
+	    
+	    for( i = constraints.length; i--; ){
+		c = constraints[i];
+		c.update();
+		
+		for( j = c.equations.length; j--; ){
+		    solverConstraints.push( c.equations[j] );
+		}
+	    }
 	    
 	    solver.solve( this, dt );
 	    solverConstraints.length = 0;

@@ -61,7 +61,8 @@ require(
 		components: [
 		    new RigidBody2D({
 			mass: 0,
-			extents: new Vec2( 1, 2 )
+			extents: new Vec2( 1, 2 ),
+			type: RigidBody2D.KINEMATIC
 		    })
 		]
 	    });
@@ -69,7 +70,40 @@ require(
 		this.rotate( Math.PI*0.5*Time.delta );
 	    });
 	    
-	    scene.add( ground, wallLeft, wallRight, spinner );
+	    ceiling = new GameObject2D({
+		position: new Vec2( 0, -1 ),
+		components: [
+		    new RigidBody2D({
+			mass: 0,
+			extents: new Vec2( 4, 0.5 ),
+			type: RigidBody2D.KINEMATIC
+		    })
+		]
+	    });
+	    ceiling.on("update", function(){
+		
+		if( Input.key("up") ){
+		    this.position.y += 0.1;
+		}
+		if( Input.key("down") ){
+		    this.position.y -= 0.1;
+		}
+		if( Input.key("right") ){
+		    this.position.x += 0.1;
+		}
+		if( Input.key("left") ){
+		    this.position.x -= 0.1;
+		}
+		
+		if( Input.key("a") ){
+		    this.rotation += 0.05;
+		}
+		if( Input.key("d") ){
+		    this.rotation -= 0.05;
+		}
+	    });
+	    
+	    scene.add( ground, wallLeft, wallRight, ceiling );
 	    
 	    for( var i = 256; i--; ){
 		var r = Mathf.randFloat( 0.1, 0.5 );
@@ -77,17 +111,7 @@ require(
 		    new GameObject2D({
 			position: new Vec2( Mathf.randFloat( -3, 3 ), Mathf.randFloat( 3, 16 ) ),
 			components: [
-			    new Sprite2D({
-				image: player,
-				x: 0,
-				y: 0,
-				w: 64,
-				h: 64,
-				width: r+r,
-				height: r+r
-			    }),
 			    new RigidBody2D({
-				linearDamping: new Vec2( 0, 0 ),
 				mass: 1,
 				radius: r
 			    })
