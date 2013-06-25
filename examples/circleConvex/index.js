@@ -31,7 +31,8 @@ require(
 		components: [
 		    new RigidBody2D({
 			mass: 0,
-			extents: new Vec2( 4, 0.5 )
+			extents: new Vec2( 4, 0.5 ),
+			type: RigidBody2D.KINEMATIC
 		    })
 		]
 	    });

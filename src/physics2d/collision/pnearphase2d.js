@@ -433,7 +433,7 @@ define([
 		xjx = xj.x, xjy = xj.y,
 		
 		x, y, vertex, vx, vy, normal, nx, ny, s, separation = -Infinity, normalIndex = 0,
-		v1, v2, v1x, v1y, v2x, v2y, ex, ey, length, invLength, u, px, py, dx, dy, dist, invDist,
+		v1, v2, v1x, v1y, v2x, v2y, ex, ey, u, px, py, dx, dy,
 		
 		c, n, nx, ny, ri, rj,
 		i;
@@ -457,29 +457,9 @@ define([
 		}
 	    }
 	    
-	    if( separation < EPSILON ){
-		normal = normals[ normalIndex ]; x = normal.x; y = normal.y;
-		nx = x * Ri11 + y * Ri12;
-		ny = x * Ri21 + y * Ri22;
-		s = radius - separation;
-		
-		c = createContact( bi, bj, contacts );
-		n = c.n; ri = c.ri; rj = c.rj;
-		
-		n.x = nx;
-		n.y = ny;
-		
-		ri.x = s * nx;
-		ri.y = s * ny;
-		
-		rj.x = -radius * nx;
-		rj.y = -radius * ny;
-		
-		bi.wake();
-		bj.wake();
-		
-		return;
-	    }
+	    normal = normals[ normalIndex ]; x = normal.x; y = normal.y;
+	    nx = x * Ri11 + y * Ri12;
+	    ny = x * Ri21 + y * Ri22;
 	    
 	    v1 = vertices[ normalIndex ]; x = v1.x; y = v1.y;
 	    v1x = xix + ( x * Ri11 + y * Ri12 );
@@ -492,47 +472,25 @@ define([
 	    ex = v2x - v1x;
 	    ey = v2y - v1y;
 	    
-	    length = sqrt( ex * ex + ey * ey );
-	    invLength = 1 / length;
+	    dx = xjx - v1x;
+	    dy = xjy - v1y;
 	    
-	    ex *= invLength;
-	    ey *= invLength;
+	    u = clamp01( ( ex * dx + ey * dy ) / ( ex * ex + ey * ey ) );
 	    
-	    u = ( xjx - v1x ) * ex + ( xjy - v1y ) * ey;
-	    
-	    if( u <= 0 ){
-		px = v1x;
-		py = v1y;
-	    }
-	    else if( u >= length ){
-		px = v2x;
-		py = v2y;
-	    }
-	    else{
-		px = ex * u + v1x;
-		py = ey * u + v1y;
-	    }
-	    
-	    dx = xjx - px;
-	    dy = xjy - py;
-	    
-	    dist = sqrt( dx * dx + dy * dy );
-	    invDist = 1 / dist;
-	    
-	    dx *= invDist;
-	    dy *= invDist;
+	    px = v1x + ex * u;
+	    py = v1y + ey * u;
 	    
 	    c = createContact( bi, bj, contacts );
 	    n = c.n; ri = c.ri; rj = c.rj;
 	    
-	    n.x = dx;
-	    n.y = dy;
+	    n.x = nx;
+	    n.y = ny;
 	    
 	    ri.x = px - xix;
 	    ri.y = py - xiy;
 	    
-	    rj.x = -radius * dx;
-	    rj.y = -radius * dy;
+	    rj.x = -radius * nx;
+	    rj.y = -radius * ny;
 	    
 	    bi.wake();
 	    bj.wake();
