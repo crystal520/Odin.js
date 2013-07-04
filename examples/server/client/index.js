@@ -1,6 +1,6 @@
 require(
     {
-        baseUrl: "../node_modules/odin/src"
+        baseUrl: "./"
     },
     [
         "odin",
@@ -10,14 +10,14 @@ require(
         Odin.globalize();
         
         game = new ClientGame({
-            name: "Game",
             host: "127.0.0.1",
-            port: 8080,
+            port: 3000,
+            forceCanvas: true,
             debug: true
         });
         
         game.on("init", function(){
-            // Game goes here
+            // Client Game goes here
         });
         
         game.init();

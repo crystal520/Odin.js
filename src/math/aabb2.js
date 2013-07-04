@@ -14,10 +14,15 @@ define([
 	
         
         function AABB2( min, max ){
-            
             this.min = min instanceof Vec2 ? min : new Vec2;
             this.max = max instanceof Vec2 ? max : new Vec2;
 	}
+        
+        
+        AABB2.prototype.fromJSON = function( json ){
+	    
+	    this.copy( json );
+	};
         
         
         AABB2.prototype.clone = function(){
@@ -41,6 +46,15 @@ define([
             
             return this;
 	};
+        
+        
+        AABB2.prototype.set = function( min, max ){
+            
+	    this.min.copy( min );
+	    this.max.copy( max );
+            
+            return this;
+        };
         
         
         AABB2.prototype.setFromPoints = function( points ){
@@ -140,6 +154,7 @@ define([
                 !equals( amax.y, bmax.y )
             );
 	};
+	
         
         return AABB2;
     }

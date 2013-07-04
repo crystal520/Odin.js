@@ -30,17 +30,14 @@ define([
 	    if( opts.radius ){
 		shape = new PCircle2D( opts.radius );
 		this.radius = opts.radius || shape.radius;
-		this.updateCircle();
 	    }
 	    if( opts.extents ){
 		shape = new PBox2D( opts.extents );
 		this.extents = opts.extents || shape.extents;
-		this.updateBox();
 	    }
 	    if( opts.vertices ){
 		shape = new PConvex2D( opts.vertices );
 		this.vertices = opts.vertices || shape.vertices;
-		this.updatePoly();
 	    }
 	    
 	    opts.shape = shape instanceof PShape2D ? shape : undefined;
@@ -78,6 +75,8 @@ define([
 	    
 	    body.position.copy( gameObject.position );
 	    body.rotation = gameObject.rotation;
+	    body.R.setRotation( gameObject.rotation );
+	    body.calculateAABB();
 	};
 	
 	
@@ -112,6 +111,48 @@ define([
 	    
 	    this.body.applyImpulse( impulse, worldPoint, wake );
 	};
+        
+        
+        RigidBody2D.prototype.toJSON = function(){
+            var json = this._JSON;
+	    
+	    json.type = "RigidBody2D";
+	    json.visible = this.visible;
+	    json.offset = this.offset;
+	    
+	    json.alpha = this.alpha;
+	    
+	    json.fill = this.fill;
+	    json.color = this.color;
+	    
+	    json.line = this.line;
+	    json.lineColor = this.lineColor;
+	    json.lineWidth = this.lineWidth;
+	    
+	    json.body = this.body.toJSON();
+	    
+	    return json;
+        };
+        
+        
+        RigidBody2D.prototype.fromJSON = function( json ){
+	    
+            this.visible = json.visible;
+	    this.offset.fromJSON( json.offset );
+	    
+	    this.alpha = json.alpha;
+	    
+	    this.fill = json.fill;
+	    this.color.fromJSON( json.color );
+	    
+	    this.line = json.line;
+	    this.lineColor.fromJSON( json.lineColor );
+	    this.lineWidth = json.lineWidth;
+	    
+	    this.body.fromJSON( json.body );
+	    
+	    return this;
+        };
 	
 	
 	RigidBody2D.DYNAMIC = PBody2D.DYNAMIC;

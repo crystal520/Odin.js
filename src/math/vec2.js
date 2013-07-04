@@ -24,6 +24,12 @@ define([
 	}
         
         
+        Vec2.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
+        
+        
         Vec2.prototype.clone = function(){
             
             return new Vec2( this.x, this.y );
@@ -620,20 +626,20 @@ define([
         };
 	
         
-        Vec2.prototype.equals = function( other ){
+        Vec2.prototype.equals = function( other, e ){
             
             return !(
-                !equals( this.x, other.x ) ||
-                !equals( this.y, other.y )
+                !equals( this.x, other.x, e ) ||
+                !equals( this.y, other.y, e )
             );
         };
         
         
-        Vec2.equals = function( a, b ){
+        Vec2.equals = function( a, b, e ){
 	    
             return !(
-                !equals( a.x, b.x ) ||
-                !equals( a.y, b.y )
+                !equals( a.x, b.x, e ) ||
+                !equals( a.y, b.y, e )
             );
         };
 	

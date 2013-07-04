@@ -81,6 +81,15 @@ define([
 		}
 	    }
         };
+	
+	
+	Keyboard.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.keys = this.keys;
+	    
+	    return json;
+	};
         
         
         var keyNames = {

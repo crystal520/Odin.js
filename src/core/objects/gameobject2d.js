@@ -3,10 +3,31 @@ if( typeof define !== "function" ){
 }
 define([
 	"base/class",
-	"core/objects/transform2d"
+	"core/objects/transform2d",
+	"core/objects/camera2d",
+	"core/components/box2d",
+	"core/components/circle2d",
+	"core/components/component",
+	"core/components/poly2d",
+	"core/components/renderable2d",
+	"core/components/rigidbody2d",
+	"core/components/sprite2d"
     ],
-    function( Class, Transform2D ){
+    function( Class, Transform2D, Camera2D, Box2D, Circle2D, Component, Poly2D, Renderable2D, RigidBody2D, Sprite2D ){
         "use strict";
+	
+	var objectTypes = {
+		Transform2D: Transform2D,
+		GameObject2D: GameObject2D,
+		Camera2D: Camera2D,
+		Box2D: Box2D,
+		Circle2D: Circle2D,
+		Component: Component,
+		Poly2D: Poly2D,
+		Renderable2D: Renderable2D,
+		RigidBody2D: RigidBody2D,
+		Sprite2D: Sprite2D
+	    };
 	
 	
         function GameObject2D( opts ){
@@ -17,6 +38,8 @@ define([
             this.name = opts.name || ( this._class +"-"+ this._id );
 	    
 	    this.z = opts.z !== undefined ? opts.z : 0;
+	    
+	    this.userData = opts.userData !== undefined ? opts.userData : {};
 	    
             this.tags = [];
             this.components = {};
@@ -120,9 +143,9 @@ define([
         
         GameObject2D.prototype.addComponent = function(){
             var components = this.components,
-                component, i, il;
-            
-            for( i = 0, il = arguments.length; i < il; i++ ){
+                component, i;
+	    
+            for( i = arguments.length; i--; ){
                 component = arguments[i];
                 
                 if( !components[ component._class ] ){
@@ -151,15 +174,15 @@ define([
         
         GameObject2D.prototype.removeComponent = function(){
             var components = this.components,
-                component, i, il;
+                component, i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 component = arguments[i];
                 
                 if( components[ component._class ] ){
                     
                     component.gameObject = undefined;
-                    delete components[ component._class ];
+                    components[ component._class ] = undefined;
                     
                     this.trigger("removecomponent", component );
                     component.trigger("remove", this );
@@ -227,6 +250,74 @@ define([
             this.updateMatrices();
             
             this.trigger("lateupdate");
+        };
+        
+        
+        GameObject2D.prototype.toJSON = function(){
+            var json = this._JSON,
+		children = this.children,
+		components = this.components,
+		tags = this.tags,
+		i;
+	    
+	    json.type = "GameObject2D";
+	    json.name = this.name;
+	    json.children = json.children || [];
+	    json.components = json.components || {};
+	    json.tags = json.tags || [];
+	    
+	    for( i = children.length; i--; ){
+		json.children[i] = children[i].toJSON();
+	    }
+	    for( i in components ){
+		json.components[i] = components[i].toJSON();
+	    }
+	    for( i = tags.length; i--; ){
+		json.tags[i] = tags[i];
+	    }
+	    
+	    json.z = this.z;
+	    
+	    json.position = this.position;
+	    json.rotation = this.rotation;
+	    json.scale = this.scale;
+	    
+            return json;
+        };
+        
+        
+        GameObject2D.prototype.fromJSON = function( json ){
+	    var children = json.children,
+		components = json.components,
+		tags = json.tags,
+		jsonObject, object,
+		i;
+	    
+	    this.name = json.name;
+	    
+	    for( i = children.length; i--; ){
+		jsonObject = children[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.add( object.fromJSON( jsonObject ) );
+	    }
+	    for( i in components ){
+		jsonObject = components[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.addComponent( object.fromJSON( jsonObject ) )
+	    }
+	    for( i = tags.length; i--; ){
+		this.tags[i] = tags[i];
+	    }
+	    
+	    this.z = json.z;
+	    
+	    this.position.fromJSON( json.position );
+	    this.rotation = json.rotation;
+	    this.scale.fromJSON( json.scale );
+	    
+	    this.updateMatrices();
+	    
+	    return this;
         };
         
         

@@ -49,16 +49,14 @@ define([
         
         Transform2D.prototype.copy = function( other ){
 	    var children = other.children,
-		child, c = 0, cl = other.children.length;
+		child, i;
 	    
             this.children.length = 0;
             
-	    for( c; c < cl; c++ ){
+	    for( i = children.length; i--; ){
 		child = children[c];
 		
-		if( !!child ){
-		    this.add( child.clone() );
-		}
+		if( child ) this.add( child.clone() );
 	    }
             
             this.root = other.root;
@@ -76,9 +74,9 @@ define([
         Transform2D.prototype.add = function(){
             var children = this.children,
                 child, index, root,
-                i, il;
+                i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 child = arguments[i];
                 index = children.indexOf( child );
                 
@@ -99,7 +97,7 @@ define([
                     child.root = root;
                     
                     child.trigger("add");
-                    this.trigger("addChild", child );
+                    this.trigger("addchild", child );
                 }
             }
             
@@ -110,9 +108,9 @@ define([
         Transform2D.prototype.remove = function(){
             var children = this.children,
                 child, index,
-                i, il;
+                i;
             
-            for( i = 0, il = arguments.length; i < il; i++ ){
+            for( i = arguments.length; i--; ){
                 child = arguments[i];
                 index = children.indexOf( child );
                 
@@ -130,7 +128,7 @@ define([
                     child.root = root;
                     
                     child.trigger("remove" );
-                    this.trigger("removeChild", child );
+                    this.trigger("removechild", child );
                 }
             }
             
@@ -295,6 +293,46 @@ define([
             else{
                 matrixWorld.mmul( matrix, this.parent.matrixWorld );
             }
+        };
+        
+        
+        Transform2D.prototype.toJSON = function(){
+            var json = this._JSON,
+		children = this.children, i;
+	    
+	    json.type = "Transform2D";
+	    json.children = json.children || [];
+	    
+	    for( i = children.length; i--; ){
+		json.children[i] = children[i].toJSON();
+	    }
+	    
+	    json.position = this.position;
+	    json.rotation = this.rotation;
+	    json.scale = this.scale;
+	    
+            return json;
+        };
+        
+        
+        Transform2D.prototype.fromJSON = function( json ){
+	    var children = json.children,
+		jsonObject, object,
+		i;
+	    
+	    for( i = children.length; i--; ){
+		jsonObject = children[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.add( object.fromJSON( jsonObject ) );
+	    }
+	    
+	    this.position.fromJSON( json.position );
+	    this.rotation = json.rotation;
+	    this.scale.fromJSON( json.scale );
+	    
+	    this.updateMatrices();
+	    
+	    return this;
         };
         
         

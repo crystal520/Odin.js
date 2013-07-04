@@ -41,8 +41,6 @@ define([
 	    this._frame = 0
 	    
 	    this.playing = this.animation !== undefined ? true : false;
-	    
-	    this.updateSprite();
         }
         
 	Class.extend( Sprite2D, Renderable2D );
@@ -117,6 +115,94 @@ define([
 		}
 	    }
 	};
+        
+        
+        Sprite2D.prototype.toJSON = function(){
+            var json = this._JSON,
+		animations = this.animations,
+		animation, i, jl;
+	    
+	    json.type = "Sprite2D";
+	    json.visible = this.visible;
+	    json.offset = this.offset;
+	    
+	    json.alpha = this.alpha;
+	    
+	    json.fill = this.fill;
+	    json.color = this.color;
+	    
+	    json.line = this.line;
+	    json.lineColor = this.lineColor;
+	    json.lineWidth = this.lineWidth;
+	    
+	    json.image = this.image.src;
+	    
+	    json.x = this.x;
+	    json.y = this.y;
+	    json.w = this.w;
+	    json.h = this.h;
+	    
+	    json.animations = json.animations || {};
+	    
+	    for( i in animations ){
+		json.animations[i] = json.animations[i] || [];
+		animation = animations[i];
+		
+		for( j = 0, jl = animation.length; j < jl; j++ ){
+		    json.animations[i][j] = animation[i];
+		}
+	    }
+	    
+	    json.animation = this.animation;
+	    json.playing = this.playing;
+	    json.mode = this.mode;
+	    json._last = this._last;
+	    json._from = this._frame;
+	    
+	    return json;
+        };
+        
+        
+        Sprite2D.prototype.fromJSON = function( json ){
+	    var animations = json.animations,
+		animation, i, j, jl;
+	    
+            this.visible = json.visible;
+	    this.offset.fromJSON( json.offset );
+	    
+	    this.alpha = json.alpha;
+	    
+	    this.fill = json.fill;
+	    this.color.fromJSON( json.color );
+	    
+	    this.line = json.line;
+	    this.lineColor.fromJSON( json.lineColor );
+	    this.lineWidth = json.lineWidth;
+	    
+	    this.image.src = json.image;
+	    
+	    this.x = json.x;
+	    this.y = json.y;
+	    this.w = json.w;
+	    this.h = json.h;
+	    
+	    for( i in animations ){
+		this.animations[i] = animations[i];
+		animation = animations[i];
+		
+		for( j = 0, jl = animation.length; j < jl; j++ ){
+		    this.animations[i][j] = animation[i];
+		}
+	    }
+	    
+	    this.animation = json.animation;
+	    this.playing = json.playing;
+	    this.mode = json.mode;
+	    this._last = json._last;
+	    this._from = json._frame;
+	    
+	    return this;
+        };
 	
 	
 	Sprite2D.ONCE = 0;

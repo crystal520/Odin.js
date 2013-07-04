@@ -25,6 +25,12 @@ define([
 	}
         
         
+        Vec3.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
+        
+        
         Vec3.prototype.clone = function(){
             
             return new Vec3( this.x, this.y, this.z );
@@ -529,22 +535,22 @@ define([
         };
 	
         
-        Vec3.prototype.equals = function( other ){
+        Vec3.prototype.equals = function( other, e ){
             
             return !(
-                !equals( this.x, other.x ) ||
-                !equals( this.y, other.y ) ||
-                !equals( this.z, other.z )
+                !equals( this.x, other.x, e ) ||
+                !equals( this.y, other.y, e ) ||
+                !equals( this.z, other.z, e )
             );
         };
         
         
-        Vec3.equals = function( a, b ){
+        Vec3.equals = function( a, b, e ){
 	    
             return !(
-                !equals( a.x, b.x ) ||
-                !equals( a.y, b.y ) ||
-                !equals( a.z, b.z )
+                !equals( a.x, b.x, e ) ||
+                !equals( a.y, b.y, e ) ||
+                !equals( a.z, b.z, e )
             );
         };
 	

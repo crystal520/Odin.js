@@ -16,7 +16,6 @@ define([
 	
 	
 	function Mat3( m11, m12, m13, m21, m22, m23, m31, m32, m33 ){
-	    
 	    this.elements = new Float32Array(8);
 	    var te = this.elements;
 	    
@@ -24,6 +23,12 @@ define([
             te[1] = m21 || 0; te[4] = m22 !== undefined ? m22 : 1; te[7] = m23 || 0;
             te[2] = m31 || 0; te[5] = m32 || 0; te[8] = m33 !== undefined ? m33 : 1;
 	}
+        
+        
+        Mat3.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
         
         
         Mat3.prototype.clone = function(){

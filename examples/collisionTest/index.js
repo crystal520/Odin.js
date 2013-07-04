@@ -27,7 +27,31 @@ require(
 	    });
 	    
 	    for( var i = 128; i--; ){
-		scene.add(
+		var r = Mathf.randFloat( 0.25, 0.5 );
+		if( Math.random() < 0.5 ){
+		    scene.add(
+			new GameObject2D({
+			    position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 16 ) ),
+			    components: [
+				new Sprite2D({
+				    image: player,
+				    x: 0,
+				    y: 0,
+				    w: 64,
+				    h: 64,
+				    width: r+r,
+				    height: r+r
+				}),
+				new RigidBody2D({
+				    mass: 1,
+				    radius: r
+				})
+			    ]
+			})
+		    );
+		}
+		else{
+		    scene.add(
 		    new GameObject2D({
 			position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 16 ) ),
 			components: [
@@ -37,16 +61,17 @@ require(
 				y: 0,
 				w: 64,
 				h: 64,
-				width: 1,
-				height: 1
+				width: r+r,
+				height: r+r
 			    }),
 			    new RigidBody2D({
 				mass: 1,
-				radius: 0.5
+				extents: new Vec2( r, r )
 			    })
 			]
 		    })
 		);
+		}
 	    }
 	    
 	    for( var i = 256; i--; ){

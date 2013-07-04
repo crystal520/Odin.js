@@ -8,10 +8,20 @@ define(
 	
 	var objProto = Object.prototype,
 	    toString = objProto.toString,
+	    defineProperty = Object.defineProperty,
 	    hasOwnProperty = objProto.hasOwnProperty;
 	
 	
 	function Utils(){}
+	
+	
+	Utils.prototype.defineProps = function( obj, props ){
+	    var key;
+	    
+	    for( key in props ){
+		defineProperty( obj, key, props[ key ] );
+	    }
+	};
 	
 	
 	Utils.prototype.has = function( obj, key ){
@@ -59,6 +69,12 @@ define(
 	Utils.prototype.isArray = function( obj ){
 	    
 	    return toString.call( obj ) === "[object Array]";
+	};
+	
+	
+	Utils.prototype.isArrayLike = function( obj ){
+	    
+	    return typeof obj === "object" && typeof obj.length === "number";
 	};
 	
 	

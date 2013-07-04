@@ -17,7 +17,6 @@ define([
 	"use strict";
 	
 	var floor = Math.floor,
-	    isString = Utils.isString,
 	    addEvent = Dom.addEvent;
 	
 	
@@ -48,6 +47,13 @@ define([
 	}
         
 	Class.extend( Game, Class );
+	
+	
+	Game.prototype.init = function(){
+	    
+	    this.trigger("init");
+	    this.animate();
+	};
 	
 	
 	Game.prototype.updateRenderer = function( scene ){
@@ -118,21 +124,17 @@ define([
 	
 	
 	Game.prototype.setScene = function( scene ){
-            var index, newScene;
+	    if( typeof scene === "string" ){
+		scene = this.findSceneByName( scene );
+	    }
+            var index = this.scenes.indexOf( scene );
 	    
-            if( Utils.isString( scene ) ){
-                this.scene = this.getScene( scene );
-            }
-	    else{
-		index = this.scenes.indexOf( scene );
-		
-		if( index === -1 ){
-		    console.warn("Game.setScene: scene not added to Game, adding it...");
-		    this.addScene( scene );
-		}
-		
-                this.scene = scene;
-            }
+	    if( index === -1 ){
+		console.warn("Game.setScene: scene not added to Game, adding it...");
+		this.addScene( scene );
+	    }
+	    
+	    this.scene = scene;
 	    
 	    if( !this.scene ){
 		console.warn("Game.setScene: could not find scene in Game "+ scene );
@@ -145,15 +147,15 @@ define([
 	
 	Game.prototype.setCamera = function( camera ){
             var index, scene = this.scene;
-		
+	    
 	    if( !scene ){
 		console.warn("Game.setCamera: no active scene for camera.");
 		return;
 	    }
 	    
-            if( isString( camera ) ){
-                this.camera = scene.findByName( camera );
-            }
+	    if( typeof camera === "string" ){
+		this.camera = scene.findByName( camera );
+	    }
 	    else{
 		index = scene.children.indexOf( camera );
 		
@@ -166,21 +168,32 @@ define([
 	    }
 	    
             if( !this.camera ){
-                console.warn("Scene.setCamera: no camera found "+ camera );
+                console.warn("Game.setCamera: no camera found "+ camera );
             }
         };
 	
 	
-	Game.prototype.init = function(){
-	    
-	    this.trigger("init");
-	    this.animate();
-	};
+	Game.prototype.findSceneByName = function( name ){
+            var scenes = this.scenes,
+                scene, i;
+            
+            for( i = scenes.length; i--; ){
+                scene = scenes[i];
+                
+                if( scene.name === name ){
+                    
+                    return scene;
+                }
+            }
+            
+            return undefined;
+        };
 	
 	
 	Game.prototype.update = function(){
 	    var scene = this.scene;
             
+	    Time.sinceStart = Time.now();
 	    Input.update();
 	    
 	    if( !this.pause ){
@@ -224,17 +237,17 @@ define([
 	    
 	    return function(){
 		
-		if( last + 0.5 <= Time.sinceStart ){
-		    fpsDisplay.innerHTML = ( Time.fps ).toFixed(2) + "fps";
-		    last = Time.sinceStart;
+		if( this.debug ){
+		    if( last + 0.5 <= Time.sinceStart ){
+			fpsDisplay.innerHTML = ( Time.fps ).toFixed(2) + "fps";
+			last = Time.sinceStart;
+		    }
 		}
 		
 		this.update();
 		this.render();
 		
 		Dom.requestAnimFrame( this.animate.bind( this ) );
-		
-		Time.sinceStart = Time.now();
 	    };
 	}();
         

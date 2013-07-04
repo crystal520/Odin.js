@@ -9,14 +9,20 @@ define([
         "use strict";
         
 	var sqrt = Math.sqrt,
+	    clamp01 = Mathf.clamp01,
 	    equals = Mathf.equals;
 	
         
         function Line2( start, end ){
-            
             this.start = start instanceof Vec2 ? start : new Vec2;
             this.end = end instanceof Vec2 ? end : new Vec2;
 	}
+        
+        
+        Line2.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
         
         
         Line2.prototype.clone = function(){
@@ -50,6 +56,117 @@ define([
 	    
             te.x = end.x;
             te.y = end.y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.add = function( other ){
+	    var ts = this.start, te = this.end,
+		x = other.x, y = other.y;
+	    
+            ts.x += x;
+            ts.y += y;
+	    
+            te.x += x;
+            te.y += y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.sadd = function( s ){
+	    var ts = this.start, te = this.end;
+	    
+            ts.x += s;
+            ts.y += s;
+	    
+            te.x += s;
+            te.y += s;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.sub = function( other ){
+	    var ts = this.start, te = this.end,
+		x = other.x, y = other.y;
+	    
+            ts.x -= x;
+            ts.y -= y;
+	    
+            te.x -= x;
+            te.y -= y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.ssub = function( s ){
+	    var ts = this.start, te = this.end;
+	    
+            ts.x -= s;
+            ts.y -= s;
+	    
+            te.x -= s;
+            te.y -= s;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.mul = function( other ){
+	    var ts = this.start, te = this.end,
+		x = other.x, y = other.y;
+	    
+            ts.x *= x;
+            ts.y *= y;
+	    
+            te.x *= x;
+            te.y *= y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.smul = function( s ){
+	    var ts = this.start, te = this.end;
+	    
+            ts.x *= s;
+            ts.y *= s;
+	    
+            te.x *= s;
+            te.y *= s;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.div = function( other ){
+	    var ts = this.start, te = this.end,
+		x = other.x !== 0 ? 1 / other.x : 0,
+		y = other.y !== 0 ? 1 / other.y : 0;
+	    
+            ts.x *= x;
+            ts.y *= y;
+	    
+            te.x *= x;
+            te.y *= y;
+            
+            return this;
+	};
+        
+        
+        Line2.prototype.sdiv = function( s ){
+	    var ts = this.start, te = this.end;
+	    
+	    s = s !== 0 ? 1 / s : 0;
+	    
+            ts.x *= s;
+            ts.y *= s;
+	    
+            te.x *= s;
+            te.y *= s;
             
             return this;
 	};
@@ -132,6 +249,28 @@ define([
 	    end.y *= el;
 	    
 	    return this;
+	};
+        
+        
+        Line2.prototype.closestPoint = function( point, target ){
+	    target = target || new Vec2;
+	    
+	    var a = this.start, b = this.end,
+		ax = a.x, ay = a.y,
+		bx = b.x, by = b.y,
+		
+		ex = bx - ax,
+		ey = by - ay,
+		
+		dx = point.x - ax,
+		dy = point.y - ay,
+		
+		t = clamp01( ( ex * dx + ey * dy ) / ( ex * ex + ey * ey ) );
+	    
+	    target.x = ex * t + ax;
+	    target.y = ey * t + ay;
+	    
+	    return target;
 	};
         
         

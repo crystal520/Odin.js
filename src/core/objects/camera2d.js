@@ -20,8 +20,8 @@ define([
 	    
             GameObject2D.call( this, opts );
 	    
-	    this.width = window.innerWidth;
-            this.height = window.innerHeight;
+	    this.width = 960;
+            this.height = 640;
             
             this.aspect = this.width / this.height;
             
@@ -147,6 +147,81 @@ define([
             this.matrixWorldInverse.minv( this.matrixWorld );
 	    
             this.trigger("lateupdate");
+        };
+        
+        
+        Camera2D.prototype.toJSON = function(){
+            var json = this._JSON,
+		children = this.children,
+		components = this.components,
+		tags = this.tags,
+		i;
+	    
+	    json.type = "Camera2D";
+	    json.name = this.name;
+	    json.children = json.children || [];
+	    json.components = json.components || [];
+	    json.tags = json.tags || [];
+	    
+	    for( i = children.length; i--; ){
+		json.children[i] = children[i].toJSON();
+	    }
+	    for( i = components.length; i--; ){
+		json.components[i] = components[i].toJSON();
+	    }
+	    for( i = tags.length; i--; ){
+		json.tags[i] = tags[i];
+	    }
+	    
+	    json.z = this.z;
+	    
+	    json.position = this.position;
+	    json.rotation = this.rotation;
+	    json.scale = this.scale;
+	    
+	    json.width = this.width;
+	    json.height = this.height;
+	    json.zoom = this.zoom;
+	    
+            return json;
+        };
+        
+        
+        Camera2D.prototype.fromJSON = function( json ){
+	    var children = json.children,
+		components = json.components,
+		tags = json.tags,
+		jsonObject, object,
+		i;
+	    
+	    this.name = json.name;
+	    
+	    for( i = children.length; i--; ){
+		jsonObject = children[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.add( object.fromJSON( jsonObject ) );
+	    }
+	    for( i in components ){
+		jsonObject = components[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.addComponent( object.fromJSON( jsonObject ) )
+	    }
+	    for( i = tags.length; i--; ){
+		this.tags[i] = tags[i];
+	    }
+	    
+	    this.z = json.z;
+	    
+	    this.position.fromJSON( json.position );
+	    this.rotation = json.rotation;
+	    this.scale.fromJSON( json.scale );
+	    
+	    this.zoom = json.zoom;
+	    this.setSize( json.width, json.height );
+	    
+	    this.updateMatrices();
+	    
+	    return this;
         };
         
         

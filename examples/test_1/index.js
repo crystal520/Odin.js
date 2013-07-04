@@ -20,12 +20,14 @@ require(
 	game.on("init", function(){
 	    vec2_1 = new Vec2;
 	    
-	    scene = new Scene2D;
+	    scene = new Scene2D({
+		gravity: new Vec2( 0, 0 ),
+		allowSleep: false
+	    });
 	    camera = new Camera2D;
 	    
 	    sprite = new GameObject2D({
-		position: new Vec2( 3, 0 ),
-		rotation: 0,
+		position: new Vec2( 0, 2 ),
 		components: [
 		    new Sprite2D({
 			image: player,
@@ -38,7 +40,9 @@ require(
 			animations: {
 			    idle: [
 				[ 0, 0, 64, 64, 0.25 ],
-				[ 64, 0, 64, 64, 0.5 ]
+				[ 64, 0, 64, 64, 0.5 ],
+				[ 128, 0, 64, 64, 1 ],
+				[ 192, 0, 64, 64, 0.1 ]
 			    ]
 			}
 		    }),
@@ -50,27 +54,7 @@ require(
 	    });
 	    
 	    sprite2 = new GameObject2D({
-		position: new Vec2( 0, -3 ),
-		rotation: 0,
-		components: [
-		    new Sprite2D({
-			image: player,
-			x: 0,
-			y: 0,
-			w: 64,
-			h: 64,
-			width: 1,
-			height: 1
-		    }),
-		    new RigidBody2D({
-			mass: 1,
-			extents: new Vec2( 0.5, 0.5 )
-		    })
-		]
-	    });
-	    
-	    sprite3 = new GameObject2D({
-		position: new Vec2( 0, 0 ),
+		position: new Vec2( 0, -0.5 ),
 		components: [
 		    new Sprite2D({
 			image: player,
@@ -87,32 +71,46 @@ require(
 		    })
 		]
 	    });
-	    sprite2.on("update", function(){
-		//this.rotation += Math.PI*Time.delta;
+	    
+	    ball = new GameObject2D({
+		position: new Vec2( 0, -4 ),
+		components: [
+		    new Sprite2D({
+			image: player,
+			x: 0,
+			y: 0,
+			w: 64,
+			h: 64,
+			width: 1,
+			height: 1
+		    }),
+		    new RigidBody2D({
+			mass: 0,
+			radius: 0.5
+		    })
+		]
 	    });
 	    
-	    scene.add( sprite, sprite2, sprite3 );
-	    
-	    
-	    scene.world.pworld.addConstraint(
-		new PDistanceConstraint2D( sprite3.components.RigidBody2D.body, sprite.components.RigidBody2D.body, 3 )
-	    );
-	    scene.world.pworld.addConstraint(
-		new PDistanceConstraint2D( sprite3.components.RigidBody2D.body, sprite2.components.RigidBody2D.body, 3 )
-	    );
+	    scene.add( sprite, sprite2, ball );
 	    
 	    Keyboard.on("keydown", function( key ){
 		if( key.name === "up" ){
-		    sprite.components.RigidBody2D.applyForce( vec2_1.set( 0, 100 ) );
+		    sprite.components.RigidBody2D.body.velocity.y += 0.1;
 		}
 		if( key.name === "down" ){
-		    sprite.components.RigidBody2D.applyForce( vec2_1.set( 0, -100 ) );
+		    sprite.components.RigidBody2D.body.velocity.y -= 0.1;
 		}
 		if( key.name === "right" ){
-		    sprite.components.RigidBody2D.applyForce( vec2_1.set( 100, 0 ) );
+		    sprite.components.RigidBody2D.body.velocity.x += 0.1;
 		}
 		if( key.name === "left" ){
-		    sprite.components.RigidBody2D.applyForce( vec2_1.set( -100, 0 ) );
+		    sprite.components.RigidBody2D.body.velocity.x -= 0.1;
+		}
+		if( key.name === "a" ){
+		    sprite.components.RigidBody2D.body.angularVelocity += Math.PI*0.03125;
+		}
+		if( key.name === "d" ){
+		    sprite.components.RigidBody2D.body.angularVelocity -= Math.PI*0.03125;
 		}
 	    });
 	    

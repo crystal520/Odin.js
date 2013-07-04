@@ -4,6 +4,8 @@ var program = require("commander"),
     mkdirp = require("mkdirp"),
     os = require("os"),
     fs = require("fs"),
+    exec = require('child_process').exec,
+    requirejs = require("requirejs"),
     
     pkg = require("../package.json"),
     
@@ -11,9 +13,7 @@ var program = require("commander"),
     eol = os.EOL,
     path;
 
-program
-    .version( version )
-    .parse( process.argv );
+program.version( version ).parse( process.argv );
 
 path = program.args.shift() || ".";
 
@@ -24,13 +24,13 @@ path = program.args.shift() || ".";
 	    createGame( path );
 	}
 	else{
-	    program.confirm("directory is not empty, continue?", function( ok ){
-		if( ok ){
+	    program.confirm("directory is not empty, continue?", function( yes ){
+		if( yes ){
 		    process.stdin.destroy();
 		    createGame( path );
 		}
 		else{
-		    abort("aborting");
+		    abort("aborting...");
 		}
 	    });
 	}
@@ -38,11 +38,11 @@ path = program.args.shift() || ".";
 }( path ));
     
 
-function createIndexjs(){
+function createClientIndexjs(){
     return [
 	'require(',
 	'    {',
-	'        baseUrl: "../node_modules/odin/src"',
+	'        baseUrl: "./"',
 	'    },',
 	'    [',
 	'        "odin",',
@@ -52,14 +52,13 @@ function createIndexjs(){
 	'        Odin.globalize();',
 	'        ',
 	'        game = new ClientGame({',
-	'            name: "Game",',
 	'            host: "127.0.0.1",',
-	'            port: 8080,',
+	'            port: 3000,',
 	'            debug: true',
 	'        });',
 	'        ',
 	'        game.on("init", function(){',
-	'            // Game goes here',
+	'            // Client Game goes here',
 	'        });',
 	'        ',
 	'        game.init();',
@@ -67,27 +66,60 @@ function createIndexjs(){
 	');'
     ].join("\n");
 }
+ 
 
-
-function createGamejs(){
+function createClientBuildjs(){
     return [
-	'var requirejs = require("requirejs");',
+	'({',
+	'    include: "../../requirejs/require.js",',
+	'    ',
+	'    baseUrl: "./node_modules/odin/src/",',
+	'    name: "odin",',
+	'    ',
+	'    optimize: "uglify2",',
+	'    uglify2: {',
+	'        ',
+	'        output: {',
+	'            beautify: true',
+	'        },',
+	'        compress: {',
+	'            sequences: false',
+	'        },',
+	'        warnings: true,',
+	'	 mangle: false',
+	'    },',
+	'    ',
+	'    out: "./client/odin.js",',
+	'})'
+    ].join("\n");
+}
+
+
+function createServerIndexjs(){
+    return [
+	'var requirejs = require("requirejs"),',
+	'    Odin = require("odin");',
 	'',
 	'requirejs(',
 	'    {',
-	'        baseUrl: "../",',
+	'        baseUrl: "./",',
 	'        nodeRequire: require',
 	'    },',
-	'    [',
-	'        "odin"',
-	'    ],',
-	'    function( Odin ){',
-	'        var game = new Odin.ServerGame({',
-	'            name: "Game",',
+	'    function(){',
+	'        ',
+	'        Odin.globalize();',
+	'        ',
+	'        var game = new ServerGame({',
 	'            host: "127.0.0.1",',
-	'            port: 8080,',
+	'            port: 3000,',
 	'            debug: true',
 	'        });',
+	'        ',
+	'        game.on("init", function(){',
+	'            // Server Game goes here',
+	'        });',
+	'        ',
+	'        game.init();',
 	'    }',
 	');'
     ].join("\n");
@@ -100,7 +132,7 @@ function createIndexhtml(){
 	'<!DOCTYPE html>',
 	'<html>',
 	'    <head>',
-	'    ',
+	'        ',
 	'        <meta http-equiv="cleartype" content="on">',
 	'        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">',
 	'        ',
@@ -113,8 +145,8 @@ function createIndexhtml(){
 	'        <title>Game</title>',
 	'        ',
 	'        <script src="/socket.io/socket.io.js"></script>',
-	'        <script src="./node_modules/requirejs/require.js"></script>',
 	'        ',
+	'        <script src="./client/odin.js"></script>',
 	'        <script src="./client/index.js"></script>',
 	'        ',
 	'    </head>',
@@ -137,9 +169,9 @@ function createREADMEmd(){
 };
 
 
-    
+
 function createGame( path ){
-    console.log();
+    
     process.on("exit", function(){
 	console.log();
 	console.log("    install dependencies:");
@@ -152,12 +184,43 @@ function createGame( path ){
     
     mkdir( path +"/assets");
     mkdir( path +"/client", function(){
-	write( path +"/client/index.js", createIndexjs() );
+	write( path +"/client/index.js", createClientIndexjs() );
     });
     
+    requirejs.optimize({
+	    include: "../node_modules/requirejs/require.js",
+	    
+	    baseUrl:  __dirname +"/../src/",
+	    name: "odin",
+	    
+	    optimize: "uglify2",
+	    uglify2: {
+		output: {
+		    beautify: true
+		},
+		compress: {
+		    sequences: false
+		},
+		warnings: true,
+		mangle: false
+	    },
+	    
+	    out: path +"/client/odin.js",
+	},
+	function( buildResponse ){
+	    var contents = fs.readFileSync(config.out, "utf8");
+	    write( path +"/client/odin.js", contents );
+	},
+	function( error ){
+	    console.log( error );
+	}
+    );
+    
     mkdir( path +"/server", function(){
-	write( path +"/server/index.js", createGamejs() );
+	write( path +"/server/index.js", createServerIndexjs() );
     });
+    
+    write( path +"/build.js", createClientBuildjs() );
     
     var pkg = {
 	name: "game",

@@ -244,6 +244,15 @@ define([
             
 	    this.clear();
         };
+	
+	
+	Touches.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.array = this.array;
+	    
+	    return json;
+	};
         
         
         return new Touches;

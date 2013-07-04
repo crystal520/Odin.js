@@ -81,8 +81,7 @@ define([
 		    px = position.x, py = position.y,
 		    min = aabb.min, max = aabb.max,
 		    minx = Infinity, miny = Infinity, maxx = -Infinity, maxy = -Infinity,
-		    R11 = R[0], R12 = R[2],
-		    R21 = R[1], R22 = R[3],
+		    R11 = R[0], R12 = R[2], R21 = R[1], R22 = R[3],
 		    vertex, ox, oy, x, y, i, il;
 		
 		for( i = vertices.length; i--; ){

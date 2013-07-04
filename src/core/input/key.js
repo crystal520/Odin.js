@@ -28,6 +28,20 @@ define([
         
 	Class.extend( Key, Class );
 	
+	
+	Key.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.name = this.name;
+	    json.keyCode = this.keyCode;
+	    json.down = this.down;
+	    
+	    json.downTime = this.downTime;
+	    json.endTime = this.endTime;
+	    
+	    return json;
+	};
+	
         
         return Key;
     }

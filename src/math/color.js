@@ -15,7 +15,6 @@ define([
 	
         
         function Color( r, g, b, a ){
-	    
             this.r = 0;
             this.g = 0;
             this.b = 0;
@@ -34,6 +33,12 @@ define([
                 a !== undefined ? a : 1
             );
         }
+        
+        
+        Color.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
         
         
         Color.prototype.clone = function(){

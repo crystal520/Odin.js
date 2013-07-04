@@ -9,8 +9,7 @@ define([
 	"use strict";
         
         var abs = Math.abs,
-	    sqrt = Math.sqrt,
-	    accelerationIncludingGravity;
+	    sqrt = Math.sqrt;
 	
         
         function Accelerometer( max ){
@@ -53,6 +52,17 @@ define([
                 this.trigger("change");
             }
         };
+	
+	
+	Accelerometer.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.x = this.x;
+	    json.y = this.y;
+	    json.z = this.z;
+	    
+	    return json;
+	};
         
         
         return new Accelerometer;

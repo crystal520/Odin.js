@@ -15,10 +15,16 @@ define([
 	
         
         function AABB3( min, max ){
-            
             this.min = min instanceof Vec3 ? min : new Vec3;
             this.max = max instanceof Vec3 ? max : new Vec3;
 	}
+        
+        
+        AABB3.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
+        
         
         
         AABB3.prototype.clone = function(){
@@ -31,9 +37,25 @@ define([
         
         
         AABB3.prototype.copy = function( other ){
+            var amin = this.min, bmin = other.min,
+		amax = this.max, bmax = other.max;
+	    
+	    amin.x = bmin.x;
+	    amin.y = bmin.y;
+	    amin.z = bmin.z;
+	    
+	    amax.x = bmax.x;
+	    amax.y = bmax.y;
+	    amax.z = bmax.z;
             
-            this.min.copy( other.min );
-            this.max.copy( other.max );
+            return this;
+	};
+        
+        
+        AABB3.prototype.set = function( min, max ){
+            
+            this.min.copy( min );
+            this.max.copy( max );
             
             return this;
 	};

@@ -34,6 +34,7 @@ define(
 	Odin.Class = require("base/class");
 	Odin.Device = require("base/device");
 	Odin.Dom = require("base/dom");
+	Odin.ObjectPool = require("base/objectpool");
 	Odin.Time = require("base/time");
 	Odin.Utils = require("base/utils");
 	
@@ -47,8 +48,6 @@ define(
 	Odin.Mat4 = require("math/mat4");
 	Odin.Mathf = require("math/mathf");
 	Odin.Quat = require("math/quat");
-	Odin.Ray2 = require("math/ray2");
-	Odin.Ray3 = require("math/ray3");
 	Odin.Vec2 = require("math/vec2");
 	Odin.Vec3 = require("math/vec3");
 	Odin.Vec4 = require("math/vec4");
@@ -58,7 +57,6 @@ define(
 	Odin.PRigidBody2D = require("physics2d/body/prigidbody2d");
 	
 	Odin.PBroadphase2D = require("physics2d/collision/pbroadphase2d");
-	Odin.PCollision2D = require("physics2d/collision/pcollision2d");
 	Odin.PNearphase2D = require("physics2d/collision/pnearphase2d");
 	
 	Odin.PConstraint2D = require("physics2d/constraints/pconstraint2d");

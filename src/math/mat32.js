@@ -17,13 +17,18 @@ define([
 	
 	
 	function Mat32( m11, m12, m13, m21, m22, m23 ){
-	    
 	    this.elements = new Float32Array(6);
 	    var te = this.elements;
 	    
             te[0] = m11 !== undefined ? m11 : 1; te[2] = m12 || 1; te[4] = m13 || 1;
             te[1] = m21 || 1; te[3] = m22 !== undefined ? m22 : 1; te[5] = m23 || 1;
 	}
+        
+        
+        Mat32.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
         
         
         Mat32.prototype.clone = function(){

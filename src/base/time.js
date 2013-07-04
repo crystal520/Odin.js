@@ -8,6 +8,8 @@ define(
         
 	function Time(){
 	    
+	    this._offset = 0;
+	    
 	    this.sinceStart = 0;
 	    
 	    this.time = 0;
@@ -26,9 +28,9 @@ define(
 		this.time = time = this.now();
 		
 		delta = ( time - last ) * this.scale;
-		this.delta = delta < 0.001 ? 0.001 : delta > 0.05 ? 0.05 : delta;
+		this.delta = delta < 0.001 ? 0.001 : delta > 0.25 ? 0.25 : delta;
 		
-		last = time;
+		last = time - this._offset;
 		
 		frames++;
 		ms = time * 1000;
@@ -44,9 +46,9 @@ define(
 	
 	Time.prototype.now = function(){
 	    var startTime = Date.now(),
-		w = window || {},
-		performance = w.performance || function(){
-		    this.now = function(){
+		w = typeof window !== "undefined" ? window : {},
+		performance = typeof w.performance !== "undefined" ? w.performance : {
+		    now: function(){
 			return Date.now() - startTime;
 		    }
 		};
@@ -56,6 +58,12 @@ define(
 		return performance.now() * 0.001;
 	    }
 	}();
+	
+	
+	Time.prototype.stamp = function(){
+	    
+	    return Date.now() * 0.001;
+	}
 	
 	
 	return new Time;

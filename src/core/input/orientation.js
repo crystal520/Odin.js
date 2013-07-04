@@ -73,6 +73,19 @@ define([
 	    
 	    this.trigger( "orientationchange", this.mode, orientation );
         };
+	
+	
+	Orientation.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.alpha = this.alpha;
+	    json.beta = this.beta;
+	    json.gamma = this.gamma;
+	    
+	    json.mode = this.mode;
+	    
+	    return json;
+	};
         
         
         return new Orientation;

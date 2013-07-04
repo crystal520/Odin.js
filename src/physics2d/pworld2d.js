@@ -18,6 +18,7 @@ define([
 	
 	var pow = Math.pow,
 	    min = Math.min,
+	    clamp = Mathf.clamp,
 	    
 	    CIRCLE = PShape2D.CIRCLE,
 	    BOX = PShape2D.BOX,
@@ -134,9 +135,9 @@ define([
 	
 	PWorld2D.prototype.now = function(){
 	    var startTime = Date.now(),
-		w = window || {},
-		performance = w.performance || function(){
-		    this.now = function(){
+		w = typeof window !== "undefined" ? window : {},
+		performance = typeof w.performance !== "undefined" ? w.performance : {
+		    now: function(){
 			return Date.now() - startTime;
 		    }
 		};
@@ -166,7 +167,7 @@ define([
 		i, j;
 	    
 	    this.time += dt;
-	    
+		
 	    for( i = bodies.length; i--; ){
 		body = bodies[i];
 		force = body.force;
@@ -217,10 +218,10 @@ define([
 		    c1.minForce = c2.minForce = -umg * mass;
 		    c1.maxForce = c2.maxForce = umg * mass;
 		    
-		    c1.ri.x = c2.ri.x = c.ri.x;
-		    c1.ri.y = c2.ri.y = c.ri.y;
-		    c1.rj.x = c2.rj.x = c.rj.x;
-		    c1.rj.y = c2.rj.y = c.rj.y;
+		    c1.ri.copy( c.ri );
+		    c2.ri.copy( c.ri );
+		    c1.rj.copy( c.rj );
+		    c2.rj.copy( c.rj );
 		    
 		    c1.t.copy( c.n ).perpL();
 		    c2.t.copy( c.n ).perpR();

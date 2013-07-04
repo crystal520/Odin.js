@@ -51,6 +51,30 @@ define([
 	};
         
         
+        World2D.prototype.toJSON = function(){
+            var json = this._JSON;
+	    
+	    json.type = "World2D";
+	    json.name = this.name;
+	    json.gravity = this.gravity
+	    json.background = this.background
+	    json.pworld = this.pworld
+	    
+	    return json;
+        };
+        
+        
+        World2D.prototype.fromJSON = function( json ){
+            
+	    this.name = json.name;
+	    this.gravity.fromJSON( json.gravity );
+	    this.background.fromJSON( json.background );
+	    this.pworld.fromJSON( json.pworld );
+	    
+	    return this;
+        };
+        
+        
         return World2D;
     }
 );

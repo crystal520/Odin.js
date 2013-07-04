@@ -53,9 +53,9 @@ define(
 	Mathf.prototype.sqrt = Math.sqrt;
 	
 	
-	Mathf.prototype.equals = function( a, b ){
+	Mathf.prototype.equals = function( a, b, e ){
 	    
-	    return abs( a - b ) <= EPSILON;
+	    return abs( a - b ) <= ( e || EPSILON );
 	};
 	
 	

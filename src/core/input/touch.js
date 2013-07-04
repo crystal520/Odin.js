@@ -57,6 +57,24 @@ define([
             
             this.position.set( x, y );
         };
+	
+	
+	Touch.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.identifier = this.identifier;
+	    
+	    json.start = this.start;
+	    json.delta = this.delta;
+	    json.position = this.position;
+	    json.end = this.end;
+	    
+	    json.startTime = this.startTime;
+	    json.deltaTime = this.deltaTime;
+	    json.endTime = this.endTime;
+	    
+	    return json;
+	};
         
         
         return Touch;

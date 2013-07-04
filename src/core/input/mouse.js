@@ -219,6 +219,28 @@ define([
         };
         
         
+        Mouse.prototype.toJSON = function(){
+            var json = this._JSON;
+	    
+	    json.start = this.start;
+            json.delta = this.delta;
+            json.position = this.position;
+            json.end = this.end;
+	    
+	    json.startTime = this.startTime;
+	    json.deltaTime = this.deltaTime;
+	    json.endTime = this.endTime;
+            
+            json.wheel = this.wheel;
+            
+            json.left = this.left;
+            json.middle = this.middle;
+            json.right = this.right;
+	    
+	    return json;
+        };
+        
+        
         return new Mouse;
     }
 );

@@ -26,6 +26,12 @@ define([
 	}
         
         
+        Vec4.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
+        
+        
         Vec4.prototype.clone = function(){
             
             return new Vec4( this.x, this.y, this.z, this.w );
@@ -415,24 +421,24 @@ define([
         };
 	
         
-        Vec4.prototype.equals = function( other ){
+        Vec4.prototype.equals = function( other, e ){
             
             return !(
-                !equals( this.x, other.x ) ||
-                !equals( this.y, other.y ) ||
-                !equals( this.z, other.z ) ||
-                !equals( this.w, other.w )
+                !equals( this.x, other.x, e ) ||
+                !equals( this.y, other.y, e ) ||
+                !equals( this.z, other.z, e ) ||
+                !equals( this.w, other.w, e )
             );
         };
         
         
-        Vec4.equals = function( a, b ){
+        Vec4.equals = function( a, b, e ){
 	    
             return !(
-                !equals( a.x, b.x ) ||
-                !equals( a.y, b.y ) ||
-                !equals( a.z, b.z ) ||
-                !equals( a.w, b.w )
+                !equals( a.x, b.x, e ) ||
+                !equals( a.y, b.y, e ) ||
+                !equals( a.z, b.z, e ) ||
+                !equals( a.w, b.w, e )
             );
         };
 	

@@ -13,6 +13,7 @@ define(
 	    this._id = ++id;
 	    this._class = this.constructor.name;
 	    this._events = {};
+	    this._JSON = {};
 	}
 	
 	
@@ -30,7 +31,7 @@ define(
 	
 	
 	Class.prototype.off = function( name ){
-	    var events = this._events[ name ];
+	    var events = this._events[ name ], key;
 	    
 	    if( events ) events.length = 0;
 	    
@@ -72,6 +73,16 @@ define(
 	    
 	    return this._id;
         };
+	
+	
+	Class.prototype.toJSON = function(){
+	    return this._JSON;
+	};
+	
+	
+	Class.prototype.fromJSON = function( json ){
+	    return this;
+	};
 	
 	
 	Class.extend = function( child, parent ){

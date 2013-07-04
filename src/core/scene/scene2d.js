@@ -4,12 +4,20 @@ if( typeof define !== "function" ){
 define([
 	"base/class",
 	"base/utils",
-	"core/scene/world2d"
+	"core/scene/world2d",
+	"core/objects/camera2d",
+	"core/objects/gameobject2d",
+	"core/objects/transform2d"
     ],
-    function( Class, Utils, World2D ){
+    function( Class, Utils, World2D, Camera2D, GameObject2D, Transform2D ){
         "use strict";
 	
-	var isString = Utils.isString;
+	var objectTypes = {
+		Camera2D: Camera2D,
+		GameObject2D: GameObject2D,
+		Transform2D: Transform2D
+	    };
+	    
 	
         
         function Scene2D( opts ){
@@ -100,6 +108,27 @@ define([
                 else{
                     console.warn("Scene2D.remove: "+ child +" is not in scene");
                 }
+            }
+        };
+        
+        
+        Scene2D.prototype.clear = function(){
+            var children = this.children,
+                child, index, i;
+            
+            for( i = children.length; i--; ){
+                child = children[i];
+                child.scene = undefined;
+                children.splice( i, 1 );
+		
+		if( child.children.length > 0 ){
+		    this.remove.apply( this, child.children );
+		}
+		
+		this._remove( child );
+                
+		child.trigger("removefromscene");
+		this.trigger("removegameobject", child );
             }
         };
         
@@ -208,6 +237,44 @@ define([
             }
             
             this.trigger("update");
+        };
+        
+        
+        Scene2D.prototype.toJSON = function(){
+            var json = this._JSON,
+		children = this.children,
+		i;
+	    
+	    json.type = "Scene2D";
+	    json.name = this.name;
+	    json.world = this.world.toJSON();
+	    
+	    json.children = json.children || [];
+	    
+	    for( i = children.length; i--; ){
+		json.children[i] = children[i].toJSON();
+	    }
+	    
+	    return json;
+        };
+        
+        
+        Scene2D.prototype.fromJSON = function( json ){
+            var children = json.children,
+		jsonObject, object,
+		i;
+	    
+	    this.name = json.name;
+	    this.world.fromJSON( json.world );
+	    
+	    this.clear();
+	    for( i = children.length; i--; ){
+		jsonObject = children[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.add( object.fromJSON( jsonObject ) );
+	    }
+	    
+	    return this;
         };
         
         

@@ -33,7 +33,6 @@ define([
 	    
 	    this.rotation = opts.rotation !== undefined ? opts.rotation : 0;
 	    this.R = new Mat2;
-	    this.R.setRotation( this.rotation );
 	    
 	    this.angularVelocity = opts.angularVelocity !== undefined ? opts.angularVelocity : 0;
 	    
@@ -70,7 +69,7 @@ define([
 		    sleepVelSq = sleepVel * sleepVel,
 		    
 		    sleepAVel = this._sleepAngularVelocity,
-		    sleepAVelSq = sleepVel * sleepVel;
+		    sleepAVelSq = sleepAVel * sleepAVel;
 		
 		if( sleepState === AWAKE && ( velSq < sleepVelSq || aVelSq < sleepAVelSq ) ){
 		    this._sleepLastSleepy = time;

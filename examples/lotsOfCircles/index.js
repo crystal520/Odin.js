@@ -105,19 +105,36 @@ require(
 	    
 	    scene.add( ground, wallLeft, wallRight, ceiling );
 	    
+	    
 	    for( var i = 256; i--; ){
 		var r = Mathf.randFloat( 0.1, 0.5 );
-		scene.add(
-		    new GameObject2D({
-			position: new Vec2( Mathf.randFloat( -3, 3 ), Mathf.randFloat( 3, 16 ) ),
-			components: [
-			    new RigidBody2D({
-				mass: 1,
-				radius: r
-			    })
-			]
-		    })
-		);
+		
+		if( Math.random() < 0.5 ){
+		    scene.add(
+			new GameObject2D({
+			    position: new Vec2( Mathf.randFloat( -3, 3 ), Mathf.randFloat( 3, 16 ) ),
+			    components: [
+				new RigidBody2D({
+				    mass: 1,
+				    radius: r
+				})
+			    ]
+			})
+		    );
+		}
+		else{
+		    scene.add(
+			new GameObject2D({
+			    position: new Vec2( Mathf.randFloat( -3, 3 ), Mathf.randFloat( 3, 16 ) ),
+			    components: [
+				new RigidBody2D({
+				    mass: 1,
+				    extents: new Vec2( r, r )
+				})
+			    ]
+			})
+		    );
+		}
 	    }
 	    
 	    Mouse.on("wheel", function(){

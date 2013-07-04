@@ -18,7 +18,6 @@ define([
 	
 	
 	function Mat4( m11, m12, m13, m14, m21, m22, m23, m24, m31, m32, m33, m34, m41, m42, m43, m44 ){
-	    
 	    this.elements = new Float32Array(16);
 	    var te = this.elements;
 	    
@@ -27,6 +26,12 @@ define([
 	    te[2] = m31 || 0; te[6] = m32 || 0; te[10] = m33 !== undefined ? m33 : 1; te[14] = m34 || 0;
 	    te[3] = m41 || 0; te[7] = m42 || 0; te[11] = m43 || 0; te[15] = m44 !== undefined ? m44 : 1;
 	}
+        
+        
+        Mat4.prototype.fromJSON = function( json ){
+            
+	    this.copy( json );
+	};
         
         
         Mat4.prototype.clone = function(){
