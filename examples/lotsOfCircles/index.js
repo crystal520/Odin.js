@@ -107,7 +107,7 @@ require(
 	    
 	    
 	    for( var i = 256; i--; ){
-		var r = Mathf.randFloat( 0.1, 0.5 );
+		var r = Mathf.randFloat( 0.25, 0.5 );
 		
 		if( Math.random() < 0.5 ){
 		    scene.add(

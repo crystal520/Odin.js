@@ -221,15 +221,15 @@ define([
 	
 	
 	PNearphase2D.prototype.convexConvex = function(){
-	    var axisi = new Vec2, axisj = new Vec2,
-		edgei = new Line2, edgej = new Line2,
+	    var edgei = new Line2, edgej = new Line2,
 		edgeOuti = [0], edgeOutj = [0],
-		tmp1 = new Vec2;
+		relativeTol = 0.98, absoluteTol = 0.001,
+		axis = new Vec2, vec = new Vec2;
 	    
 	    return function( bi, bj, si, sj, xi, xj, Ri, Rj, contacts ){
 		var separationi, separationj, edgeIndexi, edgeIndexj,
 		    edgeiStart, edgeiEnd, edgejStart, edgejEnd,
-		    normal, x, y, nx, ny, offset, s,
+		    normal, x, y, nx, ny, offset, s, tmp,
 		    c, n, ri, rj;
 		
 		separationi = findMaxSeparation( si, sj, xi, xj, Ri, Rj, edgeOuti );
@@ -243,43 +243,54 @@ define([
 		findEdge( si, xi, Ri, edgeIndexi, edgei );
 		findEdge( sj, xj, Rj, edgeIndexj, edgej );
 		
+		normal = si.normals[ edgeIndexi ];
+		x = normal.x; y = normal.y;
+		axis.x = nx = x * Ri[0] + y * Ri[2];
+		axis.y = ny = x * Ri[1] + y * Ri[3];
+		
+		if( edgej.dot( axis ) > edgei.dot( axis ) * relativeTol + absoluteTol ){
+		    tmp = bj; bj = bi; bi = tmp;
+		    tmp = sj; sj = si; si = tmp;
+		    tmp = xj; xj = xi; xi = tmp;
+		    tmp = Rj; Rj = Ri; Ri = tmp;
+		    tmp = edgeIndexj; edgeIndexj = edgeIndexi; edgeIndexi = tmp;
+		    tmp = edgej; edgej = edgei; edgei = tmp;
+		    nx = -axis.x;
+		    ny = -axis.y;
+		}
+		
 		edgeiStart = edgei.start; edgeiEnd = edgei.end;
 		edgejStart = edgej.start; edgejEnd = edgej.end;
 		
-		normal = si.normals[ edgeIndexi ];
-		x = normal.x; y = normal.y;
-		nx = x * Ri[0] + y * Ri[2];
-		ny = x * Ri[1] + y * Ri[3];
-		
 		offset = nx * edgeiStart.x + ny * edgeiStart.y;
 		
-		edgei.closestPoint( edgejStart, tmp1 );
+		edgei.closestPoint( edgejStart, vec );
 		s = ( nx * edgejStart.x + ny * edgejStart.y ) - offset;
 		
-		if( s < EPSILON ){
+		if( s <= 0 ){
 		    c = createContact( bi, bj, contacts );
 		    n = c.n; ri = c.ri; rj = c.rj;
 		    
 		    n.x = nx;
 		    n.y = ny;
 		    
-		    edgei.closestPoint( tmp1, ri ).sub( xi );
-		    edgej.closestPoint( tmp1, rj ).sub( xj );
+		    edgei.closestPoint( vec, ri ).sub( xi );
+		    edgej.closestPoint( vec, rj ).sub( xj );
 		}
 		
 		
-		edgei.closestPoint( edgejEnd, tmp1 );
+		edgei.closestPoint( edgejEnd, vec );
 		s = ( nx * edgejEnd.x + ny * edgejEnd.y ) - offset;
 		
-		if( s < EPSILON ){
+		if( s <= 0 ){
 		    c = createContact( bi, bj, contacts );
 		    n = c.n; ri = c.ri; rj = c.rj;
 		    
 		    n.x = nx;
 		    n.y = ny;
 		    
-		    edgei.closestPoint( tmp1, ri ).sub( xi );
-		    edgej.closestPoint( tmp1, rj ).sub( xj );
+		    edgei.closestPoint( vec, ri ).sub( xi );
+		    edgej.closestPoint( vec, rj ).sub( xj );
 		}
 		
 		bi.wake();

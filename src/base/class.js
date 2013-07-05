@@ -78,12 +78,13 @@ define(
 	Class.prototype.toJSON = function(){
 	    var json = this._JSON;
 	    
+	    json.type = this._class;
+	    
 	    return json;
 	};
 	
 	
 	Class.prototype.fromJSON = function( json ){
-	    
 	    return this;
 	};
 	
