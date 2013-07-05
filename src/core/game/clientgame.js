@@ -5,6 +5,7 @@ define([
 	"require",
 	"base/class",
 	"base/time",
+	"base/device",
 	"core/input/input",
 	"core/input/mouse",
 	"core/input/touches",
@@ -18,12 +19,13 @@ define([
 	"core/objects/transform2d"
 	
     ],
-    function( require, Class, Time, Input, Mouse, Touches, Keyboard, Accelerometer, Orientation,
+    function( require, Class, Time, Device, Input, Mouse, Touches, Keyboard, Accelerometer, Orientation,
 	Scene2D, Game, Camera2D, GameObject2D, Transform2D
     ){
 	"use strict";
 	
 	var objectTypes = {
+		Scene2D: Scene2D,
 		Camera2D: Camera2D,
 		GameObject2D: GameObject2D,
 		Transform2D: Transform2D
@@ -49,17 +51,15 @@ define([
 	    socket.on("connected", function( id, scenes ){
 		self.id = id;
 		
+		
+		socket.emit("device", Device );
+		
+		
 		for( i = scenes.length; i--; ){
 		    jsonObject = scenes[i];
-		    
-		    if( jsonObject.type === "Scene2D" ){
-			object = new Scene2D;
-		    }
-		    
-		    if( object ){
-			object.fromJSON( jsonObject );
-			self.addScene( object );
-		    }
+		    object = new objectTypes[ jsonObject.type ];
+		    object.fromJSON( jsonObject );
+		    self.addScene( object );
 		}
 		
 		
@@ -67,10 +67,12 @@ define([
 		    
 		    self.offset = Time.stamp() - timeStamp;
 		    Time._offset = self.offset;
+		    
+		    socket.emit("clientoffset", self.offset );
 		});
 		
 		
-		socket.on("gameObject_update", function( scene, gameObject, position, scale, rotation ){
+		socket.on("gameObject_moved", function( scene, gameObject, position ){
 		    scene = self.findSceneByName( scene );
 		    if( !scene ) return;
 		    
@@ -78,9 +80,28 @@ define([
 		    if( !gameObject ) return;
 		    
 		    gameObject.position.copy( position );
-		    gameObject.scale.copy( scale );
-		    gameObject.rotation = rotation;
+		    gameObject.updateMatrices();
+		});
+		
+		socket.on("gameObject_scaled", function( scene, gameObject, scale ){
+		    scene = self.findSceneByName( scene );
+		    if( !scene ) return;
 		    
+		    gameObject = scene.findByName( gameObject );
+		    if( !gameObject ) return;
+		    
+		    gameObject.scale.copy( scale );
+		    gameObject.updateMatrices();
+		});
+		
+		socket.on("gameObject_rotated", function( scene, gameObject, rotation ){
+		    scene = self.findSceneByName( scene );
+		    if( !scene ) return;
+		    
+		    gameObject = scene.findByName( gameObject );
+		    if( !gameObject ) return;
+		    
+		    gameObject.rotation = rotation;
 		    gameObject.updateMatrices();
 		});
 		

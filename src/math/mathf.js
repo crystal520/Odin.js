@@ -179,7 +179,7 @@ define(
         
         Mathf.prototype.randChoice = function( array ){
 	    
-	    return array[ floor( random() * array.length ) ]
+	    return array[ floor( random() * array.length ) ];
         };
         
         

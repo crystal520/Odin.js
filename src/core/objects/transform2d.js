@@ -33,6 +33,10 @@ define([
 	    this.rotation = !!opts.rotation ? opts.rotation : 0;
 	    this.scale = opts.scale instanceof Vec2 ? opts.scale : new Vec2( 1, 1 );
 	    
+	    this._position = this.position.clone();
+	    this._rotation = this.rotation;
+	    this._scale = this.scale.clone();
+	    
 	    this.updateMatrices();
         }
         
@@ -293,6 +297,10 @@ define([
             else{
                 matrixWorld.mmul( matrix, this.parent.matrixWorld );
             }
+	    
+	    if( !this._position.equals( this.position ) ) this.trigger("moved");
+	    if( !this._scale.equals( scale ) ) this.trigger("scaled");
+	    if( this._rotation !== this.rotation ) this.trigger("rotated");
         };
         
         

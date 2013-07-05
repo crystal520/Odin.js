@@ -11,7 +11,7 @@ requirejs(
         Odin.globalize();
         
         var game = new ServerGame({
-            host: "127.0.0.1",
+            host: "192.168.1.181",
             port: 3000,
             debug: true
         });
@@ -23,9 +23,9 @@ requirejs(
             scene.add(
                 new GameObject2D({
                     components: [
-                        new Circle2D({
+                        new Box2D({
                             color: new Color("#ff0000"),
-                            radius: 0.5
+                            extents: new Vec2( 0.5, 0.5 )
                         })
                     ]
                 })

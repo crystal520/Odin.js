@@ -44,7 +44,7 @@ define([
 	}
 	
 	
-	function findEdgeIndex( si, sj, xi, xj, Ri, Rj ){
+	function findMaxSeparation( si, sj, xi, xj, Ri, Rj, edgeOut ){
 	    var verticesi = si.vertices, normalsi = si.normals, counti = verticesi.length,
 		verticesj = sj.vertices, normalsj = sj.normals, countj = verticesj.length,
 		
@@ -57,23 +57,118 @@ define([
 		dx = xjx - xix,
 		dy = xjy - xiy,
 		
+		localx = dx * Ri11 + dy * Ri12,
+		localy = dx * Ri21 + dy * Ri22,
+		
 		normal, x, y, nx, ny, d, dmax = -Infinity, edgeIndex = 0,
+		s, sPrev, sNext, prevEdge, nextEdge, bestEdge = 0, bestSeparation, increment = 0,
 		i;
 	    
 	    for( i = counti; i--; ){
 		normal = normalsi[i];
-		x = normal.x; y = normal.y;
-		nx = x * Ri11 + y * Ri12;
-		ny = x * Ri21 + y * Ri22;
+		d = normal.x * localx + normal.y * localy;
 		
-		d = nx * dx + ny * dy;
 		if( d > dmax ){
 		    dmax = d;
 		    edgeIndex = i;
 		}
 	    }
 	    
-	    return edgeIndex;
+	    s = edgeSeparation( si, sj, xi, xj, Ri, Rj, edgeIndex );
+	    if( s > 0 ) return s;
+	    
+	    prevEdge = edgeIndex - 1 > -1 ? edgeIndex - 1 : counti - 1;
+	    sPrev = edgeSeparation( si, sj, xi, xj, Ri, Rj, prevEdge );
+	    if( sPrev > 0 ) return sPrev;
+	    
+	    nextEdge = edgeIndex + 1 < counti ? edgeIndex + 1 : 0;
+	    sNext = edgeSeparation( si, sj, xi, xj, Ri, Rj, nextEdge );
+	    if( sNext > 0 ) return sNext;
+	    
+	    if( sPrev > s && sPrev > sNext ){
+		increment = -1;
+		bestEdge = prevEdge;
+		bestSeparation = sPrev;
+	    }
+	    else if( sNext > s ){
+		increment = 1;
+		bestEdge = nextEdge;
+		bestSeparation = sNext;
+	    }
+	    else{
+		edgeOut[0] = edgeIndex;
+		return s;
+	    }
+	    
+	    while( true ){
+		
+		if( increment === -1 ){
+		    edgeIndex = bestEdge - 1 > -1 ? bestEdge - 1 : counti - 1;
+		}
+		else{
+		    edgeIndex = bestEdge + 1 < counti ? bestEdge + 1 : 0;
+		}
+		
+		s = edgeSeparation( si, sj, xi, xj, Ri, Rj, edgeIndex );
+		if( s > 0 ) return s;
+		
+		if( s > bestSeparation ){
+		    bestEdge = edgeIndex;
+		    bestSeparation = s;
+		}
+		else{
+		    break;
+		}
+	    }
+	    
+	    edgeOut[0] = bestEdge;
+	    return bestSeparation;
+	}
+	
+	
+	function edgeSeparation( si, sj, xi, xj, Ri, Rj, edgeIndexi ){
+	    var verticesj = sj.vertices,
+		
+		Ri11 = Ri[0], Ri12 = Ri[2], Ri21 = Ri[1], Ri22 = Ri[3],
+		Rj11 = Rj[0], Rj12 = Rj[2], Rj21 = Rj[1], Rj22 = Rj[3],
+		
+		xix = xi.x, xiy = xi.y,
+		xjx = xj.x, xjy = xj.y,
+		
+		normal = si.normals[ edgeIndexi ],
+		x = normal.x, y = normal.y,
+		nx = x * Ri11 + y * Ri12,
+		ny = x * Ri21 + y * Ri22,
+		
+		vertex, x, y, vx, vy, v1x, v1y, v2x, v2y,
+		edgeIndexj = 0, d, dmax = -Infinity,
+		i;
+	    
+	    
+	    for( i = verticesj.length; i--; ){
+		vertex = verticesj[i];
+		x = vertex.x; y = vertex.y;
+		vx = xjx + ( x * Rj11 + y * Rj12 );
+		vy = xjy + ( x * Rj21 + y * Rj22 );
+		
+		d = vx * -nx + vy * -ny;
+		if( d > dmax ){
+		    dmax = d;
+		    edgeIndexj = i;
+		    v2x = vx;
+		    v2y = vy;
+		}
+	    }
+	    
+	    vertex = si.vertices[ edgeIndexi ];
+	    x = vertex.x; y = vertex.y;
+	    v1x = xix + ( x * Ri11 + y * Ri12 );
+	    v1y = xiy + ( x * Ri21 + y * Ri22 );
+	    
+	    v2x -= v1x;
+	    v2y -= v1y;
+	    
+	    return v2x * nx + v2y * ny;
 	}
 	
 	
@@ -97,34 +192,6 @@ define([
 	    
 	    edge.start.set( v1x, v1y );
 	    edge.end.set( v2x, v2y );
-	}
-	
-	
-	function edgeSeparation( si, sj, xi, xj, Ri, Rj, edgeIndexi, edgeIndexj ){
-	    var Ri11 = Ri[0], Ri12 = Ri[2], Ri21 = Ri[1], Ri22 = Ri[3],
-		
-		normal = si.normals[ edgeIndexi ],
-		x = normal.x, y = normal.y,
-		nx = x * Ri11 + y * Ri12,
-		ny = x * Ri21 + y * Ri22,
-		
-		vertex, x, y, v1x, v1y, v2x, v2y;
-	    
-	    
-	    vertex = si.vertices[ edgeIndexi ];
-	    x = vertex.x; y = vertex.y;
-	    v1x = xi.x + ( x * Ri11 + y * Ri12 );
-	    v1y = xi.y + ( x * Ri21 + y * Ri22 );
-	    
-	    vertex = sj.vertices[ edgeIndexj ];
-	    x = vertex.x; y = vertex.y;
-	    v2x = xj.x + ( x * Rj[0] + y * Rj[2] );
-	    v2y = xj.y + ( x * Rj[1] + y * Rj[3] );
-	    
-	    v2x -= v1x;
-	    v2y -= v1y;
-	    
-	    return v2x * nx + v2y * ny;
 	}
 	
         
@@ -157,18 +224,21 @@ define([
 	    var axisi = new Vec2, axisj = new Vec2,
 		edgei = new Line2, edgej = new Line2,
 		edgeOuti = [0], edgeOutj = [0],
-		tmp1 = new Vec2, tmp2 = new Vec2;
+		tmp1 = new Vec2;
 	    
 	    return function( bi, bj, si, sj, xi, xj, Ri, Rj, contacts ){
-		var separation, separationj, edgeIndexi, edgeIndexj,
+		var separationi, separationj, edgeIndexi, edgeIndexj,
 		    edgeiStart, edgeiEnd, edgejStart, edgejEnd,
-		    normal, x, y, nx, ny,
+		    normal, x, y, nx, ny, offset, s,
 		    c, n, ri, rj;
 		
-		edgeIndexi = findEdgeIndex( si, sj, xi, xj, Ri, Rj );
-		edgeIndexj = findEdgeIndex( sj, si, xj, xi, Rj, Ri );
+		separationi = findMaxSeparation( si, sj, xi, xj, Ri, Rj, edgeOuti );
+		edgeIndexi = edgeOuti[0];
+		if( separationi > 0 ) return;
 		
-		console.log( edgeIndexi, edgeIndexj );
+		separationj = findMaxSeparation( sj, si, xj, xi, Rj, Ri, edgeOutj );
+		edgeIndexj = edgeOutj[0];
+		if( separationj > 0 ) return;
 		
 		findEdge( si, xi, Ri, edgeIndexi, edgei );
 		findEdge( sj, xj, Rj, edgeIndexj, edgej );
@@ -181,27 +251,36 @@ define([
 		nx = x * Ri[0] + y * Ri[2];
 		ny = x * Ri[1] + y * Ri[3];
 		
+		offset = nx * edgeiStart.x + ny * edgeiStart.y;
 		
-		edgei.closestPoint( edgej.start, tmp1 );
+		edgei.closestPoint( edgejStart, tmp1 );
+		s = ( nx * edgejStart.x + ny * edgejStart.y ) - offset;
 		
-		c = createContact( bi, bj, contacts );
-		n = c.n; ri = c.ri; rj = c.rj;
+		if( s < EPSILON ){
+		    c = createContact( bi, bj, contacts );
+		    n = c.n; ri = c.ri; rj = c.rj;
+		    
+		    n.x = nx;
+		    n.y = ny;
+		    
+		    edgei.closestPoint( tmp1, ri ).sub( xi );
+		    edgej.closestPoint( tmp1, rj ).sub( xj );
+		}
 		
-		n.x = nx; n.y = ny;
 		
-		edgei.closestPoint( tmp1, ri ).sub( xi );
-		edgej.closestPoint( tmp1, rj ).sub( xj );
+		edgei.closestPoint( edgejEnd, tmp1 );
+		s = ( nx * edgejEnd.x + ny * edgejEnd.y ) - offset;
 		
-		
-		edgei.closestPoint( edgej.end, tmp2 );
-		
-		c = createContact( bi, bj, contacts );
-		n = c.n; ri = c.ri; rj = c.rj;
-		
-		n.x = nx; n.y = ny;
-		
-		edgei.closestPoint( tmp2, ri ).sub( xi );
-		edgej.closestPoint( tmp2, rj ).sub( xj );
+		if( s < EPSILON ){
+		    c = createContact( bi, bj, contacts );
+		    n = c.n; ri = c.ri; rj = c.rj;
+		    
+		    n.x = nx;
+		    n.y = ny;
+		    
+		    edgei.closestPoint( tmp1, ri ).sub( xi );
+		    edgej.closestPoint( tmp1, rj ).sub( xj );
+		}
 		
 		bi.wake();
 		bj.wake();

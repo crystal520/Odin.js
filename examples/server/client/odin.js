@@ -6719,6 +6719,9 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
         this.position = opts.position instanceof Vec2 ? opts.position : new Vec2();
         this.rotation = opts.rotation ? opts.rotation : 0;
         this.scale = opts.scale instanceof Vec2 ? opts.scale : new Vec2(1, 1);
+        this._position = this.position.clone();
+        this._rotation = this.rotation;
+        this._scale = this.scale.clone();
         this.updateMatrices();
     }
     var isNumber = Utils.isNumber, EPSILON = Mathf.EPSILON;
@@ -6848,6 +6851,9 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
         (1 !== scale.x || 1 !== scale.y) && matrix.scale(scale);
         matrix.setTranslation(this.position);
         this.root === this ? matrixWorld.copy(matrix) : matrixWorld.mmul(matrix, this.parent.matrixWorld);
+        this._position.equals(this.position) || this.trigger("moved");
+        this._scale.equals(scale) || this.trigger("scaled");
+        this._rotation !== this.rotation && this.trigger("rotated");
     };
     Transform2D.prototype.toJSON = function() {
         var i, json = this._JSON, children = this.children;
@@ -7846,7 +7852,7 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("core/game/clientgame", [ "require", "base/class", "base/time", "core/input/input", "core/input/mouse", "core/input/touches", "core/input/keyboard", "core/input/accelerometer", "core/input/orientation", "core/scene/scene2d", "core/game/game", "core/objects/camera2d", "core/objects/gameobject2d", "core/objects/transform2d" ], function(require, Class, Time, Input, Mouse, Touches, Keyboard, Accelerometer, Orientation, Scene2D, Game, Camera2D, GameObject2D, Transform2D) {
+define("core/game/clientgame", [ "require", "base/class", "base/time", "base/device", "core/input/input", "core/input/mouse", "core/input/touches", "core/input/keyboard", "core/input/accelerometer", "core/input/orientation", "core/scene/scene2d", "core/game/game", "core/objects/camera2d", "core/objects/gameobject2d", "core/objects/transform2d" ], function(require, Class, Time, Device, Input, Mouse, Touches, Keyboard, Accelerometer, Orientation, Scene2D, Game, Camera2D, GameObject2D, Transform2D) {
     function ClientGame(opts) {
         opts || (opts = {});
         Game.call(this, opts);
@@ -7860,25 +7866,43 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "core/inp
         });
         socket.on("connected", function(id, scenes) {
             self.id = id;
+            socket.emit("device", Device);
             for (i = scenes.length; i--; ) {
                 jsonObject = scenes[i];
-                "Scene2D" === jsonObject.type && (object = new Scene2D());
-                if (object) {
-                    object.fromJSON(jsonObject);
-                    self.addScene(object);
-                }
+                object = new objectTypes[jsonObject.type]();
+                object.fromJSON(jsonObject);
+                self.addScene(object);
             }
             socket.on("sync", function(timeStamp) {
                 self.offset = Time.stamp() - timeStamp;
                 Time._offset = self.offset;
+                socket.emit("clientoffset", self.offset);
             });
-            socket.on("gameObject_update", function(scene, gameObject, position, scale, rotation) {
+            socket.on("gameObject_moved", function(scene, gameObject, position) {
                 scene = self.findSceneByName(scene);
                 if (scene) {
                     gameObject = scene.findByName(gameObject);
                     if (gameObject) {
                         gameObject.position.copy(position);
+                        gameObject.updateMatrices();
+                    }
+                }
+            });
+            socket.on("gameObject_scaled", function(scene, gameObject, scale) {
+                scene = self.findSceneByName(scene);
+                if (scene) {
+                    gameObject = scene.findByName(gameObject);
+                    if (gameObject) {
                         gameObject.scale.copy(scale);
+                        gameObject.updateMatrices();
+                    }
+                }
+            });
+            socket.on("gameObject_rotated", function(scene, gameObject, rotation) {
+                scene = self.findSceneByName(scene);
+                if (scene) {
+                    gameObject = scene.findByName(gameObject);
+                    if (gameObject) {
                         gameObject.rotation = rotation;
                         gameObject.updateMatrices();
                     }
@@ -7970,6 +7994,7 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "core/inp
         });
     }
     var objectTypes = {
+        Scene2D: Scene2D,
         Camera2D: Camera2D,
         GameObject2D: GameObject2D,
         Transform2D: Transform2D

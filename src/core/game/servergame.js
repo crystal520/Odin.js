@@ -60,7 +60,20 @@ define([
 		console.log("ServerGame: new Client with id "+ socket.id );
 		
 		socket.on("disconnect", function(){
+		    console.log("ServerGame: Client with id "+ socket.id +" disconnected");
 		    self.trigger("disconnect", socket.id );
+		});
+		
+		socket.on("device", function( device ){ client.device = device; });
+		
+		socket.on("clientoffset", function( offset ){
+		    client.offset = offset;
+		    
+		    if( offset > 10 ){
+			console.log("ServerGame: disconnected Client with id "+ socket.id +" due to slow connection");
+			self.trigger("disconnect", socket.id );
+			socket.disconnect();
+		    }
 		});
 		
 		socket.on("accelerometerchange", function( Accelerometer ){ client.trigger("accelerometerchange", Accelerometer ); });
@@ -121,8 +134,14 @@ define([
 			    sockets.emit("removecomponent", this.scene.name, this.name, component._class );
 			});
 			
-			gameObject.on("update", function(){
-			    sockets.emit("gameObject_update", this.scene.name, this.name, this.position, this.scale, this.rotation );
+			gameObject.on("moved", function(){
+			    sockets.emit("gameObject_moved", this.scene.name, this.name, this.position );
+			});
+			gameObject.on("scaled", function(){
+			    sockets.emit("gameObject_scaled", this.scene.name, this.name, this.scale );
+			});
+			gameObject.on("rotated", function(){
+			    sockets.emit("gameObject_rotated", this.scene.name, this.name, this.rotation );
 			});
 		    });
 		    

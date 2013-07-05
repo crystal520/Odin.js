@@ -48,6 +48,8 @@ require(
 		    }),
 		    new RigidBody2D({
 			mass: 1,
+			linearDamping: new Vec2( 0.9, 0.9 ),
+			angularDamping: 0.9,
 			extents: new Vec2( 0.5, 0.5 )
 		    })
 		]
@@ -93,24 +95,30 @@ require(
 	    
 	    scene.add( sprite, sprite2, ball );
 	    
-	    Keyboard.on("keydown", function( key ){
-		if( key.name === "up" ){
-		    sprite.components.RigidBody2D.body.velocity.y += 0.1;
+	    
+	    sprite.on("update", function(){
+		var body = this.components.RigidBody2D.body,
+		    velocity = body.velocity,
+		    speed = 0.1, angularSpeed = Math.PI*0.03125;
+		
+		if( Input.key("up") ){
+		    velocity.y += speed;
 		}
-		if( key.name === "down" ){
-		    sprite.components.RigidBody2D.body.velocity.y -= 0.1;
+		if( Input.key("down") ){
+		    velocity.y -= speed;
 		}
-		if( key.name === "right" ){
-		    sprite.components.RigidBody2D.body.velocity.x += 0.1;
+		if( Input.key("right") ){
+		    velocity.x += speed;
 		}
-		if( key.name === "left" ){
-		    sprite.components.RigidBody2D.body.velocity.x -= 0.1;
+		if( Input.key("left") ){
+		    velocity.x -= speed;
 		}
-		if( key.name === "a" ){
-		    sprite.components.RigidBody2D.body.angularVelocity += Math.PI*0.03125;
+		
+		if( Input.key("a") ){
+		    body.angularVelocity += angularSpeed;
 		}
-		if( key.name === "d" ){
-		    sprite.components.RigidBody2D.body.angularVelocity -= Math.PI*0.03125;
+		if( Input.key("d") ){
+		    body.angularVelocity -= angularSpeed;
 		}
 	    });
 	    

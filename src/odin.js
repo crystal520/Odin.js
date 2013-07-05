@@ -5,7 +5,6 @@ define(
     function( require ){
 	"use strict";
 	
-	
 	var Odin = {};
 	
 	Odin.globalize = function(){
