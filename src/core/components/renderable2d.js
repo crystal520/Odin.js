@@ -12,7 +12,7 @@ define([
         "use strict";
 	
 	var has = Utils.has,
-	    floor = Math.floor,
+	    ceil = Math.ceil,
 	    sqrt = Math.sqrt,
 	    cos = Math.cos,
 	    sin = Math.sin,
@@ -37,10 +37,14 @@ define([
 	    this.lineWidth = opts.lineWidth !== undefined ? opts.lineWidth : 0.01;
 	    
 	    this._data = {
+		needsUpdate: true,
+		dynamic: opts.dynamic !== undefined ? !!opts.dynamic : false,
 		vertices: [],
 		vertexBuffer: undefined,
 		indices: [],
 		indexBuffer: undefined,
+		uvs: [],
+		uvBuffer: undefined
 	    };
         }
         
@@ -51,6 +55,7 @@ define([
 	    var data = this._data,
 		w = this.width * 0.5,
 		h = this.height * 0.5,
+		uvs = data.uvs || [],
 		vertices = data.vertices,
 		indices = data.indices;
 	    
@@ -60,10 +65,15 @@ define([
 		-w, -h,
 		w, -h
 	    );
-	    
 	    indices.push(
 		0, 1, 2,
 		0, 2, 3
+	    );
+	    uvs.push(
+		1, 0,
+		0, 0,
+		0, 1,
+		1, 1
 	    );
 	};
         
@@ -81,7 +91,6 @@ define([
 		-w, -h,
 		w, -h
 	    );
-	    
 	    indices.push(
 		0, 1, 2,
 		0, 2, 3
@@ -94,11 +103,18 @@ define([
 		radius = this.radius,
 		vertices = data.vertices,
 		indices = data.indices,
-		step = TWO_PI / ( radius * 32 ),
-		c, s, i;
+		segments = ceil( sqrt( radius * radius * 1024 ) ),
+		segment, i, il;
 	    
-	    for( i = 0; i < TWO_PI; i += step ){
-		vertices.push( cos(i) * radius, sin(i) * radius );
+	    vertices.push( 0, 0 );
+	    
+	    for( i = 0; i <= segments; i++ ){
+		segment = i / segments * TWO_PI;;
+		
+		vertices.push( cos( segment ) * radius, sin( segment ) * radius );
+	    }
+	    for( i = 1; i <= segments; i++ ){
+		indices.push( i, i + 1, 0 );
 	    }
 	};
         
@@ -110,9 +126,14 @@ define([
 		indices = data.indices,
 		vertex, i;
 	    
+	    vertices.push( 0, 0 );
+	    
 	    for( i = 0, il = tvertices.length; i < il; i++ ){
 		vertex = tvertices[i];
 		vertices.push( vertex.x, vertex.y );
+	    }
+	    for( i = 2, il = vertices.length; i < il; i++ ){
+		indices.push( 0, i - 1, i );
 	    }
 	};
         

@@ -1,5 +1,5 @@
 /** vim: et:ts=4:sw=4:sts=4
- * @license RequireJS 2.1.6 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
+ * @license RequireJS 2.1.5 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
  * see: http://github.com/jrburke/requirejs for details
  */
@@ -51,9 +51,6 @@ var requirejs, require, define;
     }
     function scripts() {
         return document.getElementsByTagName("script");
-    }
-    function defaultOnError(err) {
-        throw err;
     }
     function getGlobal(value) {
         if (!value) return value;
@@ -197,10 +194,7 @@ var requirejs, require, define;
         }
         function on(depMap, name, fn) {
             var id = depMap.id, mod = getOwn(registry, id);
-            if (!hasProp(defined, id) || mod && !mod.defineEmitComplete) {
-                mod = getModule(depMap);
-                mod.error && "error" === name ? fn(mod.error) : mod.on(name, fn);
-            } else "defined" === name && fn(defined[id]);
+            !hasProp(defined, id) || mod && !mod.defineEmitComplete ? getModule(depMap).on(name, fn) : "defined" === name && fn(defined[id]);
         }
         function onError(err, errback) {
             var ids = err.requireModules, notified = !1;
@@ -323,9 +317,7 @@ var requirejs, require, define;
                     id: mod.map.id,
                     uri: mod.map.url,
                     config: function() {
-                        var c, pkg = getOwn(config.pkgs, mod.map.id);
-                        c = pkg ? getOwn(config.config, mod.map.id + "/" + pkg.main) : getOwn(config.config, mod.map.id);
-                        return c || {};
+                        return config.config && getOwn(config.config, mod.map.id) || {};
                     },
                     exports: defined[mod.map.id]
                 };
@@ -392,7 +384,7 @@ var requirejs, require, define;
                             this.defining = !0;
                             if (1 > this.depCount && !this.defined) {
                                 if (isFunction(factory)) {
-                                    if (this.events.error && this.map.isDefine || req.onError !== defaultOnError) try {
+                                    if (this.events.error) try {
                                         exports = context.execCb(id, factory, depExports, exports);
                                     } catch (e) {
                                         err = e;
@@ -403,8 +395,8 @@ var requirejs, require, define;
                                     }
                                     if (err) {
                                         err.requireMap = this.map;
-                                        err.requireModules = this.map.isDefine ? [ this.map.id ] : null;
-                                        err.requireType = this.map.isDefine ? "define" : "require";
+                                        err.requireModules = [ this.map.id ];
+                                        err.requireType = "define";
                                         return onError(this.error = err);
                                     }
                                 } else exports = factory;
@@ -512,7 +504,7 @@ var requirejs, require, define;
                             this.defineDep(i, depExports);
                             this.check();
                         }));
-                        this.errback && on(depMap, "error", bind(this, this.errback));
+                        this.errback && on(depMap, "error", this.errback);
                     }
                     id = depMap.id;
                     mod = registry[id];
@@ -720,7 +712,7 @@ var requirejs, require, define;
             },
             onScriptError: function(evt) {
                 var data = getScriptData(evt);
-                return hasPathFallback(data.id) ? void 0 : onError(makeError("scripterror", "Script error for: " + data.id, evt, [ data.id ]));
+                return hasPathFallback(data.id) ? void 0 : onError(makeError("scripterror", "Script error", evt, [ data.id ]));
             }
         };
         context.require = context.makeRequire();
@@ -733,7 +725,7 @@ var requirejs, require, define;
         });
         return interactiveScript;
     }
-    var req, s, head, baseElement, dataMain, src, interactiveScript, currentlyAddingScript, mainScript, subPath, version = "2.1.6", commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/gm, cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g, jsSuffixRegExp = /\.js$/, currDirRegExp = /^\.\//, op = Object.prototype, ostring = op.toString, hasOwn = op.hasOwnProperty, ap = Array.prototype, apsp = ap.splice, isBrowser = !("undefined" == typeof window || !navigator || !window.document), isWebWorker = !isBrowser && "undefined" != typeof importScripts, readyRegExp = isBrowser && "PLAYSTATION 3" === navigator.platform ? /^complete$/ : /^(complete|loaded)$/, defContextName = "_", isOpera = "undefined" != typeof opera && "[object Opera]" == "" + opera, contexts = {}, cfg = {}, globalDefQueue = [], useInteractive = !1;
+    var req, s, head, baseElement, dataMain, src, interactiveScript, currentlyAddingScript, mainScript, subPath, version = "2.1.5", commentRegExp = /(\/\*([\s\S]*?)\*\/|([^:]|^)\/\/(.*)$)/gm, cjsRequireRegExp = /[^.]\s*require\s*\(\s*["']([^'"\s]+)["']\s*\)/g, jsSuffixRegExp = /\.js$/, currDirRegExp = /^\.\//, op = Object.prototype, ostring = op.toString, hasOwn = op.hasOwnProperty, ap = Array.prototype, apsp = ap.splice, isBrowser = !("undefined" == typeof window || !navigator || !document), isWebWorker = !isBrowser && "undefined" != typeof importScripts, readyRegExp = isBrowser && "PLAYSTATION 3" === navigator.platform ? /^complete$/ : /^(complete|loaded)$/, defContextName = "_", isOpera = "undefined" != typeof opera && "[object Opera]" == "" + opera, contexts = {}, cfg = {}, globalDefQueue = [], useInteractive = !1;
     if (void 0 === define) {
         if (requirejs !== void 0) {
             if (isFunction(requirejs)) return;
@@ -788,7 +780,9 @@ var requirejs, require, define;
             baseElement = document.getElementsByTagName("base")[0];
             baseElement && (head = s.head = baseElement.parentNode);
         }
-        req.onError = defaultOnError;
+        req.onError = function(err) {
+            throw err;
+        };
         req.load = function(context, moduleName, url) {
             var node, config = context && context.config || {};
             if (isBrowser) {
@@ -822,16 +816,15 @@ var requirejs, require, define;
             head || (head = script.parentNode);
             dataMain = script.getAttribute("data-main");
             if (dataMain) {
-                mainScript = dataMain;
                 if (!cfg.baseUrl) {
-                    src = mainScript.split("/");
+                    src = dataMain.split("/");
                     mainScript = src.pop();
                     subPath = src.length ? src.join("/") + "/" : "./";
                     cfg.baseUrl = subPath;
+                    dataMain = mainScript;
                 }
-                mainScript = mainScript.replace(jsSuffixRegExp, "");
-                req.jsExtRegExp.test(mainScript) && (mainScript = dataMain);
-                cfg.deps = cfg.deps ? cfg.deps.concat(mainScript) : [ mainScript ];
+                dataMain = dataMain.replace(jsSuffixRegExp, "");
+                cfg.deps = cfg.deps ? cfg.deps.concat(dataMain) : [ dataMain ];
                 return !0;
             }
         });
@@ -844,16 +837,13 @@ var requirejs, require, define;
             }
             if (!isArray(deps)) {
                 callback = deps;
-                deps = null;
-            }
-            if (!deps && isFunction(callback)) {
                 deps = [];
-                if (callback.length) {
-                    ("" + callback).replace(commentRegExp, "").replace(cjsRequireRegExp, function(match, dep) {
-                        deps.push(dep);
-                    });
-                    deps = (1 === callback.length ? [ "require" ] : [ "require", "exports", "module" ]).concat(deps);
-                }
+            }
+            if (!deps.length && isFunction(callback) && callback.length) {
+                ("" + callback).replace(commentRegExp, "").replace(cjsRequireRegExp, function(match, dep) {
+                    deps.push(dep);
+                });
+                deps = (1 === callback.length ? [ "require" ] : [ "require", "exports", "module" ]).concat(deps);
             }
             if (useInteractive) {
                 node = currentlyAddingScript || getInteractiveScript();
@@ -874,7 +864,7 @@ var requirejs, require, define;
     }
 })(this);
 
-define("../../requirejs/require.js", function() {});
+define("../node_modules/requirejs/require.js", function() {});
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
@@ -5772,23 +5762,18 @@ define("core/components/renderable2d", [ "base/class", "base/utils", "core/compo
         this.lineColor = opts.lineColor instanceof Color ? opts.lineColor : new Color();
         this.lineWidth = void 0 !== opts.lineWidth ? opts.lineWidth : .01;
         this._data = {
-            needsUpdate: !0,
-            dynamic: void 0 !== opts.dynamic ? !!opts.dynamic : !1,
             vertices: [],
             vertexBuffer: void 0,
             indices: [],
-            indexBuffer: void 0,
-            uvs: [],
-            uvBuffer: void 0
+            indexBuffer: void 0
         };
     }
-    var ceil = (Utils.has, Math.ceil), sqrt = Math.sqrt, cos = Math.cos, sin = Math.sin, TWO_PI = 2 * Math.PI;
+    var cos = (Utils.has, Math.floor, Math.sqrt, Math.cos), sin = Math.sin, TWO_PI = 2 * Math.PI;
     Class.extend(Renderable2D, Component);
     Renderable2D.prototype.calculateSprite = function() {
-        var data = this._data, w = .5 * this.width, h = .5 * this.height, uvs = data.uvs || [], vertices = data.vertices, indices = data.indices;
+        var data = this._data, w = .5 * this.width, h = .5 * this.height, vertices = data.vertices, indices = data.indices;
         vertices.push(w, h, -w, h, -w, -h, w, -h);
         indices.push(0, 1, 2, 0, 2, 3);
-        uvs.push(1, 0, 0, 0, 0, 1, 1, 1);
     };
     Renderable2D.prototype.calculateBox = function() {
         var data = this._data, extents = this.extents, w = extents.x, h = extents.y, vertices = data.vertices, indices = data.indices;
@@ -5796,22 +5781,17 @@ define("core/components/renderable2d", [ "base/class", "base/utils", "core/compo
         indices.push(0, 1, 2, 0, 2, 3);
     };
     Renderable2D.prototype.calculateCircle = function() {
-        var segment, i, data = this._data, radius = this.radius, vertices = data.vertices, indices = data.indices, segments = ceil(sqrt(1024 * radius * radius));
-        vertices.push(0, 0);
-        for (i = 0; segments >= i; i++) {
-            segment = i / segments * TWO_PI;
-            vertices.push(cos(segment) * radius, sin(segment) * radius);
-        }
-        for (i = 1; segments >= i; i++) indices.push(i, i + 1, 0);
+        var i, data = this._data, radius = this.radius, vertices = data.vertices, step = (data.indices, 
+        TWO_PI / (32 * radius));
+        for (i = 0; TWO_PI > i; i += step) vertices.push(cos(i) * radius, sin(i) * radius);
     };
     Renderable2D.prototype.calculatePoly = function() {
-        var vertex, i, data = this._data, tvertices = this.vertices, vertices = data.vertices, indices = data.indices;
-        vertices.push(0, 0);
+        var vertex, i, data = this._data, tvertices = this.vertices, vertices = data.vertices;
+        data.indices;
         for (i = 0, il = tvertices.length; il > i; i++) {
             vertex = tvertices[i];
             vertices.push(vertex.x, vertex.y);
         }
-        for (i = 2, il = vertices.length; il > i; i++) indices.push(0, i - 1, i);
     };
     Renderable2D.prototype.copy = function(other) {
         this.visible = other.visible;
@@ -7950,7 +7930,10 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
                 body && (sleepState = body.sleepState);
                 component.fill && (ctx.fillStyle = component.color ? component.color.rgba() : "#000000");
                 ctx.globalAlpha = component.alpha;
-                sleepState && (2 === sleepState ? ctx.globalAlpha *= .5 : 3 === sleepState && (ctx.globalAlpha *= .25));
+                if (sleepState) {
+                    2 === sleepState && (ctx.globalAlpha *= .5);
+                    3 === sleepState && (ctx.globalAlpha *= .25);
+                }
                 if (component.line) {
                     ctx.strokeStyle = component.lineColor ? component.lineColor.rgba() : "#000000";
                     ctx.lineWidth = component.lineWidth || this.invPixelRatio;
@@ -7971,11 +7954,8 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
                     ctx.lineTo(vertex.x, vertex.y);
                 }
                 ctx.closePath();
+                component.line && ctx.stroke();
                 component.fill && ctx.fill();
-                if (component.line) {
-                    ctx.globalAlpha = 1;
-                    ctx.stroke();
-                }
             }
             ctx.restore();
         };
@@ -8010,13 +7990,13 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         return [ "precision " + precision + " float;", "uniform mat4 uMatrix;", "attribute vec2 aVertexPosition;", "void main(){", "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );", "}" ].join("\n");
     }
     function basicFragmentShader(precision) {
-        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec3 uColor;", "void main(){", "gl_FragColor = vec4( uColor, uAlpha );", "}" ].join("\n");
+        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec3 uColor;", "void main(){", "vec4 finalColor = vec4( uColor, 1.0 );", "finalColor.w *= uAlpha;", "gl_FragColor = finalColor;", "}" ].join("\n");
     }
     function spriteVertexShader(precision) {
-        return [ "precision " + precision + " float;", "uniform mat4 uMatrix;", "attribute vec2 aVertexPosition;", "attribute vec2 aUvPosition;", "varying vec2 vUvPosition;", "void main(){", "vUvPosition = aUvPosition;", "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );", "}" ].join("\n");
+        return [ "precision " + precision + " float;", "uniform mat4 uMatrix;", "attribute vec2 aVertexPosition;", "void main(){", "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );", "}" ].join("\n");
     }
     function spriteFragmentShader(precision) {
-        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec2 uUvPosition;", "uniform sampler2D uTexture;", "varying vec2 vUvPosition;", "void main(){", "vec2 uv = vUvPosition * uUvPosition;", "vec4 finalColor = texture2D( uTexture, uv );", "finalColor.w *= uAlpha;", "gl_FragColor = finalColor;", "}" ].join("\n");
+        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec3 uColor;", "void main(){", "vec4 finalColor = vec4( uColor, 1.0 );", "finalColor.w *= uAlpha;", "gl_FragColor = finalColor;", "}" ].join("\n");
     }
     function WebGLRenderer2D(opts) {
         opts || (opts = {});
@@ -8099,15 +8079,15 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         gl.cullFace(gl.BACK);
         gl.enable(gl.CULL_FACE);
         gl.enable(gl.BLEND);
-        gl.blendEquationSeparate(gl.FUNC_ADD, gl.FUNC_ADD);
-        gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
         basic.vertexShader = basicVertexShader(precision);
         basic.fragmentShader = basicFragmentShader(precision);
         basic.program = createProgram(gl, basic.vertexShader, basic.fragmentShader);
         parseUniformsAttributes(gl, basic);
         sprite.vertexShader = spriteVertexShader(precision);
         sprite.fragmentShader = spriteFragmentShader(precision);
-        sprite.program = createProgram(gl, sprite.vertexShader, sprite.fragmentShader);
+        sprite.program = createProgram(gl, basic.vertexShader, basic.fragmentShader);
         parseUniformsAttributes(gl, sprite);
     };
     WebGLRenderer2D.prototype.createImage = function(imageSrc) {
@@ -8122,17 +8102,21 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         };
     };
     WebGLRenderer2D.prototype.createTexture = function(image, imageSrc) {
-        var gl = this.context, data = this._data, textures = data.textures, texture = gl.createTexture(), isPOT = isPowerOfTwo(image.width) && isPowerOfTwo(image.height), TEXTURE_2D = gl.TEXTURE_2D, MAG_FILTER = gl.LINEAR, MIN_FILTER = isPOT ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR, WRAP = isPOT ? gl.CLAMP_TO_EDGE : gl.REPEAT, RGBA = gl.RGBA;
-        gl.bindTexture(TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !0);
-        gl.texImage2D(TEXTURE_2D, 0, RGBA, RGBA, gl.UNSIGNED_BYTE, image);
-        gl.texParameteri(TEXTURE_2D, gl.TEXTURE_MAG_FILTER, MAG_FILTER);
-        gl.texParameteri(TEXTURE_2D, gl.TEXTURE_MIN_FILTER, MIN_FILTER);
-        gl.texParameteri(TEXTURE_2D, gl.TEXTURE_WRAP_S, WRAP);
-        gl.texParameteri(TEXTURE_2D, gl.TEXTURE_WRAP_T, WRAP);
-        isPOT && gl.generateMipmap(TEXTURE_2D);
+        var gl = this.context, data = this._data, textures = data.textures, texture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !0);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        if (isPowerOfTwo(image.width) && isPowerOfTwo(image.height)) {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        } else {
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+        }
         textures[imageSrc] = texture;
-        gl.bindTexture(TEXTURE_2D, null);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     };
     WebGLRenderer2D.prototype.setClearColor = function(color) {
         color ? this.context.clearColor(color.r, color.g, color.b, color.a) : this.context.clearColor(0, 0, 0, 1);
@@ -8200,15 +8184,15 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
                 lastScene = scene;
             }
             if (lastCamera !== camera) {
-                var canvas = this.canvas, ipr = 1 / this.pixelRatio, w = canvas.width * ipr, h = canvas.height * ipr;
+                var canvas = this.canvas, ipr = 1 / this.pixelRatio, w = canvas.width * ipr, h = canvas.height * ipr, hw = .5 * canvas.width, hh = .5 * canvas.height;
                 camera.setSize(w, h);
-                gl.viewport(0, 0, canvas.width, canvas.height);
+                gl.viewport(0, 0, hw, hh);
                 if (this.canvas.fullScreen) {
                     this.canvas.off("resize");
                     this.canvas.on("resize", function() {
-                        var ipr = 1 / self.pixelRatio, w = this.width * ipr, h = this.height * ipr;
+                        var ipr = 1 / self.pixelRatio, w = this.width * ipr, h = this.height * ipr, hw = .5 * this.width, hh = .5 * this.height;
                         camera.setSize(w, h);
-                        gl.viewport(0, 0, this.width, this.height);
+                        gl.viewport(0, 0, hw, hh);
                     });
                 }
                 lastCamera = camera;
@@ -8225,81 +8209,17 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         };
     }();
     WebGLRenderer2D.prototype.renderComponent = function() {
-        var modelView = new Mat4(), modelViewProj = new Mat4(), mvp = modelViewProj.elements;
+        var modelView = new Mat4(), modelViewProj = new Mat4();
+        modelViewProj.elements;
         return function(component, camera) {
-            var sleepState, uniforms, attributes, gl = this.context, data = this._data, imageSrc = component.image, image = data.images[imageSrc], texture = data.textures[imageSrc], componentData = component._data, color = component.color, lineColor = component.lineColor, alpha = component.alpha, gameObject = component.gameObject, body = component.body, sprite = data.sprite, basic = data.basic;
-            if (texture || !imageSrc) {
-                componentData.needsUpdate && this.setupBuffers(componentData);
+            var data = (this.context, this._data), image = component.image, texture = data.textures[image], gameObject = component.gameObject;
+            if (texture || !image) {
                 gameObject.matrixModelView.mmul(gameObject.matrixWorld, camera.matrixWorldInverse);
                 modelView.fromMat32(gameObject.matrixModelView);
-                modelViewProj.mmul(camera._matrixProjection3D, modelView);
-                if (componentData.uvBuffer) {
-                    gl.useProgram(sprite.program);
-                    uniforms = sprite.uniforms;
-                    attributes = sprite.attributes;
-                    gl.activeTexture(gl.TEXTURE0);
-                    gl.bindTexture(gl.TEXTURE_2D, texture);
-                    gl.uniform1i(uniforms.uTexture, 0);
-                    gl.uniform2f(uniforms.uUvPosition, component.x / image.width, component.y / image.height);
-                } else {
-                    body && (sleepState = body.sleepState);
-                    gl.useProgram(basic.program);
-                    uniforms = basic.uniforms;
-                    attributes = basic.attributes;
-                    gl.uniform3f(uniforms.uColor, color.r, color.g, color.b);
-                }
-                this.bindBuffers(attributes, componentData);
-                gl.uniformMatrix4fv(uniforms.uMatrix, !1, mvp);
-                sleepState && (2 === sleepState ? alpha *= .5 : 3 === sleepState && (alpha *= .25));
-                gl.uniform1f(uniforms.uAlpha, alpha);
-                gl.drawElements(gl.TRIANGLES, componentData.indices.length, gl.UNSIGNED_SHORT, 0);
-                if (component.line) {
-                    gl.useProgram(basic.program);
-                    this.bindBuffers(attributes, componentData);
-                    this.setLineWidth(component.lineWidth || this.invPixelRatio);
-                    uniforms = basic.uniforms;
-                    attributes = basic.attributes;
-                    gl.uniformMatrix4fv(uniforms.uMatrix, !1, mvp);
-                    gl.uniform3f(uniforms.uColor, lineColor.r, lineColor.g, lineColor.b);
-                    gl.uniform1f(uniforms.uAlpha, 1);
-                    gl.drawArrays(gl.LINE_LOOP, 0, .5 * componentData.vertices.length);
-                }
-            } else this.createImage(imageSrc);
+                modelViewProj.mmul(modelView, camera._matrixProjection3D);
+            } else this.createImage(image);
         };
     }();
-    WebGLRenderer2D.prototype.bindBuffers = function(attributes, data) {
-        var gl = this.context, ARRAY_BUFFER = gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER, FLOAT = gl.FLOAT;
-        if (data.vertices.length) {
-            gl.bindBuffer(ARRAY_BUFFER, data.vertexBuffer);
-            gl.enableVertexAttribArray(attributes.aVertexPosition);
-            gl.vertexAttribPointer(attributes.aVertexPosition, 2, FLOAT, !1, 0, 0);
-        }
-        if (data.uvs.length) {
-            gl.bindBuffer(ARRAY_BUFFER, data.uvBuffer);
-            gl.enableVertexAttribArray(attributes.aUvPosition);
-            gl.vertexAttribPointer(attributes.aUvPosition, 2, FLOAT, !1, 0, 0);
-        }
-        data.indices.length && gl.bindBuffer(ELEMENT_ARRAY_BUFFER, data.indexBuffer);
-    };
-    WebGLRenderer2D.prototype.setupBuffers = function(data) {
-        var gl = this.context, DRAW = data.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW, ARRAY_BUFFER = gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
-        if (data.vertices.length) {
-            data.vertexBuffer = data.vertexBuffer || gl.createBuffer();
-            gl.bindBuffer(ARRAY_BUFFER, data.vertexBuffer);
-            gl.bufferData(ARRAY_BUFFER, new Float32Array(data.vertices), DRAW);
-        }
-        if (data.uvs.length) {
-            data.uvBuffer = data.uvBuffer || gl.createBuffer();
-            gl.bindBuffer(ARRAY_BUFFER, data.uvBuffer);
-            gl.bufferData(ARRAY_BUFFER, new Float32Array(data.uvs), DRAW);
-        }
-        if (data.indices.length) {
-            data.indexBuffer = data.indexBuffer || gl.createBuffer();
-            gl.bindBuffer(ELEMENT_ARRAY_BUFFER, data.indexBuffer);
-            gl.bufferData(ELEMENT_ARRAY_BUFFER, new Int16Array(data.indices), DRAW);
-        }
-        data.needsUpdate = !1;
-    };
     WebGLRenderer2D.none = 0;
     WebGLRenderer2D.additive = 1;
     WebGLRenderer2D.subtractive = 2;
@@ -8463,7 +8383,7 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "base/dev
         Game.call(this, opts);
         this.id = void 0;
         this.host = opts.host || "127.0.0.1";
-        this.port = opts.port || 3e3;
+        this.port = opts.port || 8080;
         var socket, jsonObject, object, i, self = this;
         this.socket = socket = io.connect("http://" + this.host, {
             port: this.port

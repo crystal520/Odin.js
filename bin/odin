@@ -102,7 +102,7 @@ function createServerIndexjs(){
 	'',
 	'requirejs(',
 	'    {',
-	'        baseUrl: "./",',
+	'        baseUrl: __dirname,',
 	'        nodeRequire: require',
 	'    },',
 	'    function(){',

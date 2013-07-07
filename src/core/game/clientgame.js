@@ -40,7 +40,7 @@ define([
 	    this.id = undefined;
 	    
 	    this.host = opts.host || "127.0.0.1";
-	    this.port = opts.port || 8080;
+	    this.port = opts.port || 3000;
 	    
 	    var self = this, socket,
 		scenes, jsonObject, object, i;

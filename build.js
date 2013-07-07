@@ -1,5 +1,5 @@
 ({
-    include: "./node_modules/requirejs/require.js",
+    include: "../node_modules/requirejs/require.js",
     
     baseUrl: "./src/",
     name: "odin",

@@ -3,7 +3,7 @@ var requirejs = require("requirejs"),
 
 requirejs(
     {
-        baseUrl: "./",
+        baseUrl: __dirname,
         nodeRequire: require
     },
     function(){

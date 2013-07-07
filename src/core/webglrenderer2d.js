@@ -90,10 +90,7 @@ define([
                 "uniform vec3 uColor;",
                 
                 "void main(){",
-		    "vec4 finalColor = vec4( uColor, 1.0 );",
-		    "finalColor.w *= uAlpha;",
-		    
-                    "gl_FragColor = finalColor;",
+                    "gl_FragColor = vec4( uColor, uAlpha );",
                 "}"
 	    ].join("\n");
 	}
@@ -107,9 +104,14 @@ define([
                 "uniform mat4 uMatrix;",
                 
                 "attribute vec2 aVertexPosition;",
+                "attribute vec2 aUvPosition;",
+		
+                "varying vec2 vUvPosition;",
                 
                 "void main(){",
                     
+		    "vUvPosition = aUvPosition;",
+		    
                     "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );",
                 "}"
 	    ].join("\n");
@@ -122,10 +124,15 @@ define([
 		"precision "+ precision +" float;",
 		
                 "uniform float uAlpha;",
-                "uniform vec3 uColor;",
+                "uniform vec2 uUvPosition;",
+                "uniform sampler2D uTexture;",
+		
+                "varying vec2 vUvPosition;",
                 
                 "void main(){",
-		    "vec4 finalColor = vec4( uColor, 1.0 );",
+		    "vec2 uv = vUvPosition * uUvPosition;",
+		    
+		    "vec4 finalColor = texture2D( uTexture, uv );",
 		    "finalColor.w *= uAlpha;",
 		    
                     "gl_FragColor = finalColor;",
@@ -288,8 +295,8 @@ define([
 	    gl.enable( gl.CULL_FACE );
 	    
 	    gl.enable( gl.BLEND );
-	    gl.blendEquation( gl.FUNC_ADD );
-	    gl.blendFunc( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
+	    gl.blendEquationSeparate( gl.FUNC_ADD, gl.FUNC_ADD );
+	    gl.blendFuncSeparate( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA );
 	    
 	    basic.vertexShader = basicVertexShader( precision );
 	    basic.fragmentShader = basicFragmentShader( precision );
@@ -298,7 +305,7 @@ define([
 	    
 	    sprite.vertexShader = spriteVertexShader( precision );
 	    sprite.fragmentShader = spriteFragmentShader( precision );
-	    sprite.program = createProgram( gl, basic.vertexShader, basic.fragmentShader );
+	    sprite.program = createProgram( gl, sprite.vertexShader, sprite.fragmentShader );
 	    parseUniformsAttributes( gl, sprite );
 	};
 	
@@ -330,26 +337,31 @@ define([
 	    var gl = this.context,
 		data = this._data,
 		textures = data.textures,
-		texture = gl.createTexture();
+		texture = gl.createTexture(),
+		
+		isPOT = isPowerOfTwo( image.width ) && isPowerOfTwo( image.height ),
+		
+		TEXTURE_2D = gl.TEXTURE_2D,
+		MAG_FILTER = gl.LINEAR,
+		MIN_FILTER = isPOT ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR,
+		WRAP = isPOT ? gl.CLAMP_TO_EDGE : gl.REPEAT,
+		RGBA = gl.RGBA;
 	    
-	    gl.bindTexture( gl.TEXTURE_2D, texture );
-	    gl.pixelStorei( gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true );
+	    gl.bindTexture( TEXTURE_2D, texture );
+	    gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
 	    
-	    gl.texImage2D( gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image );
-	    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR );
-	    gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR );
+	    gl.texImage2D( TEXTURE_2D, 0, RGBA, RGBA, gl.UNSIGNED_BYTE, image );
 	    
-	    if( isPowerOfTwo( image.width ) && isPowerOfTwo( image.height ) ){
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE );
-	    }
-	    else{
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT );
-		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
-	    }
+	    gl.texParameteri( TEXTURE_2D, gl.TEXTURE_MAG_FILTER, MAG_FILTER );
+	    gl.texParameteri( TEXTURE_2D, gl.TEXTURE_MIN_FILTER, MIN_FILTER );
+	    
+	    gl.texParameteri( TEXTURE_2D, gl.TEXTURE_WRAP_S, WRAP );
+	    gl.texParameteri( TEXTURE_2D, gl.TEXTURE_WRAP_T, WRAP );
+	    
+	    if( isPOT ) gl.generateMipmap( TEXTURE_2D );
 	    
 	    textures[ imageSrc ] = texture;
-	    gl.bindTexture( gl.TEXTURE_2D, null );
+	    gl.bindTexture( TEXTURE_2D, null );
         };
         
         
@@ -421,7 +433,6 @@ define([
 	    return function( width ){
 		
 		if( width !== lastLineWidth ){
-		    
 		    this.context.lineWidth( width );
 		    lastLineWidth = width;
 		}
@@ -452,24 +463,20 @@ define([
 		    var canvas = this.canvas,
 			ipr = 1 / this.pixelRatio,
 			w = canvas.width * ipr,
-			h = canvas.height * ipr,
-			hw = canvas.width * 0.5,
-			hh = canvas.height * 0.5;
+			h = canvas.height * ipr;
 		    
 		    camera.setSize( w, h );
-		    gl.viewport( 0, 0, hw, hh );
+		    gl.viewport( 0, 0, canvas.width, canvas.height );
 		    
 		    if( this.canvas.fullScreen ){
 			this.canvas.off("resize");
 			this.canvas.on("resize", function(){
 			    var ipr = 1 / self.pixelRatio,
 				w = this.width * ipr,
-				h = this.height * ipr,
-				hw = this.width * 0.5,
-				hh = this.height * 0.5;
+				h = this.height * ipr;
 			    
 			    camera.setSize( w, h );
-			    gl.viewport( 0, 0, hw, hh );
+			    gl.viewport( 0, 0, this.width, this.height );
 			});
 		    }
 		    
@@ -503,21 +510,136 @@ define([
 	    return function( component, camera ){
 		var gl = this.context,
 		    data = this._data,
-		    image = component.image,
-		    texture = data.textures[ image ],
-		    gameObject = component.gameObject;
+		    imageSrc = component.image,
+		    image = data.images[ imageSrc ],
+		    texture = data.textures[ imageSrc ],
+		    componentData = component._data,
+		    color = component.color,
+		    lineColor = component.lineColor,
+		    alpha = component.alpha,
+		    gameObject = component.gameObject,
+		    body = component.body, sleepState,
+		    sprite = data.sprite, basic = data.basic,
+		    uniforms, attributes;
 		
-		if( !texture && image ){
-		    this.createImage( image );
+		if( !texture && imageSrc ){
+		    this.createImage( imageSrc );
 		    return;
 		}
+		if( componentData.needsUpdate ) this.setupBuffers( componentData );
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
 		
 		modelView.fromMat32( gameObject.matrixModelView );
-		modelViewProj.mmul( modelView, camera._matrixProjection3D );
+		modelViewProj.mmul( camera._matrixProjection3D, modelView );
+		
+		if( componentData.uvBuffer ){
+		    gl.useProgram( sprite.program );
+		    
+		    uniforms = sprite.uniforms;
+		    attributes = sprite.attributes;
+		    
+		    gl.activeTexture( gl.TEXTURE0 );
+		    gl.bindTexture( gl.TEXTURE_2D, texture );
+		    gl.uniform1i( uniforms.uTexture, 0 );
+		    
+		    gl.uniform2f( uniforms.uUvPosition, component.x / image.width, component.y / image.height );
+		}
+		else{
+		    if( body ) sleepState = body.sleepState;
+		    
+		    gl.useProgram( basic.program );
+		    
+		    uniforms = basic.uniforms;
+		    attributes = basic.attributes;
+		    
+		    gl.uniform3f( uniforms.uColor, color.r, color.g, color.b );
+		}
+		
+		this.bindBuffers( attributes, componentData );
+		
+		gl.uniformMatrix4fv( uniforms.uMatrix, false, mvp );
+		
+		if( sleepState ){
+			if( sleepState === 2 ){
+			    alpha *= 0.5;
+			}
+			else if( sleepState === 3 ){
+			    alpha *= 0.25;
+			}
+		    }
+		
+		gl.uniform1f( uniforms.uAlpha, alpha );
+		
+		gl.drawElements( gl.TRIANGLES, componentData.indices.length, gl.UNSIGNED_SHORT, 0 );
+		
+		if( component.line ){
+		    gl.useProgram( basic.program );
+		    
+		    this.bindBuffers( attributes, componentData );
+		    this.setLineWidth( component.lineWidth || this.invPixelRatio );
+		    
+		    uniforms = basic.uniforms;
+		    attributes = basic.attributes;
+		    
+		    gl.uniformMatrix4fv( uniforms.uMatrix, false, mvp );
+		    gl.uniform3f( uniforms.uColor, lineColor.r, lineColor.g, lineColor.b );
+		    gl.uniform1f( uniforms.uAlpha, 1 );
+		    
+		    gl.drawArrays( gl.LINE_LOOP, 0, componentData.vertices.length * 0.5 );
+		}
 	    };
 	}();
+        
+        
+        WebGLRenderer2D.prototype.bindBuffers = function( attributes, data ){
+	    var gl = this.context,
+		ARRAY_BUFFER = gl.ARRAY_BUFFER,
+		ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER,
+		FLOAT = gl.FLOAT;
+	    
+	    if( data.vertices.length ){
+		gl.bindBuffer( ARRAY_BUFFER, data.vertexBuffer );
+		gl.enableVertexAttribArray( attributes.aVertexPosition );
+		gl.vertexAttribPointer( attributes.aVertexPosition, 2, FLOAT, false, 0, 0 );
+	    }
+	    if( data.uvs.length ){
+		gl.bindBuffer( ARRAY_BUFFER, data.uvBuffer );
+		gl.enableVertexAttribArray( attributes.aUvPosition );
+		gl.vertexAttribPointer( attributes.aUvPosition, 2, FLOAT, false, 0, 0 );
+	    }
+	    if( data.indices.length ){
+		gl.bindBuffer( ELEMENT_ARRAY_BUFFER, data.indexBuffer );
+	    }
+	};
+        
+        
+        WebGLRenderer2D.prototype.setupBuffers = function( data ){
+	    var gl = this.context,
+		DRAW = data.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW,
+		ARRAY_BUFFER = gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
+	    
+	    if( data.vertices.length ){
+		data.vertexBuffer = data.vertexBuffer || gl.createBuffer();
+		
+		gl.bindBuffer( ARRAY_BUFFER, data.vertexBuffer );
+		gl.bufferData( ARRAY_BUFFER, new Float32Array( data.vertices ), DRAW );
+	    }
+	    if( data.uvs.length ){
+		data.uvBuffer = data.uvBuffer || gl.createBuffer();
+		
+		gl.bindBuffer( ARRAY_BUFFER, data.uvBuffer );
+		gl.bufferData( ARRAY_BUFFER, new Float32Array( data.uvs ), DRAW );
+	    }
+	    if( data.indices.length ){
+		data.indexBuffer = data.indexBuffer || gl.createBuffer();
+		
+		gl.bindBuffer( ELEMENT_ARRAY_BUFFER, data.indexBuffer );
+		gl.bufferData( ELEMENT_ARRAY_BUFFER, new Int16Array( data.indices ), DRAW );
+	    }
+	    
+	    data.needsUpdate = false;
+	};
 	
 	
 	WebGLRenderer2D.none = 0;

@@ -28,7 +28,7 @@ define([
 	    this.clients = {};
 	    
 	    this.host = opts.host || "127.0.0.1";
-	    this.port = opts.port || 8080;
+	    this.port = opts.port || 3000;
 	    
 	    this.server = http.createServer( this._onRequest.bind( this ) );
 	    this.server.listen( this.port, this.host );

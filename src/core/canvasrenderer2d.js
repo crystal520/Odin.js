@@ -188,7 +188,7 @@ define([
 			if( sleepState === 2 ){
 			    ctx.globalAlpha *= 0.5;
 			}
-			if( sleepState === 3 ){
+			else if( sleepState === 3 ){
 			    ctx.globalAlpha *= 0.25;
 			}
 		    }
@@ -220,8 +220,11 @@ define([
 		    }
 		    
 		    ctx.closePath();
-		    if( component.line ) ctx.stroke();
 		    if( component.fill ) ctx.fill();
+		    if( component.line ){
+			ctx.globalAlpha = 1;
+			ctx.stroke();
+		    }
 		}
 		
 		ctx.restore();
