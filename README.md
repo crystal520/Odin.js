@@ -26,6 +26,30 @@ $ node server/index.js
 
 ## Basic Game
 ```
+// Client index.js
+require(
+    {
+        baseUrl: "./"
+    },
+    [
+        "odin",
+    ],
+    function( Odin ){
+        
+        Odin.globalize();
+        
+        game = new ClientGame({
+            host: "127.0.0.1",
+            port: 3000,
+            debug: true
+        });
+        
+        game.init();
+    }
+);
+
+
+// Server index.js
 var requirejs = require("requirejs"),
     Odin = require("odin");
 
@@ -54,22 +78,8 @@ requirejs(
                     player = new GameObject2D({
                         position: position,
                         components: [
-                            new Sprite2D({
-                                image: "../assets/player.png",
-                                x: 0,
-                                y: 0,
-                                w: 64,
-                                h: 64,
-                                width: 1,
-                                height: 1,
-                                animations: {
-                                    idle: [
-                                        [ 0, 0, 64, 64, 0.25 ],
-                                        [ 64, 0, 64, 64, 0.5 ],
-                                        [ 128, 0, 64, 64, 1 ],
-                                        [ 192, 0, 64, 64, 0.1 ]
-                                    ]
-                                }
+                            new Circle2D({
+                                radius: 0.5
                             })
                         ]
                     }),
@@ -87,18 +97,13 @@ requirejs(
                         speed = userData.speed,
                         name = key.name;
                     
-                    if( name === "up" ){
-                        position.y += speed;
-                    }
-                    if( name === "down" ){
-                        position.y -= speed;
-                    }
-                    if( name === "right" ){
-                        position.x += speed;
-                    }
-                    if( name === "left" ){
-                        position.x -= speed;
-                    }
+                    if( name === "up" ) position.y += speed;
+                    
+                    if( name === "down" ) position.y -= speed;
+                    
+                    if( name === "right" ) position.x += speed;
+                    
+                    if( name === "left" ) position.x -= speed;
                 });
                 
                 this.setScene( client, scene );
@@ -106,19 +111,10 @@ requirejs(
             });
             
             
-            this.on("disconnect", function( id ){
-                var client = this.clients[ id ],
-                    player = client.scene.findById( client.userData.player._id ),
-                    camera = client.scene.findById( client.camera._id );
-                
-                scene.remove( player, camera );
-            });
-            
             this.addScene( scene );
         });
         
         game.init();
     }
 );
-
 ```
