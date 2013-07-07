@@ -1106,20 +1106,20 @@ if ("function" != typeof define) var define = require("amdefine")(module);
 define("base/time", [], function() {
     function Time() {
         this._startTime = .001 * Date.now();
-        this._offset = 0;
         this.sinceStart = 0;
         this.time = 0;
+        this.scale = 1;
         this.fps = 60;
         this.delta = 1 / 60;
-        this.scale = 1;
     }
+    var LOW = 1e-6, HIGH = .1;
     Time.prototype.update = function() {
         var frames = 0, time = 0, last = 0, delta = 0, ms = 0, msLast = 0;
         return function() {
             this.time = time = this.now();
             delta = (time - last) * this.scale;
-            this.delta = .001 > delta ? .001 : delta > .25 ? .25 : delta;
-            last = time - this._offset;
+            this.delta = LOW > delta ? LOW : delta > HIGH ? HIGH : delta;
+            last = time;
             frames++;
             ms = 1e3 * time;
             if (ms > msLast + 1e3) {
@@ -5567,6 +5567,7 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
         this.nearphase = new PNearphase2D();
         this.debug = void 0 !== opts.debug ? opts.debug : !0;
         this.profile = {
+            total: 0,
             solve: 0,
             integration: 0,
             broadphase: 0,
@@ -5624,7 +5625,7 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
         };
     }();
     PWorld2D.prototype.step = function(dt) {
-        var profileStart, c, bi, bj, um, umg, c1, c2, body, shape, shapeType, type, force, vel, aVel, linearDamping, pos, mass, invMass, i, j, debug = this.debug, now = this.now, profile = this.profile, gravity = this.gravity, gn = gravity.len(), bodies = this.bodies, solver = this.solver, solverConstraints = solver.constraints, pairsi = this.pairsi, pairsj = this.pairsj, contacts = this.contacts, frictions = this.frictions, constraints = this.constraints;
+        var profileStart, c, bi, bj, um, umg, c1, c2, body, shape, shapeType, type, force, vel, aVel, linearDamping, pos, mass, invMass, i, j, debug = this.debug, now = this.now, profile = this.profile, start = now(), gravity = this.gravity, gn = gravity.len(), bodies = this.bodies, solver = this.solver, solverConstraints = solver.constraints, pairsi = this.pairsi, pairsj = this.pairsj, contacts = this.contacts, frictions = this.frictions, constraints = this.constraints;
         this.time += dt;
         for (i = bodies.length; i--; ) {
             body = bodies[i];
@@ -5716,6 +5717,7 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
         }
         debug && (profile.integration = now() - profileStart);
         this._removeList.length && this._remove();
+        debug && (profile.total = now() - start);
     };
     PWorld2D.prototype.toJSON = function() {
         var i, json = this._JSON, bodies = this.bodies;
@@ -7867,7 +7869,7 @@ define("core/canvas", [ "base/class", "base/device", "base/dom" ], function(Clas
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core/canvas", "math/color", "math/mat32" ], function(Class, Dom, Device, Canvas, Color, Mat32) {
+define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "base/time", "core/canvas", "math/color", "math/mat32" ], function(Class, Dom, Device, Time, Canvas, Color, Mat32) {
     function CanvasRenderer2D(opts) {
         opts || (opts = {});
         Class.call(this);
@@ -7877,13 +7879,14 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
         this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas(opts.width, opts.height);
         this.autoClear = void 0 !== opts.autoClear ? opts.autoClear : !0;
         this.context = Dom.get2DContext(this.canvas.element);
+        this.time = 0;
         this._data = {
             images: {
                 "default": defaultImage
             }
         };
     }
-    var PI = Math.PI, TWO_PI = 2 * PI, defaultImage = new Image();
+    var now = Time.now, PI = Math.PI, TWO_PI = 2 * PI, defaultImage = new Image();
     defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
     Class.extend(CanvasRenderer2D, Class);
     CanvasRenderer2D.prototype.setClearColor = function(color) {
@@ -7895,7 +7898,7 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
     CanvasRenderer2D.prototype.render = function() {
         var lastScene, lastCamera, lastBackground = new Color();
         return function(scene, camera) {
-            var renderable, rigidbody, i, self = this, background = scene.world.background, ctx = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
+            var renderable, rigidbody, i, self = this, background = scene.world.background, ctx = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies, start = now();
             if (!lastBackground.equals(background)) {
                 this.setClearColor(background);
                 lastBackground.copy(background);
@@ -7929,6 +7932,7 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
                 renderable = renderables[i];
                 renderable.visible && this.renderComponent(renderable, camera);
             }
+            this.time = now() - start;
         };
     }();
     CanvasRenderer2D.prototype.renderComponent = function() {
@@ -7985,7 +7989,7 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/canvas", "math/mathf", "math/color", "math/vec2", "math/mat32", "math/mat4" ], function(Class, Dom, Device, Canvas, Mathf, Color, Vec2, Mat32, Mat4) {
+define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "base/time", "core/canvas", "math/mathf", "math/color", "math/vec2", "math/mat32", "math/mat4" ], function(Class, Dom, Device, Time, Canvas, Mathf, Color, Vec2, Mat32, Mat4) {
     function parseUniformsAttributes(gl, shader) {
         var matchAttributes, matchUniforms, name, length, line, i, j, src = shader.vertexShader + shader.fragmentShader, lines = src.split("\n");
         for (i = lines.length; i--; ) {
@@ -8013,10 +8017,10 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec3 uColor;", "void main(){", "gl_FragColor = vec4( uColor, uAlpha );", "}" ].join("\n");
     }
     function spriteVertexShader(precision) {
-        return [ "precision " + precision + " float;", "uniform mat4 uMatrix;", "attribute vec2 aVertexPosition;", "attribute vec2 aUvPosition;", "varying vec2 vUvPosition;", "void main(){", "vUvPosition = aUvPosition;", "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );", "}" ].join("\n");
+        return [ "precision " + precision + " float;", "uniform mat4 uMatrix;", "uniform vec4 uCrop;", "attribute vec2 aVertexPosition;", "attribute vec2 aUvPosition;", "varying vec2 vUvPosition;", "void main(){", "vUvPosition = vec2( aUvPosition.x * uCrop.z, aUvPosition.y * uCrop.w ) + uCrop.xy;", "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );", "}" ].join("\n");
     }
     function spriteFragmentShader(precision) {
-        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform vec2 uUvPosition;", "uniform sampler2D uTexture;", "varying vec2 vUvPosition;", "void main(){", "vec2 uv = vUvPosition * uUvPosition;", "vec4 finalColor = texture2D( uTexture, uv );", "finalColor.w *= uAlpha;", "gl_FragColor = finalColor;", "}" ].join("\n");
+        return [ "precision " + precision + " float;", "uniform float uAlpha;", "uniform sampler2D uTexture;", "varying vec2 vUvPosition;", "void main(){", "vec4 finalColor = texture2D( uTexture, vUvPosition );", "finalColor.w *= uAlpha;", "gl_FragColor = finalColor;", "}" ].join("\n");
     }
     function WebGLRenderer2D(opts) {
         opts || (opts = {});
@@ -8027,6 +8031,7 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas(opts.width, opts.height);
         this.context = Dom.getWebGLContext(this.canvas.element, opts.attributes);
         this.autoClear = void 0 !== opts.autoClear ? opts.autoClear : !0;
+        this.time = 0;
         this.ext = {
             texture_filter_anisotropic: void 0,
             texture_float: void 0,
@@ -8065,8 +8070,8 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         };
         this.setDefault();
     }
-    var createProgram = Dom.createProgram, isPowerOfTwo = (2 * Math.PI, Math.cos, Math.sin, 
-    Mathf.isPowerOfTwo), regAttribute = (Mathf.toPowerOfTwo, /attribute\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/), regUniform = /uniform\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/, defaultImage = new Image();
+    var now = Time.now, createProgram = Dom.createProgram, isPowerOfTwo = (2 * Math.PI, 
+    Math.cos, Math.sin, Mathf.isPowerOfTwo), regAttribute = (Mathf.toPowerOfTwo, /attribute\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/), regUniform = /uniform\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/, defaultImage = new Image();
     defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
     Class.extend(WebGLRenderer2D, Class);
     WebGLRenderer2D.prototype.getExtensions = function() {
@@ -8109,10 +8114,14 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         sprite.fragmentShader = spriteFragmentShader(precision);
         sprite.program = createProgram(gl, sprite.vertexShader, sprite.fragmentShader);
         parseUniformsAttributes(gl, sprite);
+        this.createImage("default");
     };
     WebGLRenderer2D.prototype.createImage = function(imageSrc) {
-        var self = this, data = this._data, images = data.images, image = images[imageSrc];
-        if (!image) if ("default" === imageSrc) image = images["default"]; else {
+        var self = this, data = this._data, images = data.images, textures = data.textures, image = images[imageSrc];
+        if (!image) if ("default" === imageSrc) {
+            image = images["default"];
+            textures[imageSrc] || createTexture(image, imageSrc);
+        } else {
             image = new Image();
             image.src = imageSrc;
             images[imageSrc] = image;
@@ -8122,17 +8131,16 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         };
     };
     WebGLRenderer2D.prototype.createTexture = function(image, imageSrc) {
-        var gl = this.context, data = this._data, textures = data.textures, texture = gl.createTexture(), isPOT = isPowerOfTwo(image.width) && isPowerOfTwo(image.height), TEXTURE_2D = gl.TEXTURE_2D, MAG_FILTER = gl.LINEAR, MIN_FILTER = isPOT ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR, WRAP = isPOT ? gl.CLAMP_TO_EDGE : gl.REPEAT, RGBA = gl.RGBA;
+        var gl = this.context, data = this._data, textures = data.textures, texture = gl.createTexture(), isPOT = isPowerOfTwo(image.width) && isPowerOfTwo(image.height), TEXTURE_2D = gl.TEXTURE_2D, MAG_FILTER = gl.LINEAR, MIN_FILTER = isPOT ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR, WRAP = isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE, RGBA = gl.RGBA;
         gl.bindTexture(TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, !0);
         gl.texImage2D(TEXTURE_2D, 0, RGBA, RGBA, gl.UNSIGNED_BYTE, image);
         gl.texParameteri(TEXTURE_2D, gl.TEXTURE_MAG_FILTER, MAG_FILTER);
         gl.texParameteri(TEXTURE_2D, gl.TEXTURE_MIN_FILTER, MIN_FILTER);
         gl.texParameteri(TEXTURE_2D, gl.TEXTURE_WRAP_S, WRAP);
         gl.texParameteri(TEXTURE_2D, gl.TEXTURE_WRAP_T, WRAP);
         isPOT && gl.generateMipmap(TEXTURE_2D);
-        textures[imageSrc] = texture;
         gl.bindTexture(TEXTURE_2D, null);
+        textures[imageSrc] = texture;
     };
     WebGLRenderer2D.prototype.setClearColor = function(color) {
         color ? this.context.clearColor(color.r, color.g, color.b, color.a) : this.context.clearColor(0, 0, 0, 1);
@@ -8190,7 +8198,7 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
     WebGLRenderer2D.prototype.render = function() {
         var lastScene, lastCamera, lastBackground = new Color();
         return function(scene, camera) {
-            var renderable, rigidbody, i, self = this, background = scene.world.background, gl = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
+            var renderable, rigidbody, i, self = this, background = scene.world.background, gl = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies, start = now();
             if (!lastBackground.equals(background)) {
                 this.setClearColor(background);
                 lastBackground.copy(background);
@@ -8222,64 +8230,69 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
                 renderable = renderables[i];
                 renderable.visible && this.renderComponent(renderable, camera);
             }
+            this.time = now() - start;
         };
     }();
     WebGLRenderer2D.prototype.renderComponent = function() {
         var modelView = new Mat4(), modelViewProj = new Mat4(), mvp = modelViewProj.elements;
         return function(component, camera) {
-            var sleepState, uniforms, attributes, gl = this.context, data = this._data, imageSrc = component.image, image = data.images[imageSrc], texture = data.textures[imageSrc], componentData = component._data, color = component.color, lineColor = component.lineColor, alpha = component.alpha, gameObject = component.gameObject, body = component.body, sprite = data.sprite, basic = data.basic;
-            if (texture || !imageSrc) {
-                componentData.needsUpdate && this.setupBuffers(componentData);
-                gameObject.matrixModelView.mmul(gameObject.matrixWorld, camera.matrixWorldInverse);
-                modelView.fromMat32(gameObject.matrixModelView);
-                modelViewProj.mmul(camera._matrixProjection3D, modelView);
-                if (componentData.uvBuffer) {
-                    gl.useProgram(sprite.program);
-                    uniforms = sprite.uniforms;
-                    attributes = sprite.attributes;
-                    gl.activeTexture(gl.TEXTURE0);
-                    gl.bindTexture(gl.TEXTURE_2D, texture);
-                    gl.uniform1i(uniforms.uTexture, 0);
-                    gl.uniform2f(uniforms.uUvPosition, component.x / image.width, component.y / image.height);
-                } else {
-                    body && (sleepState = body.sleepState);
-                    gl.useProgram(basic.program);
-                    uniforms = basic.uniforms;
-                    attributes = basic.attributes;
-                    gl.uniform3f(uniforms.uColor, color.r, color.g, color.b);
-                }
+            var sleepState, uniforms, attributes, w, h, gl = this.context, data = this._data, imageSrc = component.image, image = data.images[imageSrc], texture = data.textures[imageSrc], componentData = component._data, color = component.color, lineColor = component.lineColor, alpha = component.alpha, gameObject = component.gameObject, body = component.body, sprite = data.sprite, basic = data.basic;
+            if (!texture && imageSrc) {
+                this.createImage(imageSrc);
+                image = data.images["default"];
+                texture = data.textures["default"];
+            }
+            componentData.needsUpdate && this.setupBuffers(componentData);
+            gameObject.matrixModelView.mmul(gameObject.matrixWorld, camera.matrixWorldInverse);
+            modelView.fromMat32(gameObject.matrixModelView);
+            modelViewProj.mmul(camera._matrixProjection3D, modelView);
+            if (componentData.uvBuffer) {
+                gl.useProgram(sprite.program);
+                w = 1 / image.width;
+                h = 1 / image.height;
+                uniforms = sprite.uniforms;
+                attributes = sprite.attributes;
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                gl.uniform1i(uniforms.uTexture, 0);
+                gl.uniform4f(uniforms.uCrop, component.x * w, component.y * h, component.w * w, component.h * h);
+            } else {
+                body && (sleepState = body.sleepState);
+                gl.useProgram(basic.program);
+                uniforms = basic.uniforms;
+                attributes = basic.attributes;
+                gl.uniform3f(uniforms.uColor, color.r, color.g, color.b);
+            }
+            this.bindBuffers(attributes, componentData);
+            gl.uniformMatrix4fv(uniforms.uMatrix, !1, mvp);
+            sleepState && (2 === sleepState ? alpha *= .5 : 3 === sleepState && (alpha *= .25));
+            gl.uniform1f(uniforms.uAlpha, alpha);
+            gl.drawElements(gl.TRIANGLES, componentData.indices.length, gl.UNSIGNED_SHORT, 0);
+            if (component.line) {
+                gl.useProgram(basic.program);
                 this.bindBuffers(attributes, componentData);
+                this.setLineWidth(component.lineWidth || this.invPixelRatio);
+                uniforms = basic.uniforms;
+                attributes = basic.attributes;
+                gl.bindTexture(gl.TEXTURE_2D, null);
                 gl.uniformMatrix4fv(uniforms.uMatrix, !1, mvp);
-                sleepState && (2 === sleepState ? alpha *= .5 : 3 === sleepState && (alpha *= .25));
-                gl.uniform1f(uniforms.uAlpha, alpha);
-                gl.drawElements(gl.TRIANGLES, componentData.indices.length, gl.UNSIGNED_SHORT, 0);
-                if (component.line) {
-                    gl.useProgram(basic.program);
-                    this.bindBuffers(attributes, componentData);
-                    this.setLineWidth(component.lineWidth || this.invPixelRatio);
-                    uniforms = basic.uniforms;
-                    attributes = basic.attributes;
-                    gl.uniformMatrix4fv(uniforms.uMatrix, !1, mvp);
-                    gl.uniform3f(uniforms.uColor, lineColor.r, lineColor.g, lineColor.b);
-                    gl.uniform1f(uniforms.uAlpha, 1);
-                    gl.drawArrays(gl.LINE_LOOP, 0, .5 * componentData.vertices.length);
-                }
-            } else this.createImage(imageSrc);
+                gl.uniform3f(uniforms.uColor, lineColor.r, lineColor.g, lineColor.b);
+                gl.uniform1f(uniforms.uAlpha, 1);
+                gl.drawArrays(gl.LINE_LOOP, 0, .5 * componentData.vertices.length);
+            }
         };
     }();
     WebGLRenderer2D.prototype.bindBuffers = function(attributes, data) {
         var gl = this.context, ARRAY_BUFFER = gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER, FLOAT = gl.FLOAT;
-        if (data.vertices.length) {
-            gl.bindBuffer(ARRAY_BUFFER, data.vertexBuffer);
-            gl.enableVertexAttribArray(attributes.aVertexPosition);
-            gl.vertexAttribPointer(attributes.aVertexPosition, 2, FLOAT, !1, 0, 0);
-        }
+        gl.bindBuffer(ARRAY_BUFFER, data.vertexBuffer);
+        gl.enableVertexAttribArray(attributes.aVertexPosition);
+        gl.vertexAttribPointer(attributes.aVertexPosition, 2, FLOAT, !1, 0, 0);
+        gl.bindBuffer(ELEMENT_ARRAY_BUFFER, data.indexBuffer);
         if (data.uvs.length) {
             gl.bindBuffer(ARRAY_BUFFER, data.uvBuffer);
             gl.enableVertexAttribArray(attributes.aUvPosition);
             gl.vertexAttribPointer(attributes.aUvPosition, 2, FLOAT, !1, 0, 0);
         }
-        data.indices.length && gl.bindBuffer(ELEMENT_ARRAY_BUFFER, data.indexBuffer);
     };
     WebGLRenderer2D.prototype.setupBuffers = function(data) {
         var gl = this.context, DRAW = data.dynamic ? gl.DYNAMIC_DRAW : gl.STATIC_DRAW, ARRAY_BUFFER = gl.ARRAY_BUFFER, ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER;
@@ -8326,7 +8339,7 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
         addEvent(window, "focus", this.handleFocus, this);
         addEvent(window, "blur", this.handleBlur, this);
     }
-    var addEvent = (Math.floor, Dom.addEvent);
+    var requestAnimFrame = Dom.requestAnimFrame, addEvent = (Math.floor, Dom.addEvent);
     Class.extend(Game, Class);
     Game.prototype.init = function() {
         this.trigger("init");
@@ -8443,7 +8456,7 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
             }
             this.update();
             this.render();
-            Dom.requestAnimFrame(this.animate.bind(this));
+            requestAnimFrame(this.animate.bind(this));
         };
     }();
     Game.prototype.handleFocus = function(e) {
@@ -8478,8 +8491,7 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "base/dev
                 self.addScene(object);
             }
             socket.on("sync", function(timeStamp) {
-                Time._offset = Time.stamp() - timeStamp;
-                socket.emit("clientOffset", Time._offset);
+                socket.emit("clientOffset", Time.stamp() - timeStamp);
             });
             socket.on("gameObjectMoved", function(scene, gameObject, position) {
                 scene = self.findSceneByServerId(scene);

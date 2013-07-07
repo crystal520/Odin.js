@@ -11,7 +11,7 @@ requirejs(
         Odin.globalize();
         
         var game = new ServerGame({
-            host: "127.0.0.1",
+            host: "192.168.1.191",
             port: 3000,
             debug: true
         });

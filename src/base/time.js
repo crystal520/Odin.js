@@ -5,21 +5,19 @@ define(
     function(){
         "use strict";
 	
+	var LOW = 0.000001, HIGH = 0.1;
+	
         
 	function Time(){
 	    
 	    this._startTime = Date.now() * 0.001;
-	    this._offset = 0;
-	    
 	    this.sinceStart = 0;
 	    
 	    this.time = 0;
+	    this.scale = 1;
 	    
 	    this.fps = 60;
-	    
 	    this.delta = 1/60;
-	    
-	    this.scale = 1;
 	}
 	
 	Time.prototype.update = function(){
@@ -29,9 +27,9 @@ define(
 		this.time = time = this.now();
 		
 		delta = ( time - last ) * this.scale;
-		this.delta = delta < 0.001 ? 0.001 : delta > 0.25 ? 0.25 : delta;
+		this.delta = delta < LOW ? LOW : delta > HIGH ? HIGH : delta;
 		
-		last = time - this._offset;
+		last = time;
 		
 		frames++;
 		ms = time * 1000;

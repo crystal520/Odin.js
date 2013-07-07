@@ -70,10 +70,11 @@ define([
 	    this.debug = opts.debug !== undefined ? opts.debug : true;
 	    
 	    this.profile = {
+		total: 0,
 		solve: 0,
 		integration: 0,
-		broadphase:0,
-		nearphase:0
+		broadphase: 0,
+		nearphase: 0
 	    };
 	    
 	    this._removeList = [];
@@ -158,7 +159,7 @@ define([
 	PWorld2D.prototype.step = function( dt ){
 	    var debug = this.debug,
 		now = this.now,
-		profile = this.profile, profileStart,
+		profile = this.profile, profileStart, start = now(),
 		
 		gravity = this.gravity,
 		gn = gravity.len(),
@@ -316,6 +317,8 @@ define([
 	    if( this._removeList.length ){
 		this._remove();
 	    }
+	    
+	    if( debug ) profile.total = now() - start;
 	};
 	
 	

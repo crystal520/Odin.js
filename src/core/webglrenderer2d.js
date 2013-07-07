@@ -5,6 +5,7 @@ define([
 	"base/class",
 	"base/dom",
 	"base/device",
+	"base/time",
 	"core/canvas",
 	"math/mathf",
 	"math/color",
@@ -12,10 +13,12 @@ define([
 	"math/mat32",
 	"math/mat4"
     ],
-    function( Class, Dom, Device, Canvas, Mathf, Color, Vec2, Mat32, Mat4 ){
+    function( Class, Dom, Device, Time, Canvas, Mathf, Color, Vec2, Mat32, Mat4 ){
 	"use strict";
 	
-	var createProgram = Dom.createProgram,
+	var now = Time.now,
+	    
+	    createProgram = Dom.createProgram,
 	    TWO_PI = Math.PI * 2,
 	    cos = Math.cos,
 	    sin = Math.sin,
@@ -95,6 +98,7 @@ define([
 	    ].join("\n");
 	}
 	
+	//texture2D(uSampler, vec2(vTextureCoord.x * uCropSource.z, vTextureCoord.y * uCropSource.w) + uCropSource.xy);
 	
 	function spriteVertexShader( precision ){
 	    
@@ -102,6 +106,7 @@ define([
 		"precision "+ precision +" float;",
 		
                 "uniform mat4 uMatrix;",
+                "uniform vec4 uCrop;",
                 
                 "attribute vec2 aVertexPosition;",
                 "attribute vec2 aUvPosition;",
@@ -110,7 +115,7 @@ define([
                 
                 "void main(){",
                     
-		    "vUvPosition = aUvPosition;",
+		    "vUvPosition = vec2( aUvPosition.x * uCrop.z, aUvPosition.y * uCrop.w ) + uCrop.xy;",
 		    
                     "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );",
                 "}"
@@ -124,15 +129,12 @@ define([
 		"precision "+ precision +" float;",
 		
                 "uniform float uAlpha;",
-                "uniform vec2 uUvPosition;",
                 "uniform sampler2D uTexture;",
 		
                 "varying vec2 vUvPosition;",
                 
                 "void main(){",
-		    "vec2 uv = vUvPosition * uUvPosition;",
-		    
-		    "vec4 finalColor = texture2D( uTexture, uv );",
+		    "vec4 finalColor = texture2D( uTexture, vUvPosition );",
 		    "finalColor.w *= uAlpha;",
 		    
                     "gl_FragColor = finalColor;",
@@ -155,6 +157,8 @@ define([
             this.context = Dom.getWebGLContext( this.canvas.element, opts.attributes );
             
             this.autoClear = opts.autoClear !== undefined ? opts.autoClear : true;
+	    
+	    this.time = 0;
 	    
 	    this.ext = {
 		texture_filter_anisotropic: undefined,
@@ -307,6 +311,8 @@ define([
 	    sprite.fragmentShader = spriteFragmentShader( precision );
 	    sprite.program = createProgram( gl, sprite.vertexShader, sprite.fragmentShader );
 	    parseUniformsAttributes( gl, sprite );
+	    
+	    this.createImage("default");
 	};
 	
 	
@@ -314,11 +320,13 @@ define([
 	    var self = this,
 		data = this._data,
 		images = data.images,
+		textures = data.textures,
 		image = images[ imageSrc ];
 	    
 	    if( !image ){
 		if( imageSrc === "default" ){
 		    image = images["default"];
+		    if( !textures[ imageSrc ] ) createTexture( image, imageSrc );
 		}
 		else{
 		    image = new Image();
@@ -344,11 +352,10 @@ define([
 		TEXTURE_2D = gl.TEXTURE_2D,
 		MAG_FILTER = gl.LINEAR,
 		MIN_FILTER = isPOT ? gl.LINEAR_MIPMAP_NEAREST : gl.LINEAR,
-		WRAP = isPOT ? gl.CLAMP_TO_EDGE : gl.REPEAT,
+		WRAP = isPOT ? gl.REPEAT : gl.CLAMP_TO_EDGE,
 		RGBA = gl.RGBA;
 	    
 	    gl.bindTexture( TEXTURE_2D, texture );
-	    gl.pixelStorei( gl.UNPACK_FLIP_Y_WEBGL, true );
 	    
 	    gl.texImage2D( TEXTURE_2D, 0, RGBA, RGBA, gl.UNSIGNED_BYTE, image );
 	    
@@ -360,8 +367,8 @@ define([
 	    
 	    if( isPOT ) gl.generateMipmap( TEXTURE_2D );
 	    
-	    textures[ imageSrc ] = texture;
 	    gl.bindTexture( TEXTURE_2D, null );
+	    textures[ imageSrc ] = texture;
         };
         
         
@@ -449,6 +456,7 @@ define([
 		    gl = this.context,
 		    renderable, renderables = scene._renderables,
 		    rigidbody, rigidbodies = scene._rigidbodies,
+		    start = now(),
 		    i;
 		
 		if( !lastBackground.equals( background ) ){
@@ -498,6 +506,8 @@ define([
 		    
 		    if( renderable.visible ) this.renderComponent( renderable, camera );
 		}
+		
+		this.time = now() - start;
 	    };
         }();
         
@@ -520,11 +530,12 @@ define([
 		    gameObject = component.gameObject,
 		    body = component.body, sleepState,
 		    sprite = data.sprite, basic = data.basic,
-		    uniforms, attributes;
+		    uniforms, attributes, w, h;
 		
 		if( !texture && imageSrc ){
 		    this.createImage( imageSrc );
-		    return;
+		    image = data.images["default"];
+		    texture = data.textures["default"];
 		}
 		if( componentData.needsUpdate ) this.setupBuffers( componentData );
 		
@@ -535,6 +546,8 @@ define([
 		
 		if( componentData.uvBuffer ){
 		    gl.useProgram( sprite.program );
+		    w = 1 / image.width;
+		    h = 1 / image.height;
 		    
 		    uniforms = sprite.uniforms;
 		    attributes = sprite.attributes;
@@ -543,7 +556,7 @@ define([
 		    gl.bindTexture( gl.TEXTURE_2D, texture );
 		    gl.uniform1i( uniforms.uTexture, 0 );
 		    
-		    gl.uniform2f( uniforms.uUvPosition, component.x / image.width, component.y / image.height );
+		    gl.uniform4f( uniforms.uCrop, component.x * w, component.y * h, component.w * w, component.h * h );
 		}
 		else{
 		    if( body ) sleepState = body.sleepState;
@@ -582,6 +595,7 @@ define([
 		    uniforms = basic.uniforms;
 		    attributes = basic.attributes;
 		    
+		    gl.bindTexture( gl.TEXTURE_2D, null );
 		    gl.uniformMatrix4fv( uniforms.uMatrix, false, mvp );
 		    gl.uniform3f( uniforms.uColor, lineColor.r, lineColor.g, lineColor.b );
 		    gl.uniform1f( uniforms.uAlpha, 1 );
@@ -598,18 +612,16 @@ define([
 		ELEMENT_ARRAY_BUFFER = gl.ELEMENT_ARRAY_BUFFER,
 		FLOAT = gl.FLOAT;
 	    
-	    if( data.vertices.length ){
-		gl.bindBuffer( ARRAY_BUFFER, data.vertexBuffer );
-		gl.enableVertexAttribArray( attributes.aVertexPosition );
-		gl.vertexAttribPointer( attributes.aVertexPosition, 2, FLOAT, false, 0, 0 );
-	    }
+	    gl.bindBuffer( ARRAY_BUFFER, data.vertexBuffer );
+	    gl.enableVertexAttribArray( attributes.aVertexPosition );
+	    gl.vertexAttribPointer( attributes.aVertexPosition, 2, FLOAT, false, 0, 0 );
+	    
+	    gl.bindBuffer( ELEMENT_ARRAY_BUFFER, data.indexBuffer );
+	    
 	    if( data.uvs.length ){
 		gl.bindBuffer( ARRAY_BUFFER, data.uvBuffer );
 		gl.enableVertexAttribArray( attributes.aUvPosition );
 		gl.vertexAttribPointer( attributes.aUvPosition, 2, FLOAT, false, 0, 0 );
-	    }
-	    if( data.indices.length ){
-		gl.bindBuffer( ELEMENT_ARRAY_BUFFER, data.indexBuffer );
 	    }
 	};
         

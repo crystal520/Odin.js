@@ -10,7 +10,7 @@ require(
 	Odin.globalize();
 	
 	game = new Game({
-	    debug: true
+	    debug: true,
 	});
 	
 	game.on("init", function(){

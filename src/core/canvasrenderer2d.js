@@ -5,14 +5,16 @@ define([
 	"base/class",
 	"base/dom",
 	"base/device",
+	"base/time",
 	"core/canvas",
 	"math/color",
 	"math/mat32"
     ],
-    function( Class, Dom, Device, Canvas, Color, Mat32 ){
+    function( Class, Dom, Device, Time, Canvas, Color, Mat32 ){
 	"use strict";
 	
-	var PI = Math.PI,
+	var now = Time.now,
+	    PI = Math.PI,
 	    TWO_PI = PI * 2,
 	    HALF_PI = PI * 0.5,
 	    defaultImage = new Image;
@@ -34,6 +36,8 @@ define([
             this.autoClear = opts.autoClear !== undefined ? opts.autoClear : true;
 	    
             this.context = Dom.get2DContext( this.canvas.element );
+	    
+	    this.time = 0;
 	    
 	    this._data = {
 		images: {
@@ -71,6 +75,7 @@ define([
 		    ctx = this.context,
 		    renderable, renderables = scene._renderables,
 		    rigidbody, rigidbodies = scene._rigidbodies,
+		    start = now(),
 		    i;
 		
 		if( !lastBackground.equals( background ) ){
@@ -128,6 +133,8 @@ define([
 		    
 		    if( renderable.visible ) this.renderComponent( renderable, camera );
 		}
+		
+		this.time = now() - start;
 	    };
         }();
         

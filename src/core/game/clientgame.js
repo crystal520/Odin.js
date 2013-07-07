@@ -62,8 +62,7 @@ define([
 		
 		socket.on("sync", function( timeStamp ){
 		    
-		    Time._offset = Time.stamp() - timeStamp;
-		    socket.emit("clientOffset", Time._offset );
+		    socket.emit("clientOffset", Time.stamp() - timeStamp );
 		});
 		
 		

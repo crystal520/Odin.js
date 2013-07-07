@@ -16,7 +16,8 @@ define([
     function( Class, Utils, Device, Dom, Time, Input, Scene2D, Canvas, CanvasRenderer2D, WebGLRenderer2D ){
 	"use strict";
 	
-	var floor = Math.floor,
+	var requestAnimFrame = Dom.requestAnimFrame,
+	    floor = Math.floor,
 	    addEvent = Dom.addEvent;
 	
 	
@@ -287,7 +288,7 @@ define([
 		this.update();
 		this.render();
 		
-		Dom.requestAnimFrame( this.animate.bind( this ) );
+		requestAnimFrame( this.animate.bind( this ) );
 	    };
 	}();
         
