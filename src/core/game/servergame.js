@@ -43,8 +43,7 @@ define([
 			id: socket.id,
 			socket: socket,
 			connectTime: Time.stamp()
-		    }),
-		    i;
+		    }), i;
 		
 		scenesList.length = 0;
 		
@@ -54,19 +53,19 @@ define([
 		
 		self.clients[ socket.id ] = client;
 		
-		socket.emit("connected", socket.id, scenesList );
-		self.trigger("connected", socket.id );
+		socket.emit("connection", socket.id, scenesList );
+		self.trigger("connection", socket.id );
 		
-		console.log("ServerGame: new Client with id "+ socket.id );
+		console.log("ServerGame: new Client id is "+ socket.id );
 		
 		socket.on("disconnect", function(){
-		    console.log("ServerGame: Client with id "+ socket.id +" disconnected");
 		    self.trigger("disconnect", socket.id );
+		    console.log("ServerGame: Client id "+ socket.id +" disconnected");
 		});
 		
 		socket.on("device", function( device ){ client.device = device; });
 		
-		socket.on("clientoffset", function( offset ){
+		socket.on("clientOffset", function( offset ){
 		    client.offset = offset;
 		    
 		    if( offset > 10 ){
@@ -119,36 +118,38 @@ define([
 		    scenes.push( scene );
 		    scene.game = this;
 		    
-		    scene.trigger("addtogame");
-		    this.trigger("addscene", scene );
-		    sockets.emit("addscene", scene.toJSON() );
+		    scene.trigger("addToGame");
+		    this.trigger("addScene", scene );
+		    sockets.emit("addScene", scene.toJSON() );
 		    
-		    scene.on("addgameobject", function( gameObject ){
-			sockets.emit("addgameobject", this.name, gameObject.toJSON() );
+		    scene.on("addGameObject", function( gameObject ){
+			sockets.emit("addGameObject", this._id, gameObject.toJSON() );
 			
-			gameObject.on("addcomponent", function( component ){
-			    sockets.emit("addcomponent", this.scene.name, this.name, component.toJSON() );
+			gameObject.on("addComponent", function( component ){
+			    if( component._class !== "RigidBody2D" ){
+				sockets.emit("addComponent", this.scene._id, this._id, component.toJSON() );
+			    }
 			});
 			
-			gameObject.on("removecomponent", function( component ){
-			    sockets.emit("removecomponent", this.scene.name, this.name, component._class );
+			gameObject.on("removeComponent", function( component ){
+			    if( component._class !== "RigidBody2D" ){
+				sockets.emit("removeComponent", this.scene._id, this._id, component._class );
+			    }
 			});
 			
 			gameObject.on("moved", function(){
-			    sockets.emit("gameObject_moved", this.scene.name, this.name, this.position );
+			    sockets.emit("gameObjectMoved", this.scene._id, this._id, this.position );
 			});
 			gameObject.on("scaled", function(){
-			    sockets.emit("gameObject_scaled", this.scene.name, this.name, this.scale );
+			    sockets.emit("gameObjectScaled", this.scene._id, this._id, this.scale );
 			});
 			gameObject.on("rotated", function(){
-			    sockets.emit("gameObject_rotated", this.scene.name, this.name, this.rotation );
+			    sockets.emit("gameObjectRotated", this.scene._id, this._id, this.rotation );
 			});
 		    });
 		    
-		    scene.on("removegameobject", function( gameObject ){
-			sockets.emit("removegameobject", this.name, gameObject.name );
-			gameObject.off("addcomponent");
-			gameObject.off("removecomponent");
+		    scene.on("removeGameObject", function( gameObject ){
+			sockets.emit("removeGameObject", this._id, gameObject._id );
 		    });
                 }
 		else{
@@ -171,12 +172,9 @@ define([
                     scenes.splice( index, 1 );
 		    scene.game = undefined;
                     
-                    scene.trigger("removefromgame");
-                    this.trigger("removescene", scene );
-		    sockets.emit("removescene", scene.name );
-		    
-		    scene.off("addgameobject");
-		    scene.off("removegameobject");
+                    scene.trigger("removeFromGame");
+                    this.trigger("removeScene", scene );
+		    sockets.emit("removeScene", scene._id );
                 }
 		else{
 		    console.warn("ServerGame.remove: "+ scene.name +" is not in game");
@@ -194,8 +192,8 @@ define([
 		this.addScene( scene );
 	    }
 	    
-	    client.scene = scene.name;
-	    socket.emit("setscene", scene.name );
+	    client.scene = scene;
+	    socket.emit("setScene", scene._id );
 	    
 	    if( !client.scene ){
 		console.warn("ServerGame.setScene: could not find scene in Game "+ scene );
@@ -203,17 +201,18 @@ define([
         };
         
         
-        ServerGame.prototype.setCamera = function( client, scene, camera ){
-            var index = scene.children.indexOf( camera ),
+        ServerGame.prototype.setCamera = function( client, camera ){
+            var scene = client.scene,
+		index = scene.children.indexOf( camera ),
 		socket = this.io.sockets.sockets[ client.id ];
 	    
 	    if( index === -1 ){
 		console.warn("ServerGame.setCamera: camera not added to scene, adding it...");
-		scene.addScene( camera );
+		scene.add( camera );
 	    }
 	    
-	    client.camera = camera.name;
-	    socket.emit("setcamera", camera.name );
+	    client.camera = camera;
+	    socket.emit("setCamera", camera._id );
 	    
 	    if( !client.camera ){
 		console.warn("ServerGame.setCamera: could not find camera in scene "+ scene );
@@ -228,10 +227,21 @@ define([
             for( i = scenes.length; i--; ){
                 scene = scenes[i];
                 
-                if( scene.name === name ){
-                    
-                    return scene;
-                }
+                if( scene.name === name ) return scene;
+            }
+            
+            return undefined;
+        };
+        
+        
+        ServerGame.prototype.findSceneById = function( id ){
+            var scenes = this.scenes,
+                scene, i;
+            
+            for( i = scenes.length; i--; ){
+                scene = scenes[i];
+                
+                if( scene._id === id ) return scene;
             }
             
             return undefined;

@@ -14,7 +14,22 @@ define(
 	    this._class = this.constructor.name;
 	    this._events = {};
 	    this._JSON = {};
+	    this._SERVER_ID = -1;
 	}
+        
+        
+        Class.prototype.clone = function(){
+	    var clone = new this.constructor;
+	    clone.copy( this );
+	    
+            return clone;
+        };
+        
+        
+        Class.prototype.copy = function( other ){
+	    
+	    return this;
+        };
 	
 	
 	Class.prototype.on = function( name, callback, context ){
@@ -76,17 +91,18 @@ define(
 	
 	
 	Class.prototype.toJSON = function(){
-	    var json = this._JSON;
 	    
-	    json.type = this._class;
-	    
-	    return json;
+	    return this._JSON;
 	};
 	
 	
 	Class.prototype.fromJSON = function( json ){
+	    
 	    return this;
 	};
+	
+	
+	Class.prototype._super = undefined;
 	
 	
 	Class.extend = function( child, parent ){
@@ -98,6 +114,7 @@ define(
 		childProto[ key ] = parentProto[ key ];
 	    }
 	    
+	    childProto._super = parent;
 	    childProto.constructor = child;
         };
 	

@@ -11,12 +11,18 @@ define([
 	"physics2d/collision/pnearphase2d",
 	"physics2d/shape/pshape2d",
 	"physics2d/body/pparticle2d",
-	"physics2d/body/pbody2d"
+	"physics2d/body/pbody2d",
+	"physics2d/body/prigidbody2d"
     ],
-    function( Class, Mathf, Vec2, PSolver2D, PFriction2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D ){
+    function( Class, Mathf, Vec2, PSolver2D, PFriction2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D, PRigidbody2D ){
         "use strict";
 	
-	var pow = Math.pow,
+	var objectTypes = {
+		PParticle2D: PParticle2D,
+		PBody2D: PBody2D,
+		PRigidbody2D: PRigidbody2D
+	    },
+	    pow = Math.pow,
 	    min = Math.min,
 	    clamp = Mathf.clamp,
 	    
@@ -266,7 +272,7 @@ define([
 		pos = body.position;
 		invMass = body.invMass;
 		
-		body.trigger("prestep");
+		body.trigger("preStep");
 		
 		if( type === DYNAMIC ){
 		    
@@ -302,7 +308,7 @@ define([
 		
 		if( this.allowSleep ) body.sleepTick( this.time );
 		
-		body.trigger("poststep");
+		body.trigger("postStep");
 	    }
 	    
 	    if( debug ) profile.integration = now() - profileStart;
@@ -310,6 +316,48 @@ define([
 	    if( this._removeList.length ){
 		this._remove();
 	    }
+	};
+	
+	
+	PWorld2D.prototype.toJSON = function(){
+	    var json = this._JSON,
+		bodies = this.bodies,
+		i;
+	    
+	    json.type = "PWorld2D";
+	    json._SERVER_ID = this._id;
+	    
+	    json.allowSleep = this.allowSleep;
+	    json.gravity = this.gravity;
+	    json.debug = this.debug;
+	    
+	    json.bodies = json.bodies || [];
+	    
+	    for( i = bodies.length; i--; ){
+		json.bodies[i] = bodies[i].toJSON();
+	    }
+	    
+	    return json;
+	};
+	
+	
+	PWorld2D.prototype.fromJSON = function( json ){
+	    var bodies = json.bodies,
+		jsonObject, object, i;
+	    
+	    this._SERVER_ID = json._SERVER_ID;
+	    
+	    this.allowSleep = json.allowSleep;
+	    this.gravity.fromJSON( json.gravity );
+	    this.debug = json.debug;
+	    
+	    for( i = bodies.length; i--; ){
+		jsonObject = bodies[i];
+		object = new objectTypes[ jsonObject.type ];
+		this.add( object.fromJSON( jsonObject ) );
+	    }
+	    
+	    return this;
 	};
 	
         

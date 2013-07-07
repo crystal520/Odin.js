@@ -68,6 +68,39 @@ define([
 	    this.volume = PI * r * r;
 	};
 	
+	
+	PCircle2D.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.type = "PCircle2D";
+	    json._SERVER_ID = this._id;
+	    
+	    json.shapeType = this.type;
+	    
+	    json.aabb = this.aabb;
+	    json.volume = this.volume;
+	    json.boundingRadius = this.boundingRadius;
+	    
+	    json.radius = this.radius;
+	    
+	    return json;
+	};
+	
+	
+	PCircle2D.prototype.fromJSON = function( json ){
+	    
+	    this.type = json.shapeType;
+	    this._SERVER_ID = json._SERVER_ID;
+	    
+	    this.aabb.fromJSON( json.aabb );
+	    this.volume = json.volume;
+	    this.boundingRadius = json.boundingRadius;
+	    
+	    this.radius = json.radius;
+	    
+	    return this;
+	};
+	
         
         return PCircle2D;
     }

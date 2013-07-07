@@ -1,6 +1,3 @@
-var player = new Image;
-player.src = "../content/images/player.png";
-
 require(
     {
 	baseUrl: "../../src/"
@@ -34,7 +31,7 @@ require(
 			    position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 16 ) ),
 			    components: [
 				new Sprite2D({
-				    image: player,
+				    image: "../content/images/player.png",
 				    x: 0,
 				    y: 0,
 				    w: 64,
@@ -56,7 +53,7 @@ require(
 			position: new Vec2( Mathf.randFloat( -8, 8 ), Mathf.randFloat( 0, 16 ) ),
 			components: [
 			    new Sprite2D({
-				image: player,
+				image: "../content/images/player.png",
 				x: 0,
 				y: 0,
 				w: 64,

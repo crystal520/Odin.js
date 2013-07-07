@@ -56,6 +56,7 @@ define([
 	    
 	    json.type = "World2D";
 	    json.name = this.name;
+	    json._SERVER_ID = this._id;
 	    json.gravity = this.gravity
 	    json.background = this.background
 	    json.pworld = this.pworld
@@ -67,6 +68,7 @@ define([
         World2D.prototype.fromJSON = function( json ){
             
 	    this.name = json.name;
+	    this._SERVER_ID = json._SERVER_ID;
 	    this.gravity.fromJSON( json.gravity );
 	    this.background.fromJSON( json.background );
 	    this.pworld.fromJSON( json.pworld );

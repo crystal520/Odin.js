@@ -8,13 +8,21 @@ define([
 	"math/aabb2",
 	"physics2d/body/pbody2d",
 	"physics2d/body/pparticle2d",
-	"physics2d/shape/pshape2d",
 	"physics2d/shape/pbox2d",
+	"physics2d/shape/pcircle2d",
+	"physics2d/shape/pconvex2d",
+	"physics2d/shape/pshape2d",
     ],
-    function( Class, Vec2, Mat2, AABB2, PBody2D, PParticle2D, PShape2D, PBox2D ){
+    function( Class, Vec2, Mat2, AABB2, PBody2D, PParticle2D, PBox2D, PCircle2D, PConvex2D, PShape2D ){
         "use strict";
 	
-	var AWAKE = PParticle2D.AWAKE,
+	var objectTypes = {
+		PBox2D: PBox2D,
+		PCircle2D: PCircle2D,
+		PConvex2D: PConvex2D,
+		PShape2D: PShape2D
+	    },
+	    AWAKE = PParticle2D.AWAKE,
 	    SLEEPY = PParticle2D.SLEEPY,
 	    SLEEPING = PParticle2D.SLEEPING,
 	    
@@ -101,13 +109,8 @@ define([
 	    
 	    worldPoint = worldPoint || pos;
 	    
-	    if( this.type === STATIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wake();
-	    }
+	    if( this.type === STATIC ) return;
+	    if( wake && this.sleepState === SLEEPING ) this.wake();
 	    
 	    px = worldPoint.x - pos.x;
 	    py = worldPoint.y - pos.y;
@@ -121,13 +124,8 @@ define([
 	
 	PRigidBody2D.prototype.applyTorque = function( torque, wake ){
 	    
-	    if( this.type === STATIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wake();
-	    }
+	    if( this.type === STATIC ) return;
+	    if( wake && this.sleepState === SLEEPING ) this.wake();
 	    
 	    this.torque += torque;
 	};
@@ -142,13 +140,8 @@ define([
 	    
 	    worldPoint = worldPoint || pos;
 	    
-	    if( this.type === STATIC ){
-		return;
-	    }
-	    
-	    if( wake && this.sleepState === SLEEPING ){
-		this.wake();
-	    }
+	    if( this.type === STATIC ) return;
+	    if( wake && this.sleepState === SLEEPING ) this.wake();
 	    
 	    px = worldPoint.x - pos.x;
 	    py = worldPoint.y - pos.y;
@@ -157,6 +150,92 @@ define([
 	    velocity.y += iy * invMass;
 	    
 	    this.angularVelocity += ( px * iy - py * ix ) * this.invInertia;
+	};
+	
+	
+	PRigidBody2D.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.type = "PRigidbody2D";
+	    json._SERVER_ID = this._id;
+	    json.filterGroup = this.filterGroup;
+	    
+	    json.position = this.position;
+	    json.velocity = this.velocity;
+	    
+	    json.linearDamping = this.linearDamping;
+	    
+	    json.mass = this.mass;
+	    json.invMass = this.invMass;
+	    
+	    json.motionType = this.type;
+	    
+	    json.elasticity = this.elasticity;
+	    json.friction = this.friction;
+	    
+	    json.allowSleep = this.allowSleep;
+	    
+	    json.shape = this.shape.toJSON();
+	    
+	    json.rotation = this.rotation;
+	    json.R = this.R;
+	    
+	    json.angularVelocity = this.angularVelocity;
+	    
+	    json.angularDamping = this.angularDamping;
+	    
+	    json.aabb = this.aabb;
+	    json.aabbNeedsUpdate = this.aabbNeedsUpdate;
+	    
+	    json.inertia = this.inertia;
+	    json.invInertia = this.invInertia;
+	    
+	    json.density = this.density;
+	    
+	    return json;
+	};
+	
+	
+	PRigidBody2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
+	    this.filterGroup = json.filterGroup;
+	    
+	    this.position.fromJSON( json.position );
+	    this.velocity.fromJSON( json.velocity );
+	    
+	    this.linearDamping = json.linearDamping;
+	    
+	    this.mass = json.mass;
+	    this.invMass = json.invMass;
+	    
+	    this.type = json.motionType;
+	    
+	    this.elasticity = json.elasticity;
+	    this.friction = json.friction;
+	    
+	    this.allowSleep = json.allowSleep;
+	    
+	    this.shape = new objectTypes[ json.shape.type ];
+	    this.shape.fromJSON( json.shape );
+	    this.shape.body = this;
+	    
+	    this.rotation = json.rotation;
+	    this.R.fromJSON( json.R );
+	    
+	    this.angularVelocity = json.angularVelocity;
+	    
+	    this.angularDamping = json.angularDamping;
+	    
+	    this.aabb.fromJSON( json.aabb );
+	    this.aabbNeedsUpdate = json.aabbNeedsUpdate;
+	    
+	    this.inertia = json.inertia;
+	    this.invInertia = json.invInertia;
+	    
+	    this.density = json.density;
+	    
+	    return this;
 	};
 	
         

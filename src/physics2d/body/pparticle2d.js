@@ -110,6 +110,56 @@ define([
 	};
 	
 	
+	PParticle2D.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.type = "PParticle2D";
+	    json._SERVER_ID = this._id;
+	    json.filterGroup = this.filterGroup;
+	    
+	    json.position = this.position;
+	    json.velocity = this.velocity;
+	    
+	    json.linearDamping = this.linearDamping;
+	    
+	    json.mass = this.mass;
+	    json.invMass = this.invMass;
+	    
+	    json.motionType = this.type;
+	    
+	    json.elasticity = this.elasticity;
+	    json.friction = this.friction;
+	    
+	    json.allowSleep = this.allowSleep;
+	    
+	    return json;
+	};
+	
+	
+	PParticle2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
+	    this.filterGroup = json.filterGroup;
+	    
+	    this.position.fromJSON( json.position );
+	    this.velocity.fromJSON( json.velocity );
+	    
+	    this.linearDamping = json.linearDamping;
+	    
+	    this.mass = json.mass;
+	    this.invMass = json.invMass;
+	    
+	    this.type = json.motionType;
+	    
+	    this.elasticity = json.elasticity;
+	    this.friction = json.friction;
+	    
+	    this.allowSleep = json.allowSleep;
+	    
+	    return this;
+	};
+	
+	
 	PParticle2D.AWAKE = AWAKE = 1;
 	PParticle2D.SLEEPY = SLEEPY = 2;
 	PParticle2D.SLEEPING = SLEEPING = 3;

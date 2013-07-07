@@ -70,8 +70,8 @@ define([
 		    
 		    this._add( child );
 		    
-		    child.trigger("addtoscene");
-		    this.trigger("addgameobject", child );
+		    child.trigger("addToScene");
+		    this.trigger("addGameObject", child );
 		    
 		    child.init();
                 }
@@ -102,8 +102,8 @@ define([
 		    
 		    this._remove( child );
                     
-		    child.trigger("removefromscene");
-		    this.trigger("removegameobject", child );
+		    child.trigger("removeFromScene");
+		    this.trigger("removeGameObject", child );
                 }
                 else{
                     console.warn("Scene2D.remove: "+ child +" is not in scene");
@@ -127,8 +127,8 @@ define([
 		
 		this._remove( child );
                 
-		child.trigger("removefromscene");
-		this.trigger("removegameobject", child );
+		child.trigger("removeFromScene");
+		this.trigger("removeGameObject", child );
             }
         };
         
@@ -186,7 +186,7 @@ define([
 	
 	Scene2D.prototype.sort = function( a, b ){
 	    
-	    return a.gameObject.z - b.gameObject.z;
+	    return b.gameObject.z - a.gameObject.z;
 	};
 	
         
@@ -215,10 +215,35 @@ define([
             for( i = children.length; i--; ){
                 child = children[i];
                 
-                if( child.name === name ){
-                    
-                    return child;
-                }
+                if( child.name === name ) return child;
+            }
+            
+            return undefined;
+        };
+        
+        
+        Scene2D.prototype.findById = function( id ){
+            var children = this.children,
+                child, i;
+            
+            for( i = children.length; i--; ){
+                child = children[i];
+                
+                if( child._id === id ) return child;
+            }
+            
+            return undefined;
+        };
+        
+        
+        Scene2D.prototype.findByServerId = function( id ){
+            var children = this.children,
+                child, i;
+            
+            for( i = children.length; i--; ){
+                child = children[i];
+                
+                if( child._SERVER_ID === id ) return child;
             }
             
             return undefined;
@@ -236,7 +261,7 @@ define([
                 children[i].update();
             }
             
-            this.trigger("update");
+            this.trigger("lateUpdate");
         };
         
         
@@ -247,6 +272,7 @@ define([
 	    
 	    json.type = "Scene2D";
 	    json.name = this.name;
+	    json._SERVER_ID = this._id;
 	    json.world = this.world.toJSON();
 	    
 	    json.children = json.children || [];
@@ -265,6 +291,7 @@ define([
 		i;
 	    
 	    this.name = json.name;
+	    this._SERVER_ID = json._SERVER_ID;
 	    this.world.fromJSON( json.world );
 	    
 	    this.clear();

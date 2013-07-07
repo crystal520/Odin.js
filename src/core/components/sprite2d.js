@@ -16,7 +16,7 @@ define([
 	    
             Renderable2D.call( this, opts );
 	    
-	    this.image = opts.image instanceof Image ? opts.image : undefined;
+	    this.image = opts.image !== undefined ? opts.image : "default";
 	    
 	    this.width = opts.width || 1;
 	    this.height = opts.height || 1;
@@ -33,23 +33,62 @@ define([
 		]
 	    };
 	    
-	    this.animation = this.animations["idle"];
+	    this.animation = "idle";
 	    
 	    this.mode = Sprite2D.loop;
 	    
 	    this._last = 0;
 	    this._frame = 0
 	    
-	    this.playing = this.animation !== undefined ? true : false;
+	    this.playing = this.animations[ this.animation ] !== undefined ? true : false;
+	    this.calculateSprite();
         }
         
 	Class.extend( Sprite2D, Renderable2D );
+        
+	
+	Sprite2D.prototype.copy = function( other ){
+	    var animations = other.animations,
+		animation, key, value, i;
+	    
+	    Renderable2D.call( this, other );
+	    
+	    this.image = other.image;
+	    
+	    this.width = other.width;
+	    this.height = other.height;
+	    
+            this.x = other.x;
+            this.y = other.y;
+            
+            this.w = other.w;
+            this.h = other.h;
+	    
+	    for( key in animations ){
+		value = animations[ key ];
+		
+		for( i = value.length; i--; ){
+		    this.animations[key][i] = value[i];
+		}
+	    }
+	    
+	    this.animation = this.animations["idle"];
+	    
+	    this.mode = other.mode;
+	    
+	    this._last = other._last;
+	    this._frame = other._frame;
+	    
+	    this.playing = other.playing;
+	    
+	    return this;
+	};
 	
 	
 	Sprite2D.prototype.play = function( name, mode ){
 	    
-	    if( this.playing && this.animation === this.animations[ name ] ){
-		this.animation = this.animations[ name ];
+	    if( this.animations[ name ] ){
+		this.animation = name;
 		
 		switch( mode ){
 		    
@@ -74,6 +113,9 @@ define([
 		
 		this.playing = true;
 	    }
+	    else{
+		console.warn("Sprite2D.play: no animation with name "+ name );
+	    }
 	};
 	
 	
@@ -84,12 +126,12 @@ define([
 	
 	
 	Sprite2D.prototype.update = function(){
-	    var animation = this.animation,
+	    var animation = this.animations[ this.animation ],
 		currentFrame = animation[ this._frame ],
 		rate = currentFrame[4],
 		currentFrame;
 	    
-	    if( animation && this.playing ){
+	    if( this.playing ){
 		
 		if( this._last + ( rate / Time.scale ) <= Time.time ){
 		    this._last = Time.time;
@@ -120,9 +162,11 @@ define([
         Sprite2D.prototype.toJSON = function(){
             var json = this._JSON,
 		animations = this.animations,
-		animation, i, jl;
+		animation, i, j;
 	    
 	    json.type = "Sprite2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -135,7 +179,7 @@ define([
 	    json.lineColor = this.lineColor;
 	    json.lineWidth = this.lineWidth;
 	    
-	    json.image = this.image.src;
+	    json.image = this.image;
 	    
 	    json.x = this.x;
 	    json.y = this.y;
@@ -148,8 +192,8 @@ define([
 		json.animations[i] = json.animations[i] || [];
 		animation = animations[i];
 		
-		for( j = 0, jl = animation.length; j < jl; j++ ){
-		    json.animations[i][j] = animation[i];
+		for( j = animation.length; j--; ){
+		    json.animations[i][j] = animation[j];
 		}
 	    }
 	    
@@ -165,7 +209,9 @@ define([
         
         Sprite2D.prototype.fromJSON = function( json ){
 	    var animations = json.animations,
-		animation, i, j, jl;
+		animation, i, j;
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );
@@ -179,7 +225,7 @@ define([
 	    this.lineColor.fromJSON( json.lineColor );
 	    this.lineWidth = json.lineWidth;
 	    
-	    this.image.src = json.image;
+	    this.image = json.image;
 	    
 	    this.x = json.x;
 	    this.y = json.y;
@@ -190,8 +236,8 @@ define([
 		this.animations[i] = animations[i];
 		animation = animations[i];
 		
-		for( j = 0, jl = animation.length; j < jl; j++ ){
-		    this.animations[i][j] = animation[i];
+		for( j = animation.length; j--; ){
+		    this.animations[i][j] = animation[j];
 		}
 	    }
 	    

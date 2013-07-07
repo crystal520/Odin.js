@@ -15,9 +15,9 @@ define([
 	var PI = Math.PI,
 	    TWO_PI = PI * 2,
 	    HALF_PI = PI * 0.5,
-	    defaultImg = new Image;
-	    defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+	    defaultImage = new Image;
 	
+	defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
 	
         function CanvasRenderer2D( opts ){
             opts || ( opts = {} );
@@ -34,6 +34,12 @@ define([
             this.autoClear = opts.autoClear !== undefined ? opts.autoClear : true;
 	    
             this.context = Dom.get2DContext( this.canvas.element );
+	    
+	    this._data = {
+		images: {
+		    "default": defaultImage
+		}
+	    };
         }
         
 	Class.extend( CanvasRenderer2D, Class );
@@ -65,7 +71,7 @@ define([
 		    ctx = this.context,
 		    renderable, renderables = scene._renderables,
 		    rigidbody, rigidbodies = scene._rigidbodies,
-		    i, il;
+		    i;
 		
 		if( !lastBackground.equals( background ) ){
 		    this.setClearColor( background );
@@ -107,26 +113,20 @@ define([
 		    lastCamera = camera;
 		}
 		
-		if( this.autoClear ){
-		    this.clear();
-		}
+		if( this.autoClear ) this.clear();
 		
 		if( this.debug ){
-		    for( i = 0, il = rigidbodies.length; i < il; i++ ){
+		    for( i = rigidbodies.length; i--; ){
 			rigidbody = rigidbodies[i];
 			
-			if( rigidbody.visible ){
-			    this.renderComponent( rigidbody, camera );
-			}
+			if( rigidbody.visible ) this.renderComponent( rigidbody, camera );
 		    }
 		}
 		
-		for( i = 0, il = renderables.length; i < il; i++ ){
+		for( i = renderables.length; i--; ){
 		    renderable = renderables[i];
 		    
-		    if( renderable.visible ){
-			this.renderComponent( renderable, camera );
-		    }
+		    if( renderable.visible ) this.renderComponent( renderable, camera );
 		}
 	    };
         }();
@@ -138,14 +138,27 @@ define([
 	    
 	    return function( component, camera ){
 		var ctx = this.context,
+		    images = this._data.images,
 		    gameObject = component.gameObject,
 		    offset = component.offset,
-		    image = component.image || defaultImg,
+		    imageSrc = component.image,
 		    radius = component.radius,
 		    extents = component.extents,
 		    vertices = component.vertices,
 		    body = component.body, sleepState,
+		    image = images[ imageSrc ],
 		    vertex, x, y, i;
+		
+		if( !image && imageSrc ){
+		    if( imageSrc === "default" ){
+			image = images["default"];
+		    }
+		    else{
+			image = new Image();
+			image.src = imageSrc;
+			images[ imageSrc ] = image;
+		    }
+		}
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
 		modelViewProj.mmul( gameObject.matrixModelView, camera.matrixProjection );

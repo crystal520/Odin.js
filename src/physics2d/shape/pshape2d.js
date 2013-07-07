@@ -53,6 +53,35 @@ define([
 	};
 	
 	
+	PShape2D.prototype.toJSON = function(){
+	    var json = this._JSON;
+	    
+	    json.type = "PShape2D";
+	    json._SERVER_ID = this._id;
+	    
+	    json.shapeType = this.type;
+	    
+	    json.aabb = this.aabb;
+	    json.volume = this.volume;
+	    json.boundingRadius = this.boundingRadius;
+	    
+	    return json;
+	};
+	
+	
+	PShape2D.prototype.fromJSON = function( json ){
+	    
+	    this.type = json.shapeType;
+	    this._SERVER_ID = json._SERVER_ID;
+	    
+	    this.aabb.fromJSON( json.aabb );
+	    this.volume = json.volume;
+	    this.boundingRadius = json.boundingRadius;
+	    
+	    return this;
+	};
+	
+	
 	PShape2D.BOX = 1;
 	PShape2D.CIRCLE = 2;
 	PShape2D.CONVEX = 3;

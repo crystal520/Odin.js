@@ -8,6 +8,7 @@ define(
         
 	function Time(){
 	    
+	    this._startTime = Date.now() * 0.001;
 	    this._offset = 0;
 	    
 	    this.sinceStart = 0;

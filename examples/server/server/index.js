@@ -11,35 +11,60 @@ requirejs(
         Odin.globalize();
         
         var game = new ServerGame({
-            host: "192.168.1.181",
+            host: "127.0.0.1",
             port: 3000,
             debug: true
         });
         
         game.on("init", function(){
-            var scene = new Scene2D;
+            var scene = new Scene2D,
+                vec = new Vec2;
             
             
             scene.add(
                 new GameObject2D({
+                    position: new Vec2( 0, -1 ),
                     components: [
                         new Box2D({
-                            color: new Color("#ff0000"),
-                            extents: new Vec2( 0.5, 0.5 )
+                            color: new Color("#000000"),
+                            extents: new Vec2( 8, 0.5 )
+                        }),
+                        new RigidBody2D({
+                            mass: 0,
+                            extents: new Vec2( 8, 0.5 )
                         })
                     ]
                 })
             );
             
             
-            this.on("connected", function( id ){
+            this.on("connection", function( id ){
                 var client = this.clients[ id ],
-                    position = new Vec2( Mathf.randFloat( -4, 4 ), Mathf.randFloat( -4, 4 ) ),
+                    userData = client.userData,
+                    position = new Vec2( Mathf.randFloat( -6, 6 ), Mathf.randFloat( 0, 2 ) ),
                     player = new GameObject2D({
                         position: position,
-                        userData: id,
+                        userData: userData,
                         components: [
-                            new Circle2D({
+                            new Sprite2D({
+                                image: "../assets/player.png",
+                                x: 0,
+                                y: 0,
+                                w: 64,
+                                h: 64,
+                                width: 1,
+                                height: 1,
+                                animations: {
+                                    idle: [
+                                        [ 0, 0, 64, 64, 0.25 ],
+                                        [ 64, 0, 64, 64, 0.5 ],
+                                        [ 128, 0, 64, 64, 1 ],
+                                        [ 192, 0, 64, 64, 0.1 ]
+                                    ]
+                                }
+                            }),
+                            new RigidBody2D({
+                                mass: 1,
                                 radius: 0.5
                             })
                         ]
@@ -49,36 +74,48 @@ requirejs(
                     });
                 
                 scene.add( player, camera );
+                userData.player = player;
+                userData.speed = 2;
+                userData.jump = 3;
+                userData.canJump = false;
                 
-                client.player = player.name;
+                player.components.RigidBody2D.on("collide", function( body, time ){
+                    player.userData.canJump = true;
+                })
                 
                 client.on("keydown", function( key ){
-                    var name = key.name;
+                    var userData = this.userData,
+                        body = userData.player.components.RigidBody2D.body,
+                        speed = userData.speed,
+                        jump = userData.jump,
+                        name = key.name;
                     
                     if( name === "up" ){
-                        player.position.y += 0.01;
-                    }
-                    if( name === "down" ){
-                        player.position.y -= 0.01;
+                        if( userData.canJump ){
+                            body.applyImpulse( vec.set( 0, jump ), body.position, true );
+                            userData.canJump = false;
+                        }
                     }
                     if( name === "right" ){
-                        player.position.x += 0.01;
+                        body.applyTorque( -speed, true );
                     }
                     if( name === "left" ){
-                        player.position.x -= 0.01;
+                        body.applyTorque( speed, true );
                     }
+                });
+                client.on("mousemove", function( mouse ){
+                    
                 });
                 
                 this.setScene( client, scene );
-                this.setCamera( client, scene, camera );
+                this.setCamera( client, camera );
             });
             
             
             this.on("disconnect", function( id ){
                 var client = this.clients[ id ],
-                    scene = this.findSceneByName( client.scene ),
-                    player = scene.findByName( client.player ),
-                    camera = scene.findByName( client.camera );
+                    player = client.scene.findById( client.userData.player._id ),
+                    camera = client.scene.findById( client.camera._id );
                 
                 scene.remove( player, camera );
             });

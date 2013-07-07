@@ -43,14 +43,6 @@ define([
 	Class.extend( Transform2D, Class );
         
         
-        Transform2D.prototype.clone = function(){
-            var clone = new Transform2D;
-	    clone.copy( this );
-	    
-            return clone;
-        };
-        
-        
         Transform2D.prototype.copy = function( other ){
 	    var children = other.children,
 		child, i;
@@ -101,7 +93,7 @@ define([
                     child.root = root;
                     
                     child.trigger("add");
-                    this.trigger("addchild", child );
+                    this.trigger("addChild", child );
                 }
             }
             
@@ -132,7 +124,7 @@ define([
                     child.root = root;
                     
                     child.trigger("remove" );
-                    this.trigger("removechild", child );
+                    this.trigger("removeChild", child );
                 }
             }
             
@@ -309,6 +301,7 @@ define([
 		children = this.children, i;
 	    
 	    json.type = "Transform2D";
+	    json._SERVER_ID = this._id;
 	    json.children = json.children || [];
 	    
 	    for( i = children.length; i--; ){
@@ -327,6 +320,8 @@ define([
 	    var children = json.children,
 		jsonObject, object,
 		i;
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
 	    for( i = children.length; i--; ){
 		jsonObject = children[i];

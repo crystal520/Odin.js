@@ -35,15 +35,112 @@ define([
 	    this.line = opts.line !== undefined ? !!opts.line : false;
 	    this.lineColor = opts.lineColor instanceof Color ? opts.lineColor : new Color;
 	    this.lineWidth = opts.lineWidth !== undefined ? opts.lineWidth : 0.01;
+	    
+	    this._data = {
+		vertices: [],
+		vertexBuffer: undefined,
+		indices: [],
+		indexBuffer: undefined,
+	    };
         }
         
 	Class.extend( Renderable2D, Component );
+        
+	
+	Renderable2D.prototype.calculateSprite = function(){
+	    var data = this._data,
+		w = this.width * 0.5,
+		h = this.height * 0.5,
+		vertices = data.vertices,
+		indices = data.indices;
+	    
+	    vertices.push(
+		w, h,
+		-w, h,
+		-w, -h,
+		w, -h
+	    );
+	    
+	    indices.push(
+		0, 1, 2,
+		0, 2, 3
+	    );
+	};
+        
+	
+	Renderable2D.prototype.calculateBox = function(){
+	    var data = this._data,
+		extents = this.extents,
+		w = extents.x, h = extents.y,
+		vertices = data.vertices,
+		indices = data.indices;
+	    
+	    vertices.push(
+		w, h,
+		-w, h,
+		-w, -h,
+		w, -h
+	    );
+	    
+	    indices.push(
+		0, 1, 2,
+		0, 2, 3
+	    );
+	};
+        
+	
+	Renderable2D.prototype.calculateCircle = function(){
+	    var data = this._data,
+		radius = this.radius,
+		vertices = data.vertices,
+		indices = data.indices,
+		step = TWO_PI / ( radius * 32 ),
+		c, s, i;
+	    
+	    for( i = 0; i < TWO_PI; i += step ){
+		vertices.push( cos(i) * radius, sin(i) * radius );
+	    }
+	};
+        
+	
+	Renderable2D.prototype.calculatePoly = function(){
+	    var data = this._data,
+		tvertices = this.vertices,
+		vertices = data.vertices,
+		indices = data.indices,
+		vertex, i;
+	    
+	    for( i = 0, il = tvertices.length; i < il; i++ ){
+		vertex = tvertices[i];
+		vertices.push( vertex.x, vertex.y );
+	    }
+	};
+        
+	
+	Renderable2D.prototype.copy = function( other ){
+	    
+	    this.visible = other.visible;
+	    this.offset.copy( other.offset );
+	    
+	    this.alpha = other.alpha;
+	    
+	    this.fill = other.fill;
+	    this.color.copy( other.color );
+	    
+	    this.line = other.line;
+	    this.lineColor.copy( other.lineColor );
+	    this.lineWidth = other.lineWidth;
+	    
+	    return this;
+	};
         
         
         Renderable2D.prototype.toJSON = function(){
             var json = this._JSON;
 	    
 	    json.type = "Renderable2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -61,6 +158,8 @@ define([
         
         
         Renderable2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );

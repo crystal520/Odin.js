@@ -16,15 +16,28 @@ define([
             Renderable2D.call( this, opts );
 	    
 	    this.extents = opts.extents instanceof Vec2 ? opts.extents : new Vec2( 0.5, 0.5 );
+	    this.calculateBox();
         }
         
 	Class.extend( Box2D, Renderable2D );
         
+	
+	Box2D.prototype.copy = function( other ){
+	    
+	    Renderable2D.call( this, other );
+	    
+	    this.extents.copy( other.extents );
+	    
+	    return this;
+	};
+	
         
         Box2D.prototype.toJSON = function(){
             var json = this._JSON;
 	    
 	    json.type = "Box2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -44,6 +57,8 @@ define([
         
         
         Box2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );

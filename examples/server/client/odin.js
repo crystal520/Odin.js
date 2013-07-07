@@ -884,8 +884,17 @@ define("base/class", [], function() {
         this._class = this.constructor.name;
         this._events = {};
         this._JSON = {};
+        this._SERVER_ID = -1;
     }
     var id = 0, slice = Array.prototype.slice;
+    Class.prototype.clone = function() {
+        var clone = new this.constructor();
+        clone.copy(this);
+        return clone;
+    };
+    Class.prototype.copy = function() {
+        return this;
+    };
     Class.prototype.on = function(name, callback, context) {
         var events = this._events[name] || (this._events[name] = []);
         events.push({
@@ -924,9 +933,11 @@ define("base/class", [], function() {
     Class.prototype.fromJSON = function() {
         return this;
     };
+    Class.prototype._super = void 0;
     Class.extend = function(child, parent) {
         var key, parentProto = parent.prototype, childProto = child.prototype = Object.create(parentProto);
         for (key in parentProto) childProto[key] = parentProto[key];
+        childProto._super = parent;
         childProto.constructor = child;
     };
     return Class;
@@ -1094,6 +1105,7 @@ if ("function" != typeof define) var define = require("amdefine")(module);
 
 define("base/time", [], function() {
     function Time() {
+        this._startTime = .001 * Date.now();
         this._offset = 0;
         this.sinceStart = 0;
         this.time = 0;
@@ -4431,6 +4443,18 @@ define("physics2d/body/pbody2d", [ "base/class" ], function(Class) {
         this.userData = void 0;
     }
     Class.extend(PBody2D, Class);
+    PBody2D.prototype.toJSON = function() {
+        var json = this._JSON;
+        json.type = "PBody2D";
+        json._SERVER_ID = this._id;
+        json.filterGroup = this.filterGroup;
+        return json;
+    };
+    PBody2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
+        this.filterGroup = json.filterGroup;
+        return this;
+    };
     PBody2D.DYNAMIC = 1;
     PBody2D.STATIC = 2;
     PBody2D.KINEMATIC = 3;
@@ -4489,6 +4513,36 @@ define("physics2d/body/pparticle2d", [ "base/class", "math/vec2", "physics2d/bod
             } else sleepState === SLEEPY && velSq > sleepVelSq ? this.wake() : sleepState === SLEEPY && time - this._sleepLastSleepy > this._sleepTimeLimit && this.sleep();
         }
     };
+    PParticle2D.prototype.toJSON = function() {
+        var json = this._JSON;
+        json.type = "PParticle2D";
+        json._SERVER_ID = this._id;
+        json.filterGroup = this.filterGroup;
+        json.position = this.position;
+        json.velocity = this.velocity;
+        json.linearDamping = this.linearDamping;
+        json.mass = this.mass;
+        json.invMass = this.invMass;
+        json.motionType = this.type;
+        json.elasticity = this.elasticity;
+        json.friction = this.friction;
+        json.allowSleep = this.allowSleep;
+        return json;
+    };
+    PParticle2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
+        this.filterGroup = json.filterGroup;
+        this.position.fromJSON(json.position);
+        this.velocity.fromJSON(json.velocity);
+        this.linearDamping = json.linearDamping;
+        this.mass = json.mass;
+        this.invMass = json.invMass;
+        this.type = json.motionType;
+        this.elasticity = json.elasticity;
+        this.friction = json.friction;
+        this.allowSleep = json.allowSleep;
+        return this;
+    };
     PParticle2D.AWAKE = AWAKE = 1;
     PParticle2D.SLEEPY = SLEEPY = 2;
     PParticle2D.SLEEPING = SLEEPING = 3;
@@ -4521,6 +4575,24 @@ define("physics2d/shape/pshape2d", [ "base/class", "math/vec2", "math/aabb2" ], 
     };
     PShape2D.prototype.calculateVolume = function() {
         throw Error("calculateVolume not implemented for shape type " + this.type);
+    };
+    PShape2D.prototype.toJSON = function() {
+        var json = this._JSON;
+        json.type = "PShape2D";
+        json._SERVER_ID = this._id;
+        json.shapeType = this.type;
+        json.aabb = this.aabb;
+        json.volume = this.volume;
+        json.boundingRadius = this.boundingRadius;
+        return json;
+    };
+    PShape2D.prototype.fromJSON = function(json) {
+        this.type = json.shapeType;
+        this._SERVER_ID = json._SERVER_ID;
+        this.aabb.fromJSON(json.aabb);
+        this.volume = json.volume;
+        this.boundingRadius = json.boundingRadius;
+        return this;
     };
     PShape2D.BOX = 1;
     PShape2D.CIRCLE = 2;
@@ -4630,6 +4702,31 @@ define("physics2d/shape/pconvex2d", [ "base/class", "math/vec2", "physics2d/shap
         }
         this.volume = volume;
     };
+    PConvex2D.prototype.toJSON = function() {
+        var i, json = this._JSON, vertices = this.vertices, normals = this.normals;
+        json.type = "PConvex2D";
+        json._SERVER_ID = this._id;
+        json.shapeType = this.type;
+        json.aabb = this.aabb;
+        json.volume = this.volume;
+        json.boundingRadius = this.boundingRadius;
+        json.vertices = json.vertices || [];
+        json.normals = json.normals || [];
+        for (i = vertices.length; i--; ) json.vertices[i] = vertices[i];
+        for (i = normals.length; i--; ) json.normals[i] = normals[i];
+        return json;
+    };
+    PConvex2D.prototype.fromJSON = function(json) {
+        var i, vertices = json.vertices, normals = json.normals;
+        this.type = json.shapeType;
+        this._SERVER_ID = json._SERVER_ID;
+        this.aabb.fromJSON(json.aabb);
+        this.volume = json.volume;
+        this.boundingRadius = json.boundingRadius;
+        for (i = vertices.length; i--; ) this.vertices[i] = (this.vertices[i] || new Vec2()).copy(vertices[i]);
+        for (i = normals.length; i--; ) this.normals[i] = (this.normals[i] || new Vec2()).copy(normals[i]);
+        return this;
+    };
     return PConvex2D;
 });
 
@@ -4666,12 +4763,98 @@ define("physics2d/shape/pbox2d", [ "base/class", "math/vec2", "physics2d/shape/p
         var extents = this.extents, w = 2 * extents.x, h = 2 * extents.y;
         this.volume = w * h;
     };
+    PBox2D.prototype.toJSON = function() {
+        var i, json = this._JSON, vertices = this.vertices, normals = this.normals;
+        json.type = "PBox2D";
+        json._SERVER_ID = this._id;
+        json.shapeType = this.type;
+        json.aabb = this.aabb;
+        json.volume = this.volume;
+        json.boundingRadius = this.boundingRadius;
+        json.vertices = json.vertices || [];
+        json.normals = json.normals || [];
+        for (i = vertices.length; i--; ) json.vertices[i] = vertices[i];
+        for (i = normals.length; i--; ) json.normals[i] = normals[i];
+        json.extents = this.extents;
+        return json;
+    };
+    PBox2D.prototype.fromJSON = function(json) {
+        var i, vertices = json.vertices, normals = json.normals;
+        this.type = json.shapeType;
+        this._SERVER_ID = json._SERVER_ID;
+        this.aabb.fromJSON(json.aabb);
+        this.volume = json.volume;
+        this.boundingRadius = json.boundingRadius;
+        for (i = vertices.length; i--; ) this.vertices[i] = (this.vertices[i] || new Vec2()).copy(vertices[i]);
+        for (i = normals.length; i--; ) this.normals[i] = (this.normals[i] || new Vec2()).copy(normals[i]);
+        this.extents = json.extents;
+        return this;
+    };
     return PBox2D;
 });
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("physics2d/body/prigidbody2d", [ "base/class", "math/vec2", "math/mat2", "math/aabb2", "physics2d/body/pbody2d", "physics2d/body/pparticle2d", "physics2d/shape/pshape2d", "physics2d/shape/pbox2d" ], function(Class, Vec2, Mat2, AABB2, PBody2D, PParticle2D, PShape2D, PBox2D) {
+define("physics2d/shape/pcircle2d", [ "base/class", "math/vec2", "physics2d/shape/pshape2d" ], function(Class, Vec2, PShape2D) {
+    function PCircle2D(radius) {
+        PShape2D.call(this);
+        this.type = PShape2D.CIRCLE;
+        this.radius = void 0 !== radius ? radius : .5;
+        this.calculateAABB();
+        this.calculateBoundingRadius();
+        this.calculateVolume();
+    }
+    var PI = Math.PI;
+    Class.extend(PCircle2D, PShape2D);
+    PCircle2D.prototype.calculateAABB = function() {
+        var r = this.radius, aabb = this.aabb, min = aabb.min, max = aabb.max;
+        min.x = min.y = -r;
+        max.x = max.y = r;
+    };
+    PCircle2D.prototype.calculateWorldAABB = function(position, rotation, aabb) {
+        var r = this.radius, min = aabb.min, max = aabb.max, x = position.x, y = position.y;
+        min.x = x - r;
+        min.y = y - r;
+        max.x = x + r;
+        max.y = r + y;
+    };
+    PCircle2D.prototype.calculateInertia = function(mass) {
+        var r = this.radius;
+        return .4 * mass * r * r;
+    };
+    PCircle2D.prototype.calculateBoundingRadius = function() {
+        this.boundingRadius = this.radius;
+    };
+    PCircle2D.prototype.calculateVolume = function() {
+        var r = this.radius;
+        this.volume = PI * r * r;
+    };
+    PCircle2D.prototype.toJSON = function() {
+        var json = this._JSON;
+        json.type = "PCircle2D";
+        json._SERVER_ID = this._id;
+        json.shapeType = this.type;
+        json.aabb = this.aabb;
+        json.volume = this.volume;
+        json.boundingRadius = this.boundingRadius;
+        json.radius = this.radius;
+        return json;
+    };
+    PCircle2D.prototype.fromJSON = function(json) {
+        this.type = json.shapeType;
+        this._SERVER_ID = json._SERVER_ID;
+        this.aabb.fromJSON(json.aabb);
+        this.volume = json.volume;
+        this.boundingRadius = json.boundingRadius;
+        this.radius = json.radius;
+        return this;
+    };
+    return PCircle2D;
+});
+
+if ("function" != typeof define) var define = require("amdefine")(module);
+
+define("physics2d/body/prigidbody2d", [ "base/class", "math/vec2", "math/mat2", "math/aabb2", "physics2d/body/pbody2d", "physics2d/body/pparticle2d", "physics2d/shape/pbox2d", "physics2d/shape/pcircle2d", "physics2d/shape/pconvex2d", "physics2d/shape/pshape2d" ], function(Class, Vec2, Mat2, AABB2, PBody2D, PParticle2D, PBox2D, PCircle2D, PConvex2D, PShape2D) {
     function PRigidBody2D(opts) {
         opts || (opts = {});
         PParticle2D.call(this, opts);
@@ -4690,7 +4873,12 @@ define("physics2d/body/prigidbody2d", [ "base/class", "math/vec2", "math/mat2", 
         this.wlambda = 0;
         this._sleepAngularVelocity = .001;
     }
-    var AWAKE = PParticle2D.AWAKE, SLEEPY = PParticle2D.SLEEPY, SLEEPING = PParticle2D.SLEEPING, STATIC = (PBody2D.DYNAMIC, 
+    var objectTypes = {
+        PBox2D: PBox2D,
+        PCircle2D: PCircle2D,
+        PConvex2D: PConvex2D,
+        PShape2D: PShape2D
+    }, AWAKE = PParticle2D.AWAKE, SLEEPY = PParticle2D.SLEEPY, SLEEPING = PParticle2D.SLEEPING, STATIC = (PBody2D.DYNAMIC, 
     PBody2D.STATIC);
     PBody2D.KINEMATIC;
     Class.extend(PRigidBody2D, PParticle2D);
@@ -4737,6 +4925,58 @@ define("physics2d/body/prigidbody2d", [ "base/class", "math/vec2", "math/mat2", 
             velocity.y += iy * invMass;
             this.angularVelocity += (px * iy - py * ix) * this.invInertia;
         }
+    };
+    PRigidBody2D.prototype.toJSON = function() {
+        var json = this._JSON;
+        json.type = "PRigidbody2D";
+        json._SERVER_ID = this._id;
+        json.filterGroup = this.filterGroup;
+        json.position = this.position;
+        json.velocity = this.velocity;
+        json.linearDamping = this.linearDamping;
+        json.mass = this.mass;
+        json.invMass = this.invMass;
+        json.motionType = this.type;
+        json.elasticity = this.elasticity;
+        json.friction = this.friction;
+        json.allowSleep = this.allowSleep;
+        json.shape = this.shape.toJSON();
+        json.rotation = this.rotation;
+        json.R = this.R;
+        json.angularVelocity = this.angularVelocity;
+        json.angularDamping = this.angularDamping;
+        json.aabb = this.aabb;
+        json.aabbNeedsUpdate = this.aabbNeedsUpdate;
+        json.inertia = this.inertia;
+        json.invInertia = this.invInertia;
+        json.density = this.density;
+        return json;
+    };
+    PRigidBody2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
+        this.filterGroup = json.filterGroup;
+        this.position.fromJSON(json.position);
+        this.velocity.fromJSON(json.velocity);
+        this.linearDamping = json.linearDamping;
+        this.mass = json.mass;
+        this.invMass = json.invMass;
+        this.type = json.motionType;
+        this.elasticity = json.elasticity;
+        this.friction = json.friction;
+        this.allowSleep = json.allowSleep;
+        this.shape = new objectTypes[json.shape.type]();
+        this.shape.fromJSON(json.shape);
+        this.shape.body = this;
+        this.rotation = json.rotation;
+        this.R.fromJSON(json.R);
+        this.angularVelocity = json.angularVelocity;
+        this.angularDamping = json.angularDamping;
+        this.aabb.fromJSON(json.aabb);
+        this.aabbNeedsUpdate = json.aabbNeedsUpdate;
+        this.inertia = json.inertia;
+        this.invInertia = json.invInertia;
+        this.density = json.density;
+        return this;
     };
     return PRigidBody2D;
 });
@@ -4799,23 +5039,74 @@ define("physics2d/collision/pnearphase2d", [ "base/class", "math/mathf", "math/v
         contacts.push(c);
         return c;
     }
-    function findEdgeIndex(si, sj, xi, xj, Ri, Rj) {
-        var normal, x, y, nx, ny, d, i, verticesi = si.vertices, normalsi = si.normals, counti = verticesi.length, verticesj = sj.vertices, Ri11 = (sj.normals, 
+    function findMaxSeparation(si, sj, xi, xj, Ri, Rj, edgeOut) {
+        var normal, d, s, sPrev, sNext, prevEdge, nextEdge, bestSeparation, i, verticesi = si.vertices, normalsi = si.normals, counti = verticesi.length, verticesj = sj.vertices, Ri11 = (sj.normals, 
         verticesj.length, Ri[0]), Ri12 = Ri[2], Ri21 = Ri[1], Ri22 = Ri[3], xix = (Rj[0], 
-        Rj[2], Rj[1], Rj[3], xi.x), xiy = xi.y, xjx = xj.x, xjy = xj.y, dx = xjx - xix, dy = xjy - xiy, dmax = -1/0, edgeIndex = 0;
+        Rj[2], Rj[1], Rj[3], xi.x), xiy = xi.y, xjx = xj.x, xjy = xj.y, dx = xjx - xix, dy = xjy - xiy, localx = dx * Ri11 + dy * Ri12, localy = dx * Ri21 + dy * Ri22, dmax = -1/0, edgeIndex = 0, bestEdge = 0, increment = 0;
         for (i = counti; i--; ) {
             normal = normalsi[i];
-            x = normal.x;
-            y = normal.y;
-            nx = x * Ri11 + y * Ri12;
-            ny = x * Ri21 + y * Ri22;
-            d = nx * dx + ny * dy;
+            d = normal.x * localx + normal.y * localy;
             if (d > dmax) {
                 dmax = d;
                 edgeIndex = i;
             }
         }
-        return edgeIndex;
+        s = edgeSeparation(si, sj, xi, xj, Ri, Rj, edgeIndex);
+        if (s > 0) return s;
+        prevEdge = edgeIndex - 1 > -1 ? edgeIndex - 1 : counti - 1;
+        sPrev = edgeSeparation(si, sj, xi, xj, Ri, Rj, prevEdge);
+        if (sPrev > 0) return sPrev;
+        nextEdge = counti > edgeIndex + 1 ? edgeIndex + 1 : 0;
+        sNext = edgeSeparation(si, sj, xi, xj, Ri, Rj, nextEdge);
+        if (sNext > 0) return sNext;
+        if (sPrev > s && sPrev > sNext) {
+            increment = -1;
+            bestEdge = prevEdge;
+            bestSeparation = sPrev;
+        } else {
+            if (!(sNext > s)) {
+                edgeOut[0] = edgeIndex;
+                return s;
+            }
+            increment = 1;
+            bestEdge = nextEdge;
+            bestSeparation = sNext;
+        }
+        for (;;) {
+            edgeIndex = -1 === increment ? bestEdge - 1 > -1 ? bestEdge - 1 : counti - 1 : counti > bestEdge + 1 ? bestEdge + 1 : 0;
+            s = edgeSeparation(si, sj, xi, xj, Ri, Rj, edgeIndex);
+            if (s > 0) return s;
+            if (!(s > bestSeparation)) break;
+            bestEdge = edgeIndex;
+            bestSeparation = s;
+        }
+        edgeOut[0] = bestEdge;
+        return bestSeparation;
+    }
+    function edgeSeparation(si, sj, xi, xj, Ri, Rj, edgeIndexi) {
+        var vertex, x, y, vx, vy, v1x, v1y, v2x, v2y, d, i, verticesj = sj.vertices, Ri11 = Ri[0], Ri12 = Ri[2], Ri21 = Ri[1], Ri22 = Ri[3], Rj11 = Rj[0], Rj12 = Rj[2], Rj21 = Rj[1], Rj22 = Rj[3], xix = xi.x, xiy = xi.y, xjx = xj.x, xjy = xj.y, normal = si.normals[edgeIndexi], x = normal.x, y = normal.y, nx = x * Ri11 + y * Ri12, ny = x * Ri21 + y * Ri22, edgeIndexj = 0, dmax = -1/0;
+        for (i = verticesj.length; i--; ) {
+            vertex = verticesj[i];
+            x = vertex.x;
+            y = vertex.y;
+            vx = xjx + (x * Rj11 + y * Rj12);
+            vy = xjy + (x * Rj21 + y * Rj22);
+            d = vx * -nx + vy * -ny;
+            if (d > dmax) {
+                dmax = d;
+                edgeIndexj = i;
+                v2x = vx;
+                v2y = vy;
+            }
+        }
+        vertex = si.vertices[edgeIndexi];
+        x = vertex.x;
+        y = vertex.y;
+        v1x = xix + (x * Ri11 + y * Ri12);
+        v1y = xiy + (x * Ri21 + y * Ri22);
+        v2x -= v1x;
+        v2y -= v1y;
+        return v2x * nx + v2y * ny;
     }
     function findEdge(si, xi, Ri, edgeIndex, edge) {
         var vertex, x, y, v1x, v1y, v2x, v2y, vertices = si.vertices, count = vertices.length, Ri11 = Ri[0], Ri12 = Ri[2], Ri21 = Ri[1], Ri22 = Ri[3], xix = xi.x, xiy = xi.y;
@@ -4849,43 +5140,79 @@ define("physics2d/collision/pnearphase2d", [ "base/class", "math/mathf", "math/v
         }
     };
     PNearphase2D.prototype.convexConvex = function() {
-        var edgei = (new Vec2(), new Vec2(), new Line2()), edgej = new Line2(), tmp1 = new Vec2(), tmp2 = new Vec2();
+        var edgei = new Line2(), edgej = new Line2(), edgeOuti = [ 0 ], edgeOutj = [ 0 ], relativeTol = .98, absoluteTol = .001, axis = new Vec2(), vec = new Vec2();
         return function(bi, bj, si, sj, xi, xj, Ri, Rj, contacts) {
-            var edgeIndexi, edgeIndexj, edgeiStart, edgeiEnd, edgejStart, edgejEnd, normal, x, y, nx, ny, c, n, ri, rj;
-            edgeIndexi = findEdgeIndex(si, sj, xi, xj, Ri, Rj);
-            edgeIndexj = findEdgeIndex(sj, si, xj, xi, Rj, Ri);
-            console.log(edgeIndexi, edgeIndexj);
-            findEdge(si, xi, Ri, edgeIndexi, edgei);
-            findEdge(sj, xj, Rj, edgeIndexj, edgej);
-            edgeiStart = edgei.start;
-            edgeiEnd = edgei.end;
-            edgejStart = edgej.start;
-            edgejEnd = edgej.end;
-            normal = si.normals[edgeIndexi];
-            x = normal.x;
-            y = normal.y;
-            nx = x * Ri[0] + y * Ri[2];
-            ny = x * Ri[1] + y * Ri[3];
-            edgei.closestPoint(edgej.start, tmp1);
-            c = createContact(bi, bj, contacts);
-            n = c.n;
-            ri = c.ri;
-            rj = c.rj;
-            n.x = nx;
-            n.y = ny;
-            edgei.closestPoint(tmp1, ri).sub(xi);
-            edgej.closestPoint(tmp1, rj).sub(xj);
-            edgei.closestPoint(edgej.end, tmp2);
-            c = createContact(bi, bj, contacts);
-            n = c.n;
-            ri = c.ri;
-            rj = c.rj;
-            n.x = nx;
-            n.y = ny;
-            edgei.closestPoint(tmp2, ri).sub(xi);
-            edgej.closestPoint(tmp2, rj).sub(xj);
-            bi.wake();
-            bj.wake();
+            var separationi, separationj, edgeIndexi, edgeIndexj, edgeiStart, edgeiEnd, edgejStart, edgejEnd, normal, x, y, nx, ny, offset, s, tmp, c, n, ri, rj;
+            separationi = findMaxSeparation(si, sj, xi, xj, Ri, Rj, edgeOuti);
+            edgeIndexi = edgeOuti[0];
+            if (!(separationi > 0)) {
+                separationj = findMaxSeparation(sj, si, xj, xi, Rj, Ri, edgeOutj);
+                edgeIndexj = edgeOutj[0];
+                if (!(separationj > 0)) {
+                    findEdge(si, xi, Ri, edgeIndexi, edgei);
+                    findEdge(sj, xj, Rj, edgeIndexj, edgej);
+                    normal = si.normals[edgeIndexi];
+                    x = normal.x;
+                    y = normal.y;
+                    axis.x = nx = x * Ri[0] + y * Ri[2];
+                    axis.y = ny = x * Ri[1] + y * Ri[3];
+                    if (edgej.dot(axis) > edgei.dot(axis) * relativeTol + absoluteTol) {
+                        tmp = bj;
+                        bj = bi;
+                        bi = tmp;
+                        tmp = sj;
+                        sj = si;
+                        si = tmp;
+                        tmp = xj;
+                        xj = xi;
+                        xi = tmp;
+                        tmp = Rj;
+                        Rj = Ri;
+                        Ri = tmp;
+                        tmp = edgeIndexj;
+                        edgeIndexj = edgeIndexi;
+                        edgeIndexi = tmp;
+                        tmp = edgej;
+                        edgej = edgei;
+                        edgei = tmp;
+                        nx = -axis.x;
+                        ny = -axis.y;
+                    }
+                    edgeiStart = edgei.start;
+                    edgeiEnd = edgei.end;
+                    edgejStart = edgej.start;
+                    edgejEnd = edgej.end;
+                    offset = nx * edgeiStart.x + ny * edgeiStart.y;
+                    edgei.closestPoint(edgejStart, vec);
+                    s = nx * edgejStart.x + ny * edgejStart.y - offset;
+                    if (0 >= s) {
+                        c = createContact(bi, bj, contacts);
+                        n = c.n;
+                        ri = c.ri;
+                        rj = c.rj;
+                        n.x = nx;
+                        n.y = ny;
+                        edgei.closestPoint(vec, ri).sub(xi);
+                        edgej.closestPoint(vec, rj).sub(xj);
+                    }
+                    edgei.closestPoint(edgejEnd, vec);
+                    s = nx * edgejEnd.x + ny * edgejEnd.y - offset;
+                    if (0 >= s) {
+                        c = createContact(bi, bj, contacts);
+                        n = c.n;
+                        ri = c.ri;
+                        rj = c.rj;
+                        n.x = nx;
+                        n.y = ny;
+                        edgei.closestPoint(vec, ri).sub(xi);
+                        edgej.closestPoint(vec, rj).sub(xj);
+                    }
+                    bi.wake();
+                    bj.wake();
+                    bi.trigger("collide", bj);
+                    bj.trigger("collide", bi);
+                }
+            }
         };
     }();
     PNearphase2D.prototype.convexCircle = function(bi, bj, si, sj, xi, xj, Ri, contacts) {
@@ -4942,6 +5269,8 @@ define("physics2d/collision/pnearphase2d", [ "base/class", "math/mathf", "math/v
         rj.y = -radius * ny;
         bi.wake();
         bj.wake();
+        bi.trigger("collide", bj);
+        bj.trigger("collide", bi);
     };
     PNearphase2D.prototype.circleCircle = function(bi, bj, si, sj, xi, xj, contacts) {
         var invDist, c, n, nx, ny, ri, rj, dx = xj.x - xi.x, dy = xj.y - xi.y, dist = dx * dx + dy * dy, radiusi = si.radius, radiusj = sj.radius, r = radiusi + radiusj;
@@ -4967,6 +5296,8 @@ define("physics2d/collision/pnearphase2d", [ "base/class", "math/mathf", "math/v
             rj.y = -radiusj * ny;
             bi.wake();
             bj.wake();
+            bi.trigger("collide", bj);
+            bj.trigger("collide", bi);
         }
     };
     PNearphase2D.prototype.nearphase = function(bi, bj, si, sj, xi, xj, Ri, Rj, contacts) {
@@ -5146,45 +5477,6 @@ define("physics2d/constraints/pfriction2d", [ "base/class", "math/vec2", "physic
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("physics2d/shape/pcircle2d", [ "base/class", "math/vec2", "physics2d/shape/pshape2d" ], function(Class, Vec2, PShape2D) {
-    function PCircle2D(radius) {
-        PShape2D.call(this);
-        this.type = PShape2D.CIRCLE;
-        this.radius = void 0 !== radius ? radius : .5;
-        this.calculateAABB();
-        this.calculateBoundingRadius();
-        this.calculateVolume();
-    }
-    var PI = Math.PI;
-    Class.extend(PCircle2D, PShape2D);
-    PCircle2D.prototype.calculateAABB = function() {
-        var r = this.radius, aabb = this.aabb, min = aabb.min, max = aabb.max;
-        min.x = min.y = -r;
-        max.x = max.y = r;
-    };
-    PCircle2D.prototype.calculateWorldAABB = function(position, rotation, aabb) {
-        var r = this.radius, min = aabb.min, max = aabb.max, x = position.x, y = position.y;
-        min.x = x - r;
-        min.y = y - r;
-        max.x = x + r;
-        max.y = r + y;
-    };
-    PCircle2D.prototype.calculateInertia = function(mass) {
-        var r = this.radius;
-        return .4 * mass * r * r;
-    };
-    PCircle2D.prototype.calculateBoundingRadius = function() {
-        this.boundingRadius = this.radius;
-    };
-    PCircle2D.prototype.calculateVolume = function() {
-        var r = this.radius;
-        this.volume = PI * r * r;
-    };
-    return PCircle2D;
-});
-
-if ("function" != typeof define) var define = require("amdefine")(module);
-
 define("physics2d/psolver2d", [ "base/class" ], function(Class) {
     function PSolver2D() {
         Class.call(this);
@@ -5256,7 +5548,7 @@ define("physics2d/psolver2d", [ "base/class" ], function(Class) {
 
 if ("function" != typeof define) var define = require("amdefine")(module);
 
-define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics2d/psolver2d", "physics2d/constraints/pfriction2d", "physics2d/collision/pbroadphase2d", "physics2d/collision/pnearphase2d", "physics2d/shape/pshape2d", "physics2d/body/pparticle2d", "physics2d/body/pbody2d" ], function(Class, Mathf, Vec2, PSolver2D, PFriction2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D) {
+define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics2d/psolver2d", "physics2d/constraints/pfriction2d", "physics2d/collision/pbroadphase2d", "physics2d/collision/pnearphase2d", "physics2d/shape/pshape2d", "physics2d/body/pparticle2d", "physics2d/body/pbody2d", "physics2d/body/prigidbody2d" ], function(Class, Mathf, Vec2, PSolver2D, PFriction2D, PBroadphase2D, PNearphase2D, PShape2D, PParticle2D, PBody2D, PRigidbody2D) {
     function PWorld2D(opts) {
         opts || (opts = {});
         Class.call(this);
@@ -5282,7 +5574,11 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
         };
         this._removeList = [];
     }
-    var pow = Math.pow, min = Math.min, SLEEPING = (Mathf.clamp, PShape2D.CIRCLE, PShape2D.BOX, 
+    var objectTypes = {
+        PParticle2D: PParticle2D,
+        PBody2D: PBody2D,
+        PRigidbody2D: PRigidbody2D
+    }, pow = Math.pow, min = Math.min, SLEEPING = (Mathf.clamp, PShape2D.CIRCLE, PShape2D.BOX, 
     PShape2D.CONVEX, PParticle2D.AWAKE, PParticle2D.SLEEPY, PParticle2D.SLEEPING), DYNAMIC = PBody2D.DYNAMIC, KINEMATIC = (PBody2D.STATIC, 
     PBody2D.KINEMATIC), frictionPool = [];
     Class.extend(PWorld2D, Class);
@@ -5394,7 +5690,7 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
             linearDamping = body.linearDamping;
             pos = body.position;
             invMass = body.invMass;
-            body.trigger("prestep");
+            body.trigger("preStep");
             if (type === DYNAMIC) {
                 vel.x *= pow(1 - linearDamping.x, dt);
                 vel.y *= pow(1 - linearDamping.y, dt);
@@ -5416,10 +5712,34 @@ define("physics2d/pworld2d", [ "base/class", "math/mathf", "math/vec2", "physics
             force.y = 0;
             body.torque && (body.torque = 0);
             this.allowSleep && body.sleepTick(this.time);
-            body.trigger("poststep");
+            body.trigger("postStep");
         }
         debug && (profile.integration = now() - profileStart);
         this._removeList.length && this._remove();
+    };
+    PWorld2D.prototype.toJSON = function() {
+        var i, json = this._JSON, bodies = this.bodies;
+        json.type = "PWorld2D";
+        json._SERVER_ID = this._id;
+        json.allowSleep = this.allowSleep;
+        json.gravity = this.gravity;
+        json.debug = this.debug;
+        json.bodies = json.bodies || [];
+        for (i = bodies.length; i--; ) json.bodies[i] = bodies[i].toJSON();
+        return json;
+    };
+    PWorld2D.prototype.fromJSON = function(json) {
+        var jsonObject, object, i, bodies = json.bodies;
+        this._SERVER_ID = json._SERVER_ID;
+        this.allowSleep = json.allowSleep;
+        this.gravity.fromJSON(json.gravity);
+        this.debug = json.debug;
+        for (i = bodies.length; i--; ) {
+            jsonObject = bodies[i];
+            object = new objectTypes[jsonObject.type]();
+            this.add(object.fromJSON(jsonObject));
+        }
+        return this;
     };
     return PWorld2D;
 });
@@ -5454,9 +5774,21 @@ define("core/components/renderable2d", [ "base/class", "base/utils", "core/compo
     }
     Utils.has, Math.floor, Math.sqrt, Math.cos, Math.sin, 2 * Math.PI;
     Class.extend(Renderable2D, Component);
+    Renderable2D.prototype.copy = function(other) {
+        this.visible = other.visible;
+        this.offset.copy(other.offset);
+        this.alpha = other.alpha;
+        this.fill = other.fill;
+        this.color.copy(other.color);
+        this.line = other.line;
+        this.lineColor.copy(other.lineColor);
+        this.lineWidth = other.lineWidth;
+        return this;
+    };
     Renderable2D.prototype.toJSON = function() {
         var json = this._JSON;
         json.type = "Renderable2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5468,6 +5800,7 @@ define("core/components/renderable2d", [ "base/class", "base/utils", "core/compo
         return json;
     };
     Renderable2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5490,9 +5823,15 @@ define("core/components/box2d", [ "base/class", "math/vec2", "core/components/re
         this.extents = opts.extents instanceof Vec2 ? opts.extents : new Vec2(.5, .5);
     }
     Class.extend(Box2D, Renderable2D);
+    Box2D.prototype.copy = function(other) {
+        Renderable2D.call(this, other);
+        this.extents.copy(other.extents);
+        return this;
+    };
     Box2D.prototype.toJSON = function() {
         var json = this._JSON;
         json.type = "Box2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5505,6 +5844,7 @@ define("core/components/box2d", [ "base/class", "math/vec2", "core/components/re
         return json;
     };
     Box2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5529,9 +5869,15 @@ define("core/components/circle2d", [ "base/class", "core/components/renderable2d
     }
     Math.floor, Math.sqrt, Math.cos, Math.sin, 2 * Math.PI;
     Class.extend(Circle2D, Renderable2D);
+    Circle2D.prototype.copy = function(other) {
+        Renderable2D.call(this, other);
+        this.radius = other.radius;
+        return this;
+    };
     Circle2D.prototype.toJSON = function() {
         var json = this._JSON;
         json.type = "Circle2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5544,6 +5890,7 @@ define("core/components/circle2d", [ "base/class", "core/components/renderable2d
         return json;
     };
     Circle2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5567,9 +5914,19 @@ define("core/components/poly2d", [ "base/class", "math/vec2", "core/components/r
         this.vertices = opts.vertices instanceof Array ? opts.vertices : [ new Vec2(.5, .5), new Vec2(-.5, .5), new Vec2(-.5, -.5), new Vec2(.5, -.5) ];
     }
     Class.extend(Poly2D, Renderable2D);
+    Poly2D.prototype.copy = function(other) {
+        var vertex, i, vertices = other.vertices;
+        Renderable2D.call(this, other);
+        for (i = vertices.length; i--; ) {
+            vertex = this.vertices[i] || new Vec2();
+            vertex.copy(vertices[i]);
+        }
+        return this;
+    };
     Poly2D.prototype.toJSON = function() {
         var i, json = this._JSON, vertices = this.vertices;
         json.type = "Poly2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5584,6 +5941,7 @@ define("core/components/poly2d", [ "base/class", "math/vec2", "core/components/r
     };
     Poly2D.prototype.fromJSON = function(json) {
         var vertex, vertices = json.vertices;
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5645,6 +6003,18 @@ define("core/components/rigidbody2d", [ "base/class", "base/time", "core/compone
         }
     }
     Class.extend(RigidBody2D, Renderable2D);
+    RigidBody2D.prototype.copy = function(other) {
+        var vertex, i, vertices = other.vertices;
+        Renderable2D.call(this, other);
+        this.radius = other.radius;
+        other.extents && (this.extents = new Vec2().copy(other.extents));
+        if (vertices) for (i = vertices.length; i--; ) {
+            vertex = this.vertices[i] || new Vec2();
+            vertex.copy(vertices[i]);
+        }
+        this.body.copy(other);
+        return this;
+    };
     RigidBody2D.prototype.init = function() {
         var body = this.body, gameObject = this.gameObject;
         body.position.copy(gameObject.position);
@@ -5674,6 +6044,7 @@ define("core/components/rigidbody2d", [ "base/class", "base/time", "core/compone
     RigidBody2D.prototype.toJSON = function() {
         var json = this._JSON;
         json.type = "RigidBody2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5686,6 +6057,7 @@ define("core/components/rigidbody2d", [ "base/class", "base/time", "core/compone
         return json;
     };
     RigidBody2D.prototype.fromJSON = function(json) {
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5709,7 +6081,7 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
     function Sprite2D(opts) {
         opts || (opts = {});
         Renderable2D.call(this, opts);
-        this.image = opts.image instanceof Image ? opts.image : void 0;
+        this.image = void 0 !== opts.image ? opts.image : "default";
         this.width = opts.width || 1;
         this.height = opts.height || 1;
         this.x = opts.x || 0;
@@ -5719,16 +6091,37 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         this.animations = opts.animations || {
             idle: [ [ this.x, this.y, this.w, this.h, .25 ] ]
         };
-        this.animation = this.animations.idle;
+        this.animation = "idle";
         this.mode = Sprite2D.loop;
         this._last = 0;
         this._frame = 0;
-        this.playing = void 0 !== this.animation ? !0 : !1;
+        this.playing = void 0 !== this.animations[this.animation] ? !0 : !1;
     }
     Class.extend(Sprite2D, Renderable2D);
+    Sprite2D.prototype.copy = function(other) {
+        var key, value, i, animations = other.animations;
+        Renderable2D.call(this, other);
+        this.image = other.image;
+        this.width = other.width;
+        this.height = other.height;
+        this.x = other.x;
+        this.y = other.y;
+        this.w = other.w;
+        this.h = other.h;
+        for (key in animations) {
+            value = animations[key];
+            for (i = value.length; i--; ) this.animations[key][i] = value[i];
+        }
+        this.animation = this.animations.idle;
+        this.mode = other.mode;
+        this._last = other._last;
+        this._frame = other._frame;
+        this.playing = other.playing;
+        return this;
+    };
     Sprite2D.prototype.play = function(name, mode) {
-        if (this.playing && this.animation === this.animations[name]) {
-            this.animation = this.animations[name];
+        if (this.animations[name]) {
+            this.animation = name;
             switch (mode) {
               case Sprite2D.LOOP:
               case "loop":
@@ -5749,14 +6142,14 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
                 this.mode = Sprite2D.LOOP;
             }
             this.playing = !0;
-        }
+        } else console.warn("Sprite2D.play: no animation with name " + name);
     };
     Sprite2D.prototype.stop = function() {
         this.playing = !1;
     };
     Sprite2D.prototype.update = function() {
-        var currentFrame, animation = this.animation, currentFrame = animation[this._frame], rate = currentFrame[4];
-        if (animation && this.playing && this._last + rate / Time.scale <= Time.time) {
+        var currentFrame, animation = this.animations[this.animation], currentFrame = animation[this._frame], rate = currentFrame[4];
+        if (this.playing && this._last + rate / Time.scale <= Time.time) {
             this._last = Time.time;
             if (currentFrame) {
                 this.x = currentFrame[0];
@@ -5768,8 +6161,9 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         }
     };
     Sprite2D.prototype.toJSON = function() {
-        var animation, i, jl, json = this._JSON, animations = this.animations;
+        var animation, i, j, json = this._JSON, animations = this.animations;
         json.type = "Sprite2D";
+        json._SERVER_ID = this._id;
         json.visible = this.visible;
         json.offset = this.offset;
         json.alpha = this.alpha;
@@ -5778,7 +6172,7 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         json.line = this.line;
         json.lineColor = this.lineColor;
         json.lineWidth = this.lineWidth;
-        json.image = this.image.src;
+        json.image = this.image;
         json.x = this.x;
         json.y = this.y;
         json.w = this.w;
@@ -5787,7 +6181,7 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         for (i in animations) {
             json.animations[i] = json.animations[i] || [];
             animation = animations[i];
-            for (j = 0, jl = animation.length; jl > j; j++) json.animations[i][j] = animation[i];
+            for (j = animation.length; j--; ) json.animations[i][j] = animation[j];
         }
         json.animation = this.animation;
         json.playing = this.playing;
@@ -5797,7 +6191,8 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         return json;
     };
     Sprite2D.prototype.fromJSON = function(json) {
-        var animation, i, j, jl, animations = json.animations;
+        var animation, i, j, animations = json.animations;
+        this._SERVER_ID = json._SERVER_ID;
         this.visible = json.visible;
         this.offset.fromJSON(json.offset);
         this.alpha = json.alpha;
@@ -5806,7 +6201,7 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         this.line = json.line;
         this.lineColor.fromJSON(json.lineColor);
         this.lineWidth = json.lineWidth;
-        this.image.src = json.image;
+        this.image = json.image;
         this.x = json.x;
         this.y = json.y;
         this.w = json.w;
@@ -5814,7 +6209,7 @@ define("core/components/sprite2d", [ "base/class", "base/time", "core/components
         for (i in animations) {
             this.animations[i] = animations[i];
             animation = animations[i];
-            for (j = 0, jl = animation.length; jl > j; j++) this.animations[i][j] = animation[i];
+            for (j = animation.length; j--; ) this.animations[i][j] = animation[j];
         }
         this.animation = json.animation;
         this.playing = json.playing;
@@ -6690,6 +7085,7 @@ define("core/scene/world2d", [ "base/class", "base/time", "math/color", "math/ve
         var json = this._JSON;
         json.type = "World2D";
         json.name = this.name;
+        json._SERVER_ID = this._id;
         json.gravity = this.gravity;
         json.background = this.background;
         json.pworld = this.pworld;
@@ -6697,6 +7093,7 @@ define("core/scene/world2d", [ "base/class", "base/time", "math/color", "math/ve
     };
     World2D.prototype.fromJSON = function(json) {
         this.name = json.name;
+        this._SERVER_ID = json._SERVER_ID;
         this.gravity.fromJSON(json.gravity);
         this.background.fromJSON(json.background);
         this.pworld.fromJSON(json.pworld);
@@ -6727,11 +7124,6 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
     var isNumber = Utils.isNumber, EPSILON = Mathf.EPSILON;
     Mathf.standardRadian;
     Class.extend(Transform2D, Class);
-    Transform2D.prototype.clone = function() {
-        var clone = new Transform2D();
-        clone.copy(this);
-        return clone;
-    };
     Transform2D.prototype.copy = function(other) {
         var child, i, children = other.children;
         this.children.length = 0;
@@ -6759,7 +7151,7 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
                 for (;root.parent; ) root = root.parent;
                 child.root = root;
                 child.trigger("add");
-                this.trigger("addchild", child);
+                this.trigger("addChild", child);
             }
         }
         return this;
@@ -6776,7 +7168,7 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
                 for (;root.parent; ) root = root.parent;
                 child.root = root;
                 child.trigger("remove");
-                this.trigger("removechild", child);
+                this.trigger("removeChild", child);
             }
         }
         return this;
@@ -6858,6 +7250,7 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
     Transform2D.prototype.toJSON = function() {
         var i, json = this._JSON, children = this.children;
         json.type = "Transform2D";
+        json._SERVER_ID = this._id;
         json.children = json.children || [];
         for (i = children.length; i--; ) json.children[i] = children[i].toJSON();
         json.position = this.position;
@@ -6867,6 +7260,7 @@ define("core/objects/transform2d", [ "base/class", "base/utils", "math/mathf", "
     };
     Transform2D.prototype.fromJSON = function(json) {
         var jsonObject, object, i, children = json.children;
+        this._SERVER_ID = json._SERVER_ID;
         for (i = children.length; i--; ) {
             jsonObject = children[i];
             object = new objectTypes[jsonObject.type]();
@@ -6910,11 +7304,6 @@ define("core/objects/gameobject2d", [ "base/class", "core/objects/transform2d", 
         Sprite2D: Sprite2D
     };
     Class.extend(GameObject2D, Transform2D);
-    GameObject2D.prototype.clone = function() {
-        var clone = new GameObject2D();
-        clone.copy(this);
-        return clone;
-    };
     GameObject2D.prototype.copy = function(other) {
         var name, component;
         Transform2D.call(this, other);
@@ -6962,11 +7351,11 @@ define("core/objects/gameobject2d", [ "base/class", "core/objects/transform2d", 
         var component, i, components = this.components;
         for (i = arguments.length; i--; ) {
             component = arguments[i];
-            if (components[component._class]) console.warn("GameObject2D.addComponent: GameObject2D already has a " + component + " Component"); else if (component instanceof Component) {
+            if (components[component._class]) console.warn("GameObject2D.addComponent: GameObject2D already has a " + component._class + " Component"); else if (component instanceof Component) {
                 component.gameObject && (component = component.clone());
                 components[component._class] = component;
                 component.gameObject = this;
-                this.trigger("addcomponent", component);
+                this.trigger("addComponent", component);
                 component.trigger("add", this);
             } else console.warn("GameObject2D.addComponent: " + component._class + " is not an instance of Component");
         }
@@ -6978,9 +7367,9 @@ define("core/objects/gameobject2d", [ "base/class", "core/objects/transform2d", 
             if (components[component._class]) {
                 component.gameObject = void 0;
                 components[component._class] = void 0;
-                this.trigger("removecomponent", component);
+                this.trigger("removeComponent", component);
                 component.trigger("remove", this);
-            } else console.warn("GameObject2D.removeComponent: Component is not attached GameObject2D");
+            } else console.warn("GameObject2D.removeComponent: Component is not attached to GameObject2D");
         }
     };
     GameObject2D.prototype.hasComponent = function(type) {
@@ -7010,17 +7399,21 @@ define("core/objects/gameobject2d", [ "base/class", "core/objects/transform2d", 
             component && component.update && component.update();
         }
         this.updateMatrices();
-        this.trigger("lateupdate");
+        this.trigger("lateUpdate");
     };
     GameObject2D.prototype.toJSON = function() {
-        var i, json = this._JSON, children = this.children, components = this.components, tags = this.tags;
+        var component, i, json = this._JSON, children = this.children, components = this.components, tags = this.tags;
         json.type = "GameObject2D";
         json.name = this.name;
+        json._SERVER_ID = this._id;
         json.children = json.children || [];
         json.components = json.components || {};
         json.tags = json.tags || [];
         for (i = children.length; i--; ) json.children[i] = children[i].toJSON();
-        for (i in components) json.components[i] = components[i].toJSON();
+        for (i in components) {
+            component = components[i];
+            "RigidBody2D" !== component._class && (json.components[i] = component.toJSON());
+        }
         for (i = tags.length; i--; ) json.tags[i] = tags[i];
         json.z = this.z;
         json.position = this.position;
@@ -7031,6 +7424,7 @@ define("core/objects/gameobject2d", [ "base/class", "core/objects/transform2d", 
     GameObject2D.prototype.fromJSON = function(json) {
         var jsonObject, object, i, children = json.children, components = json.components, tags = json.tags;
         this.name = json.name;
+        this._SERVER_ID = json._SERVER_ID;
         for (i = children.length; i--; ) {
             jsonObject = children[i];
             object = new objectTypes[jsonObject.type]();
@@ -7124,12 +7518,13 @@ define("core/objects/camera2d", [ "base/class", "math/mathf", "math/vec2", "math
         this.updateMatrices();
         this.needsUpdate && this.updateMatrixProjection();
         this.matrixWorldInverse.minv(this.matrixWorld);
-        this.trigger("lateupdate");
+        this.trigger("lateUpdate");
     };
     Camera2D.prototype.toJSON = function() {
         var i, json = this._JSON, children = this.children, components = this.components, tags = this.tags;
         json.type = "Camera2D";
         json.name = this.name;
+        json._SERVER_ID = this._id;
         json.children = json.children || [];
         json.components = json.components || [];
         json.tags = json.tags || [];
@@ -7148,6 +7543,7 @@ define("core/objects/camera2d", [ "base/class", "math/mathf", "math/vec2", "math
     Camera2D.prototype.fromJSON = function(json) {
         var jsonObject, object, i, children = json.children, components = json.components, tags = json.tags;
         this.name = json.name;
+        this._SERVER_ID = json._SERVER_ID;
         for (i = children.length; i--; ) {
             jsonObject = children[i];
             object = new objectTypes[jsonObject.type]();
@@ -7205,8 +7601,8 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
                 children.push(child);
                 child.children.length > 0 && this.add.apply(this, child.children);
                 this._add(child);
-                child.trigger("addtoscene");
-                this.trigger("addgameobject", child);
+                child.trigger("addToScene");
+                this.trigger("addGameObject", child);
                 child.init();
             } else console.warn("Scene2D.add: " + child.name + " is already added to scene");
         }
@@ -7221,8 +7617,8 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
                 children.splice(index, 1);
                 child.children.length > 0 && this.remove.apply(this, child.children);
                 this._remove(child);
-                child.trigger("removefromscene");
-                this.trigger("removegameobject", child);
+                child.trigger("removeFromScene");
+                this.trigger("removeGameObject", child);
             } else console.warn("Scene2D.remove: " + child + " is not in scene");
         }
     };
@@ -7234,8 +7630,8 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
             children.splice(i, 1);
             child.children.length > 0 && this.remove.apply(this, child.children);
             this._remove(child);
-            child.trigger("removefromscene");
-            this.trigger("removegameobject", child);
+            child.trigger("removeFromScene");
+            this.trigger("removeGameObject", child);
         }
     };
     Scene2D.prototype._add = function(gameObject) {
@@ -7268,7 +7664,7 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
         }
     };
     Scene2D.prototype.sort = function(a, b) {
-        return a.gameObject.z - b.gameObject.z;
+        return b.gameObject.z - a.gameObject.z;
     };
     Scene2D.prototype.findByTag = function(tag, results) {
         results = results || [];
@@ -7287,17 +7683,34 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
         }
         return void 0;
     };
+    Scene2D.prototype.findById = function(id) {
+        var child, i, children = this.children;
+        for (i = children.length; i--; ) {
+            child = children[i];
+            if (child._id === id) return child;
+        }
+        return void 0;
+    };
+    Scene2D.prototype.findByServerId = function(id) {
+        var child, i, children = this.children;
+        for (i = children.length; i--; ) {
+            child = children[i];
+            if (child._SERVER_ID === id) return child;
+        }
+        return void 0;
+    };
     Scene2D.prototype.update = function() {
         var i, children = this.children;
         this.trigger("update");
         this.world.update();
         for (i = children.length; i--; ) children[i].update();
-        this.trigger("update");
+        this.trigger("lateUpdate");
     };
     Scene2D.prototype.toJSON = function() {
         var i, json = this._JSON, children = this.children;
         json.type = "Scene2D";
         json.name = this.name;
+        json._SERVER_ID = this._id;
         json.world = this.world.toJSON();
         json.children = json.children || [];
         for (i = children.length; i--; ) json.children[i] = children[i].toJSON();
@@ -7306,6 +7719,7 @@ define("core/scene/scene2d", [ "base/class", "base/utils", "core/scene/world2d",
     Scene2D.prototype.fromJSON = function(json) {
         var jsonObject, object, i, children = json.children;
         this.name = json.name;
+        this._SERVER_ID = json._SERVER_ID;
         this.world.fromJSON(json.world);
         this.clear();
         for (i = children.length; i--; ) {
@@ -7417,9 +7831,14 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
         this.canvas = opts.canvas instanceof Canvas ? opts.canvas : new Canvas(opts.width, opts.height);
         this.autoClear = void 0 !== opts.autoClear ? opts.autoClear : !0;
         this.context = Dom.get2DContext(this.canvas.element);
+        this._data = {
+            images: {
+                "default": defaultImage
+            }
+        };
     }
-    var PI = Math.PI, TWO_PI = 2 * PI, defaultImg = new Image();
-    defaultImg.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+    var PI = Math.PI, TWO_PI = 2 * PI, defaultImage = new Image();
+    defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
     Class.extend(CanvasRenderer2D, Class);
     CanvasRenderer2D.prototype.setClearColor = function(color) {
         this.canvas.element.style.background = color ? color.hex() : "#000000";
@@ -7430,7 +7849,7 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
     CanvasRenderer2D.prototype.render = function() {
         var lastScene, lastCamera, lastBackground = new Color();
         return function(scene, camera) {
-            var renderable, rigidbody, i, il, self = this, background = scene.world.background, ctx = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
+            var renderable, rigidbody, i, self = this, background = scene.world.background, ctx = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
             if (!lastBackground.equals(background)) {
                 this.setClearColor(background);
                 lastBackground.copy(background);
@@ -7456,11 +7875,11 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
                 lastCamera = camera;
             }
             this.autoClear && this.clear();
-            if (this.debug) for (i = 0, il = rigidbodies.length; il > i; i++) {
+            if (this.debug) for (i = rigidbodies.length; i--; ) {
                 rigidbody = rigidbodies[i];
                 rigidbody.visible && this.renderComponent(rigidbody, camera);
             }
-            for (i = 0, il = renderables.length; il > i; i++) {
+            for (i = renderables.length; i--; ) {
                 renderable = renderables[i];
                 renderable.visible && this.renderComponent(renderable, camera);
             }
@@ -7469,7 +7888,12 @@ define("core/canvasrenderer2d", [ "base/class", "base/dom", "base/device", "core
     CanvasRenderer2D.prototype.renderComponent = function() {
         var modelViewProj = new Mat32(), mvp = modelViewProj.elements;
         return function(component, camera) {
-            var sleepState, vertex, x, y, i, ctx = this.context, gameObject = component.gameObject, offset = component.offset, image = component.image || defaultImg, radius = component.radius, extents = component.extents, vertices = component.vertices, body = component.body;
+            var sleepState, vertex, x, y, i, ctx = this.context, images = this._data.images, gameObject = component.gameObject, offset = component.offset, imageSrc = component.image, radius = component.radius, extents = component.extents, vertices = component.vertices, body = component.body, image = images[imageSrc];
+            if (!image && imageSrc) if ("default" === imageSrc) image = images["default"]; else {
+                image = new Image();
+                image.src = imageSrc;
+                images[imageSrc] = image;
+            }
             gameObject.matrixModelView.mmul(gameObject.matrixWorld, camera.matrixWorldInverse);
             modelViewProj.mmul(gameObject.matrixModelView, camera.matrixProjection);
             ctx.save();
@@ -7540,19 +7964,17 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
             maxRenderBufferSize: 16384
         };
         this._data = {
-            imageProgram: void 0,
-            imageUniforms: {},
-            imageAttributes: {},
-            program: void 0,
-            uniforms: {},
-            attributes: {}
+            images: {
+                "default": defaultImage
+            },
+            textures: {}
         };
         this.getExtensions();
         this.getGPUCapabilities();
         this.setDefault();
     }
-    var createProgram = Dom.createProgram, isPowerOfTwo = (2 * Math.PI, Math.cos, Math.sin, 
-    Mathf.isPowerOfTwo);
+    var isPowerOfTwo = (Dom.createProgram, 2 * Math.PI, Math.cos, Math.sin, Mathf.isPowerOfTwo), defaultImage = new Image();
+    defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
     Class.extend(WebGLRenderer2D, Class);
     WebGLRenderer2D.prototype.getExtensions = function() {
         var gl = this.context, ext = this.ext, texture_filter_anisotropic = gl.getExtension("EXT_texture_filter_anisotropic") || gl.getExtension("MOZ_EXT_texture_filter_anisotropic") || gl.getExtension("WEBKIT_EXT_texture_filter_anisotropic"), compressed_texture_s3tc = gl.getExtension("WEBGL_compressed_texture_s3tc") || gl.getExtension("MOZ_WEBGL_compressed_texture_s3tc") || gl.getExtension("WEBKIT_WEBGL_compressed_texture_s3tc"), standard_derivatives = gl.getExtension("OES_standard_derivatives"), texture_float = gl.getExtension("OES_texture_float");
@@ -7562,9 +7984,8 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         ext.compressed_texture_s3tc = compressed_texture_s3tc;
     };
     WebGLRenderer2D.prototype.getGPUCapabilities = function() {
-        var gl = this.context, gpu = this.gpu, ext = this.ext, VERTEX_SHADER = gl.VERTEX_SHADER, FRAGMENT_SHADER = gl.FRAGMENT_SHADER, HIGH_FLOAT = gl.HIGH_FLOAT, MEDIUM_FLOAT = gl.MEDIUM_FLOAT, LOW_FLOAT = gl.LOW_FLOAT, maxAnisotropy = ext.texture_filter_anisotropic ? gl.getParameter(ext.texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1, maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS), maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE), maxCubeTextureSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE), maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), vsHighpFloat = gl.getShaderPrecisionFormat(VERTEX_SHADER, HIGH_FLOAT), vsMediumpFloat = gl.getShaderPrecisionFormat(VERTEX_SHADER, MEDIUM_FLOAT), fsHighpFloat = (gl.getShaderPrecisionFormat(VERTEX_SHADER, LOW_FLOAT), 
-        gl.getShaderPrecisionFormat(FRAGMENT_SHADER, HIGH_FLOAT)), fsMediumpFloat = gl.getShaderPrecisionFormat(FRAGMENT_SHADER, MEDIUM_FLOAT), highpAvailable = (gl.getShaderPrecisionFormat(FRAGMENT_SHADER, LOW_FLOAT), 
-        vsHighpFloat.precision > 0 && fsHighpFloat.precision > 0), mediumpAvailable = vsMediumpFloat.precision > 0 && fsMediumpFloat.precision > 0, precision = "highp";
+        var gl = this.context, gpu = this.gpu, ext = this.ext, VERTEX_SHADER = gl.VERTEX_SHADER, FRAGMENT_SHADER = gl.FRAGMENT_SHADER, HIGH_FLOAT = gl.HIGH_FLOAT, MEDIUM_FLOAT = gl.MEDIUM_FLOAT, shaderPrecision = (gl.LOW_FLOAT, 
+        gl.getShaderPrecisionFormat !== void 0), maxAnisotropy = ext.texture_filter_anisotropic ? gl.getParameter(ext.texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1, maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS), maxTextureSize = gl.getParameter(gl.MAX_TEXTURE_SIZE), maxCubeTextureSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE), maxRenderBufferSize = gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), vsHighpFloat = shaderPrecision ? gl.getShaderPrecisionFormat(VERTEX_SHADER, HIGH_FLOAT) : 0, vsMediumpFloat = shaderPrecision ? gl.getShaderPrecisionFormat(VERTEX_SHADER, MEDIUM_FLOAT) : 23, fsHighpFloat = shaderPrecision ? gl.getShaderPrecisionFormat(FRAGMENT_SHADER, HIGH_FLOAT) : 0, fsMediumpFloat = shaderPrecision ? gl.getShaderPrecisionFormat(FRAGMENT_SHADER, MEDIUM_FLOAT) : 23, highpAvailable = vsHighpFloat.precision > 0 && fsHighpFloat.precision > 0, mediumpAvailable = vsMediumpFloat.precision > 0 && fsMediumpFloat.precision > 0, precision = "highp";
         (!highpAvailable || Device.mobile) && (precision = mediumpAvailable ? "mediump" : "lowp");
         gpu.precision = precision;
         gpu.maxAnisotropy = maxAnisotropy;
@@ -7574,7 +7995,8 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         gpu.maxRenderBufferSize = maxRenderBufferSize;
     };
     WebGLRenderer2D.prototype.setDefault = function() {
-        var gl = this.context, data = this._data;
+        var gl = this.context;
+        this._data;
         gl.clearColor(0, 0, 0, 1);
         gl.clearDepth(0);
         gl.clearStencil(0);
@@ -7584,11 +8006,14 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-        data.imageProgram = createProgram(gl, this.vertexShader(!0), this.fragmentShader(!0));
-        data.program = createProgram(gl, this.vertexShader(!1), this.fragmentShader(!1));
     };
-    WebGLRenderer2D.prototype.createTexture = function(image) {
-        var gl = context, texture = gl.createTexture();
+    WebGLRenderer2D.prototype.createTexture = function(imageSrc) {
+        var gl = this.context, data = this._data, textures = data.textures, images = data.images, image = images[imageSrc], texture = gl.createTexture();
+        if (!image) if ("default" === imageSrc) image = images["default"]; else {
+            image = new Image();
+            image.src = imageSrc;
+            images[imageSrc] = image;
+        }
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, !0);
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
@@ -7601,8 +8026,8 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
         }
+        textures[imageSrc] = texture;
         gl.bindTexture(gl.TEXTURE_2D, null);
-        return texture;
     };
     WebGLRenderer2D.prototype.setClearColor = function(color) {
         color ? this.context.clearColor(color.r, color.g, color.b, color.a) : this.context.clearColor(0, 0, 0, 1);
@@ -7649,7 +8074,7 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         };
     }();
     WebGLRenderer2D.prototype.setLineWidth = function() {
-        var lastLineWidth;
+        var lastLineWidth = 1;
         return function(width) {
             if (width !== lastLineWidth) {
                 this.context.lineWidth(width);
@@ -7660,7 +8085,7 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
     WebGLRenderer2D.prototype.render = function() {
         var lastScene, lastCamera, lastBackground = new Color();
         return function(scene, camera) {
-            var renderable, rigidbody, i, il, self = this, background = scene.world.background, gl = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
+            var renderable, rigidbody, i, self = this, background = scene.world.background, gl = this.context, renderables = scene._renderables, rigidbodies = scene._rigidbodies;
             if (!lastBackground.equals(background)) {
                 this.setClearColor(background);
                 lastBackground.copy(background);
@@ -7684,11 +8109,11 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
                 lastCamera = camera;
             }
             this.autoClear && this.clear();
-            if (this.debug) for (i = 0, il = rigidbodies.length; il > i; i++) {
+            if (this.debug) for (i = rigidbodies.length; i--; ) {
                 rigidbody = rigidbodies[i];
                 rigidbody.visible && this.renderComponent(rigidbody, camera);
             }
-            for (i = 0, il = renderables.length; il > i; i++) {
+            for (i = renderables.length; i--; ) {
                 renderable = renderables[i];
                 renderable.visible && this.renderComponent(renderable, camera);
             }
@@ -7699,8 +8124,6 @@ define("core/webglrenderer2d", [ "base/class", "base/dom", "base/device", "core/
         modelViewProj.elements;
         return function(component, camera) {
             var gameObject = (this.context, component._data, component.gameObject);
-            component.setupBuffers(this);
-            component.setupProgram(this);
             gameObject.matrixModelView.mmul(gameObject.matrixWorld, camera.matrixWorldInverse);
             modelView.fromMat32(gameObject.matrixModelView);
             modelViewProj.mmul(modelView, camera._matrixProjection3D);
@@ -7762,8 +8185,8 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
             if (-1 === index) {
                 scenes.push(scene);
                 scene.game = this;
-                scene.trigger("addtogame");
-                this.trigger("addscene", scene);
+                scene.trigger("addToGame");
+                this.trigger("addScene", scene);
             } else console.warn("Game.add: " + scene.name + " is already added to game");
         }
     };
@@ -7775,14 +8198,15 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
             if (-1 !== index) {
                 scenes.splice(index, 1);
                 scene.game = void 0;
-                scene.trigger("removefromgame");
-                this.trigger("removescene", scene);
+                scene.trigger("removeFromGame");
+                this.trigger("removeScene", scene);
             } else console.warn("Game.remove: " + scene.name + " is not in game");
         }
     };
     Game.prototype.setScene = function(scene) {
-        "string" == typeof scene && (scene = this.findSceneByName(scene));
-        var index = this.scenes.indexOf(scene);
+        var index, type = typeof scene;
+        "string" === type ? scene = this.findSceneByName(scene) : "number" === type && (scene = this.findSceneById(scene));
+        index = this.scenes.indexOf(scene);
         if (-1 === index) {
             console.warn("Game.setScene: scene not added to Game, adding it...");
             this.addScene(scene);
@@ -7791,9 +8215,9 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
         this.scene ? this.updateRenderer(this.scene) : console.warn("Game.setScene: could not find scene in Game " + scene);
     };
     Game.prototype.setCamera = function(camera) {
-        var index, scene = this.scene;
+        var index, type = typeof camera, scene = this.scene;
         if (scene) {
-            if ("string" == typeof camera) this.camera = scene.findByName(camera); else {
+            if ("string" === type) this.camera = scene.findByName(camera); else if ("number" === type) camera = scene.findById(camera); else {
                 index = scene.children.indexOf(camera);
                 if (-1 === index) {
                     console.warn("Game.setCamera: camera not added to Scene, adding it...");
@@ -7812,6 +8236,22 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
         }
         return void 0;
     };
+    Game.prototype.findSceneById = function(id) {
+        var scene, i, scenes = this.scenes;
+        for (i = scenes.length; i--; ) {
+            scene = scenes[i];
+            if (scene._id === id) return scene;
+        }
+        return void 0;
+    };
+    Game.prototype.findSceneByServerId = function(id) {
+        var scene, i, scenes = this.scenes;
+        for (i = scenes.length; i--; ) {
+            scene = scenes[i];
+            if (scene._SERVER_ID === id) return scene;
+        }
+        return void 0;
+    };
     Game.prototype.update = function() {
         var scene = this.scene;
         Time.sinceStart = Time.now();
@@ -7820,7 +8260,7 @@ define("core/game/game", [ "base/class", "base/utils", "base/device", "base/dom"
             Time.update();
             this.trigger("update");
             scene && scene.update();
-            this.trigger("lateupdate");
+            this.trigger("lateUpdate");
         }
     };
     Game.prototype.render = function() {
@@ -7857,14 +8297,13 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "base/dev
         opts || (opts = {});
         Game.call(this, opts);
         this.id = void 0;
-        this.offset = 0;
         this.host = opts.host || "127.0.0.1";
         this.port = opts.port || 8080;
         var socket, jsonObject, object, i, self = this;
         this.socket = socket = io.connect("http://" + this.host, {
             port: this.port
         });
-        socket.on("connected", function(id, scenes) {
+        socket.on("connection", function(id, scenes) {
             self.id = id;
             socket.emit("device", Device);
             for (i = scenes.length; i--; ) {
@@ -7874,44 +8313,43 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "base/dev
                 self.addScene(object);
             }
             socket.on("sync", function(timeStamp) {
-                self.offset = Time.stamp() - timeStamp;
-                Time._offset = self.offset;
-                socket.emit("clientoffset", self.offset);
+                Time._offset = Time.stamp() - timeStamp;
+                socket.emit("clientOffset", Time._offset);
             });
-            socket.on("gameObject_moved", function(scene, gameObject, position) {
-                scene = self.findSceneByName(scene);
+            socket.on("gameObjectMoved", function(scene, gameObject, position) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     if (gameObject) {
                         gameObject.position.copy(position);
                         gameObject.updateMatrices();
                     }
                 }
             });
-            socket.on("gameObject_scaled", function(scene, gameObject, scale) {
-                scene = self.findSceneByName(scene);
+            socket.on("gameObjectScaled", function(scene, gameObject, scale) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     if (gameObject) {
                         gameObject.scale.copy(scale);
                         gameObject.updateMatrices();
                     }
                 }
             });
-            socket.on("gameObject_rotated", function(scene, gameObject, rotation) {
-                scene = self.findSceneByName(scene);
+            socket.on("gameObjectRotated", function(scene, gameObject, rotation) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     if (gameObject) {
                         gameObject.rotation = rotation;
                         gameObject.updateMatrices();
                     }
                 }
             });
-            socket.on("addcomponent", function(scene, gameObject, component) {
-                scene = self.findSceneByName(scene);
+            socket.on("addComponent", function(scene, gameObject, component) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     if (gameObject) {
                         object = new objectTypes[component.type]();
                         object.fromJSON(component);
@@ -7919,42 +8357,48 @@ define("core/game/clientgame", [ "require", "base/class", "base/time", "base/dev
                     }
                 }
             });
-            socket.on("removecomponent", function(scene, gameObject, component) {
-                scene = self.findSceneByName(scene);
+            socket.on("removeComponent", function(scene, gameObject, component) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     gameObject && gameObject.removeComponent(gameObject.getComponent(component));
                 }
             });
-            socket.on("addgameobject", function(scene, gameObject) {
-                scene = self.findSceneByName(scene);
+            socket.on("addGameObject", function(scene, gameObject) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
                     object = new objectTypes[gameObject.type]();
                     object.fromJSON(gameObject);
                     scene.add(object);
                 }
             });
-            socket.on("removegameobject", function(scene, gameObject) {
-                scene = self.findSceneByName(scene);
+            socket.on("removeGameObject", function(scene, gameObject) {
+                scene = self.findSceneByServerId(scene);
                 if (scene) {
-                    gameObject = scene.findByName(gameObject);
+                    gameObject = scene.findByServerId(gameObject);
                     gameObject && scene.remove(gameObject);
                 }
             });
-            socket.on("addscene", function(json) {
-                var scene;
-                "Scene2D" === json.type && (scene = new Scene2D());
-                if (scene) {
-                    scene.fromJSON(json);
-                    self.addScene(scene);
-                }
+            socket.on("addScene", function(scene) {
+                object = new objectTypes[scene.type]();
+                object.fromJSON(scene);
+                self.add(object);
             });
-            socket.on("removescene", function(name) {
-                var scene = self.findSceneByName(name);
+            socket.on("removeScene", function(scene) {
+                scene = self.findSceneByServerId(scene);
                 scene && self.removeScene(scene);
             });
-            socket.on("setscene", self.setScene.bind(self));
-            socket.on("setcamera", self.setCamera.bind(self));
+            socket.on("setScene", function(scene) {
+                scene = self.findSceneByServerId(scene);
+                scene && self.setScene(scene);
+            });
+            socket.on("setCamera", function(camera) {
+                camera = self.scene.findByServerId(camera);
+                camera && self.setCamera(camera);
+            });
+            socket.on("log", function() {
+                console.log.apply(console, arguments);
+            });
             Accelerometer.on("accelerometerchange", function() {
                 socket.emit("accelerometerchange", Accelerometer);
             });

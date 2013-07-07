@@ -19,7 +19,119 @@ define([
 	    TWO_PI = Math.PI * 2,
 	    cos = Math.cos,
 	    sin = Math.sin,
-	    isPowerOfTwo = Mathf.isPowerOfTwo;
+	    isPowerOfTwo = Mathf.isPowerOfTwo,
+	    toPowerOfTwo = Mathf.toPowerOfTwo,
+	    
+	    regAttribute = /attribute\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/,
+	    regUniform = /uniform\s+([a-z]+\s+)?([A-Za-z0-9]+)\s+([a-zA-Z_0-9]+)\s*(\[\s*(.+)\s*\])?/,
+	    
+	    defaultImage = new Image;
+	
+	defaultImage.src = "data:image/gif;base64,R0lGODlhAQABAIAAAP7//wAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==";
+	
+	
+	function parseUniformsAttributes( gl, shader ){
+	    var src = shader.vertexShader + shader.fragmentShader,
+		lines = src.split("\n"), matchAttributes, matchUniforms,
+		name, length, line,
+		i, j;
+	    
+	    for( i = lines.length; i--; ) {
+		line = lines[i];
+		matchAttributes = line.match( regAttribute );
+		matchUniforms = line.match( regUniform );
+		
+		if( matchAttributes ){
+		    name = matchAttributes[3];
+		    shader.attributes[ name ] = gl.getAttribLocation( shader.program, name );
+		}
+		if( matchUniforms ){
+		    name = matchUniforms[3];
+		    length = parseInt( matchUniforms[5] );
+		    
+		    if( length ){
+			shader.uniforms[ name ] = [];
+			
+			for( j = length; j--; ){
+			    shader.uniforms[ name ][j] = gl.getUniformLocation( shader.program, name +"["+ j +"]" );
+			}
+		    }
+		    else{
+			shader.uniforms[ name ] = gl.getUniformLocation( shader.program, name );
+		    }
+		}
+	    }
+	}
+	
+	
+	function basicVertexShader( precision ){
+	    
+	    return [
+		"precision "+ precision +" float;",
+		
+                "uniform mat4 uMatrix;",
+                
+                "attribute vec2 aVertexPosition;",
+                
+                "void main(){",
+                    
+                    "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );",
+                "}"
+	    ].join("\n");
+	}
+	
+	
+	function basicFragmentShader( precision ){
+	    
+	    return [
+		"precision "+ precision +" float;",
+		
+                "uniform float uAlpha;",
+                "uniform vec3 uColor;",
+                
+                "void main(){",
+		    "vec4 finalColor = vec4( uColor, 1.0 );",
+		    "finalColor.w *= uAlpha;",
+		    
+                    "gl_FragColor = finalColor;",
+                "}"
+	    ].join("\n");
+	}
+	
+	
+	function spriteVertexShader( precision ){
+	    
+	    return [
+		"precision "+ precision +" float;",
+		
+                "uniform mat4 uMatrix;",
+                
+                "attribute vec2 aVertexPosition;",
+                
+                "void main(){",
+                    
+                    "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );",
+                "}"
+	    ].join("\n");
+	}
+	
+	
+	function spriteFragmentShader( precision ){
+	    
+	    return [
+		"precision "+ precision +" float;",
+		
+                "uniform float uAlpha;",
+                "uniform vec3 uColor;",
+                
+                "void main(){",
+		    "vec4 finalColor = vec4( uColor, 1.0 );",
+		    "finalColor.w *= uAlpha;",
+		    
+                    "gl_FragColor = finalColor;",
+                "}"
+	    ].join("\n");
+	}
 	
 	
         function WebGLRenderer2D( opts ){
@@ -54,16 +166,27 @@ define([
 	    };
 	    
 	    this._data = {
-		imageProgram: undefined,
-		imageUniforms: {},
-		imageAttributes: {},
-		program: undefined,
-		uniforms: {},
-		attributes: {}
+		images: {
+		    "default": defaultImage
+		},
+		textures: {
+		    "default": undefined,
+		},
+		sprite: {
+		    vertexShader: undefined,
+		    fragmentShader: undefined,
+		    program: undefined,
+		    uniforms: {},
+		    attributes: {}
+		},
+		basic: {
+		    vertexShader: undefined,
+		    fragmentShader: undefined,
+		    program: undefined,
+		    uniforms: {},
+		    attributes: {}
+		}
 	    }
-	    
-	    this.getExtensions();
-	    this.getGPUCapabilities();
 	    
             this.setDefault();
         }
@@ -97,12 +220,14 @@ define([
         WebGLRenderer2D.prototype.getGPUCapabilities = function(){
 	    var gl = this.context,
 		gpu = this.gpu, ext = this.ext,
-	    
+		
 		VERTEX_SHADER = gl.VERTEX_SHADER,
 		FRAGMENT_SHADER = gl.FRAGMENT_SHADER,
 		HIGH_FLOAT = gl.HIGH_FLOAT,
 		MEDIUM_FLOAT = gl.MEDIUM_FLOAT,
 		LOW_FLOAT = gl.LOW_FLOAT,
+		
+		shaderPrecision = typeof gl.getShaderPrecisionFormat !== "undefined",
 		
 		maxAnisotropy = ext.texture_filter_anisotropic ? gl.getParameter( ext.texture_filter_anisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT ) : 1,
 		
@@ -114,13 +239,11 @@ define([
 		
 		maxRenderBufferSize = gl.getParameter( gl.MAX_RENDERBUFFER_SIZE ),
 		
-		vsHighpFloat = gl.getShaderPrecisionFormat( VERTEX_SHADER, HIGH_FLOAT ),
-		vsMediumpFloat = gl.getShaderPrecisionFormat( VERTEX_SHADER, MEDIUM_FLOAT ),
-		vsLowpFloat = gl.getShaderPrecisionFormat( VERTEX_SHADER, LOW_FLOAT ),
+		vsHighpFloat = shaderPrecision ? gl.getShaderPrecisionFormat( VERTEX_SHADER, HIGH_FLOAT ) : 0,
+		vsMediumpFloat = shaderPrecision ? gl.getShaderPrecisionFormat( VERTEX_SHADER, MEDIUM_FLOAT ) : 23,
 		
-		fsHighpFloat = gl.getShaderPrecisionFormat( FRAGMENT_SHADER, HIGH_FLOAT ),
-		fsMediumpFloat = gl.getShaderPrecisionFormat( FRAGMENT_SHADER, MEDIUM_FLOAT ),
-		fsLowpFloat = gl.getShaderPrecisionFormat( FRAGMENT_SHADER, LOW_FLOAT ),
+		fsHighpFloat = shaderPrecision ? gl.getShaderPrecisionFormat( FRAGMENT_SHADER, HIGH_FLOAT ) : 0,
+		fsMediumpFloat = shaderPrecision ? gl.getShaderPrecisionFormat( FRAGMENT_SHADER, MEDIUM_FLOAT ) : 23,
 		
 		highpAvailable = vsHighpFloat.precision > 0 && fsHighpFloat.precision > 0,
 		mediumpAvailable = vsMediumpFloat.precision > 0 && fsMediumpFloat.precision > 0,
@@ -147,7 +270,14 @@ define([
 	
         WebGLRenderer2D.prototype.setDefault = function(){
 	    var gl = this.context,
-		data = this._data;
+		data = this._data,
+		gpu = this.gpu, precision,
+		basic = data.basic,
+		sprite = data.sprite;
+	    
+	    this.getExtensions();
+	    this.getGPUCapabilities();
+	    precision = gpu.precision;
 	    
 	    gl.clearColor( 0, 0, 0, 1 );
 	    gl.clearDepth( 0 );
@@ -161,13 +291,45 @@ define([
 	    gl.blendEquation( gl.FUNC_ADD );
 	    gl.blendFunc( gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA );
 	    
-	    data.imageProgram = createProgram( gl, this.vertexShader( true ), this.fragmentShader( true ) );
-	    data.program = createProgram( gl, this.vertexShader( false ), this.fragmentShader( false ) );
+	    basic.vertexShader = basicVertexShader( precision );
+	    basic.fragmentShader = basicFragmentShader( precision );
+	    basic.program = createProgram( gl, basic.vertexShader, basic.fragmentShader );
+	    parseUniformsAttributes( gl, basic );
+	    
+	    sprite.vertexShader = spriteVertexShader( precision );
+	    sprite.fragmentShader = spriteFragmentShader( precision );
+	    sprite.program = createProgram( gl, basic.vertexShader, basic.fragmentShader );
+	    parseUniformsAttributes( gl, sprite );
 	};
 	
 	
-	WebGLRenderer2D.prototype.createTexture = function( image ){
-	    var gl = context,
+	WebGLRenderer2D.prototype.createImage = function( imageSrc ){
+	    var self = this,
+		data = this._data,
+		images = data.images,
+		image = images[ imageSrc ];
+	    
+	    if( !image ){
+		if( imageSrc === "default" ){
+		    image = images["default"];
+		}
+		else{
+		    image = new Image();
+		    image.src = imageSrc;
+		    images[ imageSrc ] = image;
+		}
+	    }
+	    
+	    image.onload = function(){
+		self.createTexture( image, imageSrc );
+	    };
+        };
+	
+	
+	WebGLRenderer2D.prototype.createTexture = function( image, imageSrc ){
+	    var gl = this.context,
+		data = this._data,
+		textures = data.textures,
 		texture = gl.createTexture();
 	    
 	    gl.bindTexture( gl.TEXTURE_2D, texture );
@@ -186,9 +348,8 @@ define([
 		gl.texParameteri( gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT );
 	    }
 	    
+	    textures[ imageSrc ] = texture;
 	    gl.bindTexture( gl.TEXTURE_2D, null );
-	    
-	    return texture;
         };
         
         
@@ -255,7 +416,7 @@ define([
         
         
         WebGLRenderer2D.prototype.setLineWidth = function(){
-	    var lastLineWidth;
+	    var lastLineWidth = 1;
 	    
 	    return function( width ){
 		
@@ -277,7 +438,7 @@ define([
 		    gl = this.context,
 		    renderable, renderables = scene._renderables,
 		    rigidbody, rigidbodies = scene._rigidbodies,
-		    i, il;
+		    i;
 		
 		if( !lastBackground.equals( background ) ){
 		    this.setClearColor( background );
@@ -291,46 +452,44 @@ define([
 		    var canvas = this.canvas,
 			ipr = 1 / this.pixelRatio,
 			w = canvas.width * ipr,
-			h = canvas.height * ipr;
+			h = canvas.height * ipr,
+			hw = canvas.width * 0.5,
+			hh = canvas.height * 0.5;
 		    
 		    camera.setSize( w, h );
-		    gl.viewport( 0, 0, canvas.width, canvas.height );
+		    gl.viewport( 0, 0, hw, hh );
 		    
 		    if( this.canvas.fullScreen ){
 			this.canvas.off("resize");
 			this.canvas.on("resize", function(){
 			    var ipr = 1 / self.pixelRatio,
 				w = this.width * ipr,
-				h = this.height * ipr;
+				h = this.height * ipr,
+				hw = this.width * 0.5,
+				hh = this.height * 0.5;
 			    
 			    camera.setSize( w, h );
-			    gl.viewport( 0, 0, this.width, this.height );
+			    gl.viewport( 0, 0, hw, hh );
 			});
 		    }
 		    
 		    lastCamera = camera;
 		}
 		
-		if( this.autoClear ){
-		    this.clear();
-		}
+		if( this.autoClear ) this.clear();
 		
 		if( this.debug ){
-		    for( i = 0, il = rigidbodies.length; i < il; i++ ){
+		    for( i = rigidbodies.length; i--; ){
 			rigidbody = rigidbodies[i];
 			
-			if( rigidbody.visible ){
-			    this.renderComponent( rigidbody, camera );
-			}
+			if( rigidbody.visible ) this.renderComponent( rigidbody, camera );
 		    }
 		}
 		
-		for( i = 0, il = renderables.length; i < il; i++ ){
+		for( i = renderables.length; i--; ){
 		    renderable = renderables[i];
 		    
-		    if( renderable.visible ){
-			this.renderComponent( renderable, camera );
-		    }
+		    if( renderable.visible ) this.renderComponent( renderable, camera );
 		}
 	    };
         }();
@@ -343,11 +502,15 @@ define([
 	    
 	    return function( component, camera ){
 		var gl = this.context,
-		    data = component._data,
+		    data = this._data,
+		    image = component.image,
+		    texture = data.textures[ image ],
 		    gameObject = component.gameObject;
 		
-		component.setupBuffers( this );
-		component.setupProgram( this );
+		if( !texture && image ){
+		    this.createImage( image );
+		    return;
+		}
 		
 		gameObject.matrixModelView.mmul( gameObject.matrixWorld, camera.matrixWorldInverse );
 		
@@ -355,43 +518,6 @@ define([
 		modelViewProj.mmul( modelView, camera._matrixProjection3D );
 	    };
 	}();
-	
-	
-	WebGLRenderer2D.prototype.vertexShader = function( image ){
-	    
-	    return [
-		"precision "+ this.gpu.precision +" float;",
-		
-                "uniform mat4 uMatrix;",
-                
-                "attribute vec2 aVertexPosition;",
-                
-                "void main(){",
-                    
-                    "gl_Position = uMatrix * vec4( aVertexPosition, 0.0, 1.0 );",
-                "}"
-	    ].join("\n");
-	};
-	
-	
-	WebGLRenderer2D.prototype.fragmentShader = function( image ){
-	    
-	    return [
-		"precision "+ this.gpu.precision +" float;",
-		
-                "uniform float uAlpha;",
-                "uniform vec3 uColor;",
-                
-                "void main(){",
-		    "vec4 finalColor;",
-                    
-		    "finalColor = vec4( uColor, 1.0 );",
-		    "finalColor.w *= uAlpha;",
-		    
-                    "gl_FragColor = finalColor;",
-                "}"
-	    ].join("\n");
-	};
 	
 	
 	WebGLRenderer2D.none = 0;

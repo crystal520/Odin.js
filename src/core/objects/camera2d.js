@@ -146,7 +146,7 @@ define([
             
             this.matrixWorldInverse.minv( this.matrixWorld );
 	    
-            this.trigger("lateupdate");
+            this.trigger("lateUpdate");
         };
         
         
@@ -159,6 +159,7 @@ define([
 	    
 	    json.type = "Camera2D";
 	    json.name = this.name;
+	    json._SERVER_ID = this._id;
 	    json.children = json.children || [];
 	    json.components = json.components || [];
 	    json.tags = json.tags || [];
@@ -195,6 +196,7 @@ define([
 		i;
 	    
 	    this.name = json.name;
+	    this._SERVER_ID = json._SERVER_ID;
 	    
 	    for( i = children.length; i--; ){
 		jsonObject = children[i];

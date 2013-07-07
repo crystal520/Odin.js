@@ -76,6 +76,60 @@ define([
 	    this.volume = w * h;
 	};
 	
+	
+	PBox2D.prototype.toJSON = function(){
+	    var json = this._JSON,
+		vertices = this.vertices, normals = this.normals,
+		i;
+	    
+	    json.type = "PBox2D";
+	    json._SERVER_ID = this._id;
+	    
+	    json.shapeType = this.type;
+	    
+	    json.aabb = this.aabb;
+	    json.volume = this.volume;
+	    json.boundingRadius = this.boundingRadius;
+	    
+	    json.vertices = json.vertices || [];
+	    json.normals = json.normals || [];
+	    
+	    for( i = vertices.length; i--; ){
+		json.vertices[i] = vertices[i];
+	    }
+	    for( i = normals.length; i--; ){
+		json.normals[i] = normals[i];
+	    }
+	    
+	    json.extents = this.extents;
+	    
+	    return json;
+	};
+	
+	
+	PBox2D.prototype.fromJSON = function( json ){
+	    var vertices = json.vertices, normals = json.normals,
+		object, i;
+	    
+	    this.type = json.shapeType;
+	    this._SERVER_ID = json._SERVER_ID;
+	    
+	    this.aabb.fromJSON( json.aabb );
+	    this.volume = json.volume;
+	    this.boundingRadius = json.boundingRadius;
+	    
+	    for( i = vertices.length; i--; ){
+		this.vertices[i] = ( this.vertices[i] || new Vec2 ).copy( vertices[i] );
+	    }
+	    for( i = normals.length; i--; ){
+		this.normals[i] = ( this.normals[i] || new Vec2 ).copy( normals[i] );
+	    }
+	    
+	    this.extents = json.extents;
+	    
+	    return this;
+	};
+	
         
         return PBox2D;
     }

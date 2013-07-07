@@ -189,7 +189,7 @@ define(
         };
         
         
-        Mathf.prototype.nextPowerOfTwo = function( x ){
+        Mathf.prototype.toPowerOfTwo = function( x ){
 	    var i = 2;
 	    
 	    while( i < x ){

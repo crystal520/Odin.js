@@ -295,6 +295,8 @@ define([
 		
 		bi.wake();
 		bj.wake();
+		bi.trigger("collide", bj );
+		bj.trigger("collide", bi );
 	    };
 	}();
 	
@@ -374,6 +376,8 @@ define([
 	    
 	    bi.wake();
 	    bj.wake();
+	    bi.trigger("collide", bj );
+	    bj.trigger("collide", bi );
 	};
 	
 	
@@ -417,6 +421,8 @@ define([
 	    
 	    bi.wake();
 	    bj.wake();
+	    bi.trigger("collide", bj );
+	    bj.trigger("collide", bi );
 	};
 	
 	

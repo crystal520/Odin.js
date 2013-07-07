@@ -54,14 +54,6 @@ define([
 	Class.extend( GameObject2D, Transform2D );
         
         
-        GameObject2D.prototype.clone = function(){
-            var clone = new GameObject2D;
-	    clone.copy( this );
-	    
-            return clone;
-        };
-        
-        
         GameObject2D.prototype.copy = function( other ){
             var name, component, prop;
             
@@ -158,7 +150,7 @@ define([
 			components[ component._class ] = component;
 			component.gameObject = this;
 			
-			this.trigger("addcomponent", component );
+			this.trigger("addComponent", component );
 			component.trigger("add", this );
 		    }
 		    else{
@@ -166,7 +158,7 @@ define([
 		    }
                 }
 		else{
-		    console.warn("GameObject2D.addComponent: GameObject2D already has a "+ component +" Component");
+		    console.warn("GameObject2D.addComponent: GameObject2D already has a "+ component._class +" Component");
 		}
             }
         };
@@ -184,11 +176,11 @@ define([
                     component.gameObject = undefined;
                     components[ component._class ] = undefined;
                     
-                    this.trigger("removecomponent", component );
+                    this.trigger("removeComponent", component );
                     component.trigger("remove", this );
                 }
 		else{
-		    console.warn("GameObject2D.removeComponent: Component is not attached GameObject2D");
+		    console.warn("GameObject2D.removeComponent: Component is not attached to GameObject2D");
 		}
             }
         };
@@ -249,7 +241,7 @@ define([
             
             this.updateMatrices();
             
-            this.trigger("lateupdate");
+            this.trigger("lateUpdate");
         };
         
         
@@ -258,10 +250,11 @@ define([
 		children = this.children,
 		components = this.components,
 		tags = this.tags,
-		i;
+		component, i;
 	    
 	    json.type = "GameObject2D";
 	    json.name = this.name;
+	    json._SERVER_ID = this._id;
 	    json.children = json.children || [];
 	    json.components = json.components || {};
 	    json.tags = json.tags || [];
@@ -270,7 +263,8 @@ define([
 		json.children[i] = children[i].toJSON();
 	    }
 	    for( i in components ){
-		json.components[i] = components[i].toJSON();
+		component = components[i];
+		if( component._class !== "RigidBody2D" ) json.components[i] = component.toJSON();
 	    }
 	    for( i = tags.length; i--; ){
 		json.tags[i] = tags[i];
@@ -294,6 +288,7 @@ define([
 		i;
 	    
 	    this.name = json.name;
+	    this._SERVER_ID = json._SERVER_ID;
 	    
 	    for( i = children.length; i--; ){
 		jsonObject = children[i];

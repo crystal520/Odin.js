@@ -30,14 +30,17 @@ define([
 	    if( opts.radius ){
 		shape = new PCircle2D( opts.radius );
 		this.radius = opts.radius || shape.radius;
+		this.calculateCircle();
 	    }
 	    if( opts.extents ){
 		shape = new PBox2D( opts.extents );
 		this.extents = opts.extents || shape.extents;
+		this.calculateBox();
 	    }
 	    if( opts.vertices ){
 		shape = new PConvex2D( opts.vertices );
 		this.vertices = opts.vertices || shape.vertices;
+		this.calculatePoly();
 	    }
 	    
 	    opts.shape = shape instanceof PShape2D ? shape : undefined;
@@ -67,6 +70,29 @@ define([
         }
         
 	Class.extend( RigidBody2D, Renderable2D );
+        
+	
+	RigidBody2D.prototype.copy = function( other ){
+	    var vertices = other.vertices,
+		vertex, i;
+	    
+	    Renderable2D.call( this, other );
+	    
+	    this.radius = other.radius;
+	    
+	    if( other.extents ){
+		this.extents = new Vec2().copy( other.extents );
+	    }
+	    if( vertices ){
+		for( i = vertices.length; i--; ){
+		    vertex = this.vertices[i] || new Vec2;
+		    vertex.copy( vertices[i] );
+		}
+	    }
+	    this.body.copy( other );
+	    
+	    return this;
+	};
 	
 	
 	RigidBody2D.prototype.init = function(){
@@ -117,6 +143,8 @@ define([
             var json = this._JSON;
 	    
 	    json.type = "RigidBody2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -136,6 +164,8 @@ define([
         
         
         RigidBody2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );

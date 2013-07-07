@@ -21,9 +21,25 @@ define([
 		new Vec2( -0.5, -0.5 ),
 		new Vec2( 0.5, -0.5 )
 	    ];
+	    this.calculatePoly();
         }
         
 	Class.extend( Poly2D, Renderable2D );
+        
+	
+	Poly2D.prototype.copy = function( other ){
+	    var vertices = other.vertices,
+		vertex, i;
+	    
+	    Renderable2D.call( this, other );
+	    
+	    for( i = vertices.length; i--; ){
+		vertex = this.vertices[i] || new Vec2;
+		vertex.copy( vertices[i] );
+	    }
+	    
+	    return this;
+	};
         
         
         Poly2D.prototype.toJSON = function(){
@@ -32,6 +48,8 @@ define([
 		i;
 	    
 	    json.type = "Poly2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -57,6 +75,8 @@ define([
         Poly2D.prototype.fromJSON = function( json ){
 	    var vertices = json.vertices,
 		vertex;
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );

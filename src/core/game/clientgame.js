@@ -38,7 +38,6 @@ define([
 	    Game.call( this, opts );
 	    
 	    this.id = undefined;
-	    this.offset = 0;
 	    
 	    this.host = opts.host || "127.0.0.1";
 	    this.port = opts.port || 8080;
@@ -48,12 +47,10 @@ define([
 	    
 	    this.socket = socket = io.connect("http://"+ this.host, { port: this.port });
 	    
-	    socket.on("connected", function( id, scenes ){
+	    socket.on("connection", function( id, scenes ){
+		
 		self.id = id;
-		
-		
 		socket.emit("device", Device );
-		
 		
 		for( i = scenes.length; i--; ){
 		    jsonObject = scenes[i];
@@ -65,40 +62,38 @@ define([
 		
 		socket.on("sync", function( timeStamp ){
 		    
-		    self.offset = Time.stamp() - timeStamp;
-		    Time._offset = self.offset;
-		    
-		    socket.emit("clientoffset", self.offset );
+		    Time._offset = Time.stamp() - timeStamp;
+		    socket.emit("clientOffset", Time._offset );
 		});
 		
 		
-		socket.on("gameObject_moved", function( scene, gameObject, position ){
-		    scene = self.findSceneByName( scene );
+		socket.on("gameObjectMoved", function( scene, gameObject, position ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    gameObject.position.copy( position );
 		    gameObject.updateMatrices();
 		});
 		
-		socket.on("gameObject_scaled", function( scene, gameObject, scale ){
-		    scene = self.findSceneByName( scene );
+		socket.on("gameObjectScaled", function( scene, gameObject, scale ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    gameObject.scale.copy( scale );
 		    gameObject.updateMatrices();
 		});
 		
-		socket.on("gameObject_rotated", function( scene, gameObject, rotation ){
-		    scene = self.findSceneByName( scene );
+		socket.on("gameObjectRotated", function( scene, gameObject, rotation ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    gameObject.rotation = rotation;
@@ -106,11 +101,11 @@ define([
 		});
 		
 		
-		socket.on("addcomponent", function( scene, gameObject, component ){
-		    scene = self.findSceneByName( scene );
+		socket.on("addComponent", function( scene, gameObject, component ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    object = new objectTypes[ component.type ];
@@ -119,19 +114,19 @@ define([
 		});
 		
 		
-		socket.on("removecomponent", function( scene, gameObject, component ){
-		    scene = self.findSceneByName( scene );
+		socket.on("removeComponent", function( scene, gameObject, component ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    gameObject.removeComponent( gameObject.getComponent( component ) );
 		});
 		
 		
-		socket.on("addgameobject", function( scene, gameObject ){
-		    scene = self.findSceneByName( scene );
+		socket.on("addGameObject", function( scene, gameObject ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
 		    object = new objectTypes[ gameObject.type ];
@@ -140,40 +135,45 @@ define([
 		});
 		
 		
-		socket.on("removegameobject", function( scene, gameObject ){
-		    scene = self.findSceneByName( scene );
+		socket.on("removeGameObject", function( scene, gameObject ){
+		    scene = self.findSceneByServerId( scene );
 		    if( !scene ) return;
 		    
-		    gameObject = scene.findByName( gameObject );
+		    gameObject = scene.findByServerId( gameObject );
 		    if( !gameObject ) return;
 		    
 		    scene.remove( gameObject );
 		});
 		
 		
-		socket.on("addscene", function( json ){
-		    var scene;
-		    
-		    if( json.type === "Scene2D" ){
-			scene = new Scene2D;
-		    }
-		    
-		    if( scene ){
-			scene.fromJSON( json );
-			self.addScene( scene );
-		    }
+		socket.on("addScene", function( scene ){
+		    object = new objectTypes[ scene.type ];
+		    object.fromJSON( scene );
+		    self.add( object );
 		});
 		
 		
-		socket.on("removescene", function( name ){
-		    var scene = self.findSceneByName( name );
-		    
+		socket.on("removeScene", function( scene ){
+		    scene = self.findSceneByServerId( scene );
 		    if( scene ) self.removeScene( scene );
 		});
 		
 		
-		socket.on("setscene", self.setScene.bind( self ) );
-		socket.on("setcamera", self.setCamera.bind( self ) );
+		socket.on("setScene", function( scene ){
+		    scene = self.findSceneByServerId( scene );
+		    if( scene ) self.setScene( scene );
+		});
+		
+		socket.on("setCamera", function( camera ){
+		    camera = self.scene.findByServerId( camera );
+		    if( camera ) self.setCamera( camera );
+		});
+		
+		
+		socket.on("log", function(){
+		    console.log.apply( console, arguments );
+		});
+		
 		
 		Accelerometer.on("accelerometerchange", function(){ socket.emit("accelerometerchange", Accelerometer ); });
 		Orientation.on("orientationchange", function( mode, orientation ){ socket.emit("orientationchange", mode, orientation ); });

@@ -21,15 +21,28 @@ define([
             Renderable2D.call( this, opts );
 	    
 	    this.radius = opts.radius !== undefined ? opts.radius : 0.5;
+	    this.calculateCircle();
         }
         
 	Class.extend( Circle2D, Renderable2D );
+        
+	
+	Circle2D.prototype.copy = function( other ){
+	    
+	    Renderable2D.call( this, other );
+	    
+	    this.radius = other.radius;
+	    
+	    return this;
+	};
         
         
         Circle2D.prototype.toJSON = function(){
             var json = this._JSON;
 	    
 	    json.type = "Circle2D";
+	    json._SERVER_ID = this._id;
+	    
 	    json.visible = this.visible;
 	    json.offset = this.offset;
 	    
@@ -49,6 +62,8 @@ define([
         
         
         Circle2D.prototype.fromJSON = function( json ){
+	    
+	    this._SERVER_ID = json._SERVER_ID;
 	    
             this.visible = json.visible;
 	    this.offset.fromJSON( json.offset );
