@@ -25,6 +25,8 @@ $ node server/index.js
 ```
 
 ## Basic Game
+
+### Client index.js
 ```
 // Client index.js
 require(
@@ -47,9 +49,10 @@ require(
         game.init();
     }
 );
+```
 
-
-// Server index.js
+### Server index.js
+```
 var requirejs = require("requirejs"),
     Odin = require("odin");
 
@@ -109,7 +112,6 @@ requirejs(
                 this.setScene( client, scene );
                 this.setCamera( client, camera );
             });
-            
             
             this.addScene( scene );
         });
